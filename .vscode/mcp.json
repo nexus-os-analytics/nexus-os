@@ -1,0 +1,9 @@
+{
+	"servers": {
+		"mcpdoc": {
+			"url": "http://localhost:8082",
+			"type": "http"
+		}
+	},
+	"inputs": []
+}

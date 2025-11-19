@@ -1,0 +1,55 @@
+{
+  "biome.enabled": true,
+  "editor.defaultFormatter": "biomejs.biome",
+  "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "source.organizeImports.biome": "explicit",
+    "source.fixAll.biome": "explicit"    
+  },
+  "biome.lsp.bin": "npx --no -- biome",
+  "eslint.enable": false,
+  "prettier.enable": false,
+  "[typescript]": {
+    "editor.defaultFormatter": "biomejs.biome"
+  },
+  "[javascript]": {
+    "editor.defaultFormatter": "biomejs.biome"
+  },
+  "[javascriptreact]": {
+    "editor.defaultFormatter": "biomejs.biome"
+  },
+  "[typescriptreact]": {
+    "editor.defaultFormatter": "biomejs.biome"
+  },
+  "[json]": {
+    "editor.defaultFormatter": "biomejs.biome"
+  },
+  "[jsonc]": {
+    "editor.defaultFormatter": "biomejs.biome"
+  },
+  "[yaml]": {
+    "editor.defaultFormatter": "redhat.vscode-yaml"
+  },
+  "[jsx]": {
+    "editor.defaultFormatter": "biomejs.biome"
+  },
+  "workbench.editor.customLabels.patterns": {
+    "**/**/**/**": "${dirname} - ${filename}",
+    "**/app/**/page.tsx": "${dirname} - Page",
+    "**/app/**/index.tsx": "${dirname} - Index",
+    "**/app/**/layout.tsx": "${dirname} - Layout",
+    "**/app/**/template.tsx": "${dirname} - Template",
+    "**/app/**/error.tsx": "${dirname} - Error",
+    "**/app/**/loading.tsx": "${dirname} - Loading",
+    "**/pages/**/index.tsx": "${dirname} - Page",
+    "**/components/**/index.tsx": "${dirname} - Component",
+    "**/**/**/**.stories.tsx": "${filename} - Story"
+  },
+  "[postcss]": {
+    "editor.defaultFormatter": "stylelint.vscode-stylelint"
+  },
+  "cSpell.language": "en,pt,pt-BR",
+}
+
+
+
