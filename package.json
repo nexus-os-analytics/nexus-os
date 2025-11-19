@@ -11,6 +11,7 @@
     "prepare": "husky",
     "typecheck": "tsc --noEmit --skipLibCheck",
     "preinstall": "npx only-allow pnpm",
+    "postinstall": "npx prisma generate && npx prisma migrate deploy",
     "seed": "tsx ./src/lib/prisma/seed.ts",
     "inngest:dev": "npx inngest dev --next=3000"
   },
