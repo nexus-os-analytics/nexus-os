@@ -1,6 +1,6 @@
 import { type NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import { IntegrationService } from '@/lib/bling/integration-service';
+import { BlingIntegration } from '@/lib/bling/bling-integration';
 import { inngest } from '@/lib/inngest/client';
 import { authOptions } from '@/lib/next-auth';
 
@@ -53,10 +53,10 @@ export async function GET(request: NextRequest) {
     const tokens = await tokenResponse.json();
 
     // Salvar integração no banco
-    await IntegrationService.connectBling(session?.user?.id, tokens);
+    await BlingIntegration.connectBling(session?.user?.id, tokens);
 
     // Disparar sincronização inicial
-    inngest.send({ name: 'bling/sync-all' });
+    inngest.send({ name: 'bling/sync-user', data: { userId: session.user.id } });
 
     return NextResponse.redirect(`${process.env.NEXTAUTH_URL}/bling?success=bling_connected`);
   } catch (error) {

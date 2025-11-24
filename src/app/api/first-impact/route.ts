@@ -4,6 +4,12 @@ import { authOptions } from '@/lib/next-auth';
 import prisma from '@/lib/prisma';
 import type { FirstImpactData } from '@/types';
 
+const RISK_ORDER = {
+  CRITICAL: 3,
+  HIGH: 2,
+  LOW: 1,
+};
+
 export async function GET() {
   try {
     const session = await getServerSession(authOptions);
@@ -21,61 +27,53 @@ export async function GET() {
 
     const userId = user.id;
 
-    // Capital parado
-    const capitalTiedAgg = await prisma.productAlert.aggregate({
-      _sum: { capitalTied: true },
+    // Carrega todos os alerts ativos junto com produto
+    const alerts = await prisma.blingAlert.findMany({
       where: {
-        type: 'dead_stock',
-        daysSinceLastSale: { gte: 30 },
-        integration: { userId },
+        product: { integration: { userId } },
+      },
+      include: {
+        product: true,
       },
     });
-    const capitalTied = Number(capitalTiedAgg._sum.capitalTied ?? 0);
 
-    // Ruptura
-    const ruptureCount = await prisma.productAlert.count({
-      where: {
-        type: 'rupture',
-        daysRemaining: { lte: 3 },
-        integration: { userId },
-      },
-    });
+    // Rupturas
+    const ruptureCount = alerts.filter((a) => a.type === 'RUPTURE').length;
 
     // Oportunidades
-    const opportunityCount = await prisma.productAlert.count({
-      where: {
-        type: 'opportunity',
-        salesGrowth: { gt: 0 },
-        integration: { userId },
-      },
-    });
+    const opportunityCount = alerts.filter((a) => a.type === 'OPPORTUNITY').length;
 
-    // Top ações (3 melhores)
-    const topActionsRaw = await prisma.productAlert.findMany({
-      where: {
-        integration: { userId },
-        OR: [{ type: 'rupture' }, { type: 'dead_stock' }, { type: 'opportunity' }],
-      },
-      orderBy: [{ type: 'asc' }, { salesGrowth: 'desc' }],
-      take: 3,
-      select: {
-        productName: true,
-        type: true,
-        salesGrowth: true,
-        category: true,
-      },
-    });
+    // Capital parado = produtos DEAD_STOCK * custo * estoque
+    const capitalTied = alerts
+      .filter((a) => a.type === 'DEAD_STOCK')
+      .reduce((sum, a) => {
+        const p = a.product;
+        if (!p) return sum;
+        return sum + (p.stock ?? 0) * (p.costPrice ?? 0);
+      }, 0);
 
-    const topActions = topActionsRaw.map((p) => {
+    // Top Actions (prioridade: risk desc -> novo primeiro)
+    const topActionsRaw = [...alerts]
+      .sort((a, b) => {
+        const rA = a.risk ? (RISK_ORDER[a.risk as keyof typeof RISK_ORDER] ?? 0) : 0;
+        const rB = b.risk ? (RISK_ORDER[b.risk as keyof typeof RISK_ORDER] ?? 0) : 0;
+        if (rA !== rB) return rB - rA;
+        return new Date(b.generatedAt).getTime() - new Date(a.generatedAt).getTime();
+      })
+      .slice(0, 3);
+
+    const topActions = topActionsRaw.map((a) => {
+      const p = a.product;
+
       let action = '';
-      if (p.type === 'rupture') action = 'Repor estoque urgentemente';
-      else if (p.type === 'dead_stock') action = 'Aplicar liquidação controlada';
-      else if (p.type === 'opportunity') action = 'Impulsionar campanha de alta';
+      if (a.type === 'RUPTURE') action = 'Repor estoque urgentemente';
+      else if (a.type === 'DEAD_STOCK') action = 'Aplicar liquidação controlada';
+      else if (a.type === 'OPPORTUNITY') action = 'Impulsionar campanha de alta';
 
       return {
-        productName: p.productName,
+        productName: p?.name ?? 'Produto',
         action,
-        impact: `Categoria: ${p.category}, Crescimento: ${p.salesGrowth ?? 0}%`,
+        impact: `Estoque: ${p?.stock ?? 0} un, Margem: ${((((p?.salePrice ?? 0) - (p?.costPrice ?? 0)) / (p?.salePrice || 1)) * 100).toFixed(1)}%`,
       };
     });
 

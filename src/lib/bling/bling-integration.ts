@@ -1,7 +1,7 @@
 /** biome-ignore-all lint/complexity/noStaticOnlyClass: <explanation> */
 import prisma from '@/lib/prisma';
 
-export interface BlingIntegration {
+export type BlingIntegrationType = {
   id: string;
   access_token: string;
   refresh_token: string;
@@ -9,15 +9,15 @@ export interface BlingIntegration {
   token_type: string;
   scope: string;
   connected_at: Date;
-}
+};
 
-export class IntegrationService {
+export class BlingIntegration {
   /**
    * Conectar conta Bling
    *
    * @param userId
    * @param tokens
-   * @returns {Promise<BlingIntegration>}
+   * @returns {Promise<BlingIntegrationType>}
    */
   static async connectBling(
     userId: string,
@@ -58,7 +58,7 @@ export class IntegrationService {
       },
     });
 
-    return IntegrationService.mapToBlingIntegration(integration);
+    return BlingIntegration.mapToBlingIntegration(integration);
   }
 
   /**
@@ -84,14 +84,14 @@ export class IntegrationService {
   /**
    * Obter integração Bling do usuário
    * @param userId
-   * @returns {Promise<BlingIntegration | null>}
+   * @returns {Promise<BlingIntegrationType | null>}
    */
-  static async getBlingIntegration(userId: string): Promise<BlingIntegration | null> {
+  static async getBlingIntegration(userId: string): Promise<BlingIntegrationType | null> {
     const integration = await prisma.blingIntegration.findUnique({
       where: { userId },
     });
 
-    return integration ? IntegrationService.mapToBlingIntegration(integration) : null;
+    return integration ? BlingIntegration.mapToBlingIntegration(integration) : null;
   }
 
   /**
@@ -113,15 +113,15 @@ export class IntegrationService {
   /**
    * Obter tokens válidos, atualizando se necessário
    * @param userId
-   * @returns {Promise<BlingIntegration>}
+   * @returns {Promise<BlingIntegrationType>}
    */
-  static async getValidBlingTokens(userId: string): Promise<BlingIntegration> {
-    const integration = await IntegrationService.getBlingIntegration(userId);
+  static async getValidBlingTokens(userId: string): Promise<BlingIntegrationType> {
+    const integration = await BlingIntegration.getBlingIntegration(userId);
     if (!integration) throw new Error('Bling integration not found');
 
     const expiresIn = integration.expires_at * 1000 - Date.now();
     if (expiresIn < 5 * 60 * 1000) {
-      return IntegrationService.fetchAndRefreshBlingTokens(userId);
+      return BlingIntegration.fetchAndRefreshBlingTokens(userId);
     }
 
     return integration;
@@ -135,7 +135,7 @@ export class IntegrationService {
    * @returns {Promise<any>}
    */
   static async request(userId: string, endpoint: string, options: RequestInit = {}) {
-    const { access_token } = await IntegrationService.getValidBlingTokens(userId);
+    const { access_token } = await BlingIntegration.getValidBlingTokens(userId);
 
     const res = await fetch(`https://www.bling.com.br/Api/v3${endpoint}`, {
       ...options,
@@ -169,7 +169,7 @@ export class IntegrationService {
       token_type: string;
       scope: string;
     }
-  ): Promise<BlingIntegration> {
+  ): Promise<BlingIntegrationType> {
     const integration = await prisma.blingIntegration.update({
       where: { userId },
       data: {
@@ -181,7 +181,7 @@ export class IntegrationService {
       },
     });
 
-    return IntegrationService.mapToBlingIntegration(integration);
+    return BlingIntegration.mapToBlingIntegration(integration);
   }
 
   /**
@@ -189,7 +189,7 @@ export class IntegrationService {
    * @param userId
    * @returns
    */
-  static async fetchAndRefreshBlingTokens(userId: string): Promise<BlingIntegration> {
+  static async fetchAndRefreshBlingTokens(userId: string): Promise<BlingIntegrationType> {
     const integration = await prisma.blingIntegration.findUnique({ where: { userId } });
     if (!integration) throw new Error('Integration not found');
 
@@ -216,7 +216,7 @@ export class IntegrationService {
 
     const data = await response.json();
 
-    return IntegrationService.refreshBlingTokens(userId, {
+    return BlingIntegration.refreshBlingTokens(userId, {
       access_token: data.access_token,
       refresh_token: data.refresh_token ?? integration.refreshToken,
       expires_in: data.expires_in,
@@ -230,7 +230,7 @@ export class IntegrationService {
    * @param integration
    * @returns
    */
-  private static mapToBlingIntegration(integration: any): BlingIntegration {
+  private static mapToBlingIntegration(integration: any): BlingIntegrationType {
     return {
       id: integration.id,
       access_token: integration.accessToken,

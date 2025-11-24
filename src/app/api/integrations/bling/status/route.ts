@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import { IntegrationService } from '@/lib/bling/integration-service';
+import { BlingIntegration } from '@/lib/bling/bling-integration';
 import { authOptions } from '@/lib/next-auth';
 
 export async function GET() {
@@ -11,11 +11,9 @@ export async function GET() {
       return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
     }
 
-    const integration = await IntegrationService.getBlingIntegration(session.user.id);
+    const integration = await BlingIntegration.getBlingIntegration(session.user.id);
     const isConnected = !!integration;
-    const isValid = integration
-      ? await IntegrationService.isBlingTokenValid(session.user.id)
-      : false;
+    const isValid = integration ? await BlingIntegration.isBlingTokenValid(session.user.id) : false;
 
     return NextResponse.json({
       connected: isConnected,

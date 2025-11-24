@@ -7,6 +7,8 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// User and Authentication Models
+
 enum UserRole {
   SUPER_ADMIN
   ADMIN
@@ -42,9 +44,9 @@ model User {
   apiKeys             ApiKey[]
   securityIncidents   SecurityIncident[]
   blingIntegration    BlingIntegration?
-  userSettings        UserSettings?
 
   @@index([email, createdAt, deletedAt])
+  @@map("users")
 }
 
 model Account {
@@ -97,6 +99,7 @@ model AuditLog {
   createdAt DateTime @default(now())
 
   @@index([userId, createdAt])
+  @@map("audit_logs")
 }
 
 model SecurityIncident {
@@ -108,6 +111,7 @@ model SecurityIncident {
   createdAt DateTime @default(now())
 
   @@index([userId, createdAt])
+  @@map("security_incidents")
 }
 
 model LoginActivity {
@@ -121,19 +125,21 @@ model LoginActivity {
   createdAt  DateTime @default(now())
 
   @@index([userId, createdAt])
+  @@map("login_activities")
 }
 
 model ApiKey {
-  id        String   @id @default(uuid())
-  user      User     @relation(fields: [userId], references: [id])
+  id        String    @id @default(uuid())
+  user      User      @relation(fields: [userId], references: [id])
   userId    String
-  key       String   @unique
+  key       String    @unique
   scopes    String[]
-  expiresAt DateTime
-  createdAt DateTime @default(now())
-  revoked   Boolean  @default(false)
+  expiresAt DateTime?
+  createdAt DateTime  @default(now())
+  revoked   Boolean   @default(false)
 
   @@index([key, userId, createdAt])
+  @@map("api_keys")
 }
 
 model DataRegistry {
@@ -143,123 +149,181 @@ model DataRegistry {
   createdAt DateTime @default(now())
 
   @@index([createdAt])
+  @@map("data_registries")
+}
+
+// Bling Integration Models
+
+enum BlingAlertType {
+  RUPTURE
+  DEAD_STOCK
+  OPPORTUNITY
+}
+
+enum BlingRuptureRisk {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum BlingJobSyncType {
+  SALES
+  FULL
+}
+
+enum BlingJobStatus {
+  RUNNING
+  FAILED
+  DONE
 }
 
 model BlingIntegration {
-  id     String @id @default(uuid())
-  userId String @unique
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  // Tokens OAuth
+  id           String   @id @default(uuid())
+  userId       String   @unique
   accessToken  String   @db.Text
   refreshToken String   @db.Text
   expiresAt    DateTime
   tokenType    String
   scope        String
 
-  // Metadados
   connectedAt DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
+  user     User           @relation(fields: [userId], references: [id], onDelete: Cascade)
   products BlingProduct[]
-  alerts   ProductAlert[]
 
   @@map("bling_integrations")
 }
 
-model ProductAlert {
-  id            String           @id @default(uuid())
-  type          AlertType
-  productName   String
-  sku           String
-  imageUrl      String?
-  category      String
-  integrationId String
-  integration   BlingIntegration @relation(fields: [integrationId], references: [id], onDelete: Cascade)
-
-  // Risco de Ruptura
-  daysRemaining     Int?
-  stockAmount       Int?
-  vvd               Float?
-  replenishmentTime Int?
-  safetyDays        Int?
-
-  // Dinheiro Parado
-  capitalTied       Float?
-  daysSinceLastSale Int?
-  lastSaleDate      DateTime?
-  costPrice         Float?
-  sellingPrice      Float?
-  recommendedPrice  Float?
-  recoveryPercent   Float?
-
-  // Oportunidade
-  salesGrowth      Float?
-  vvdLast7Days     Float?
-  vvdPrevious7Days Float?
-
-  blingProductId String?
-  blingProduct   BlingProduct? @relation(fields: [blingProductId], references: [id])
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([sku, type])
-}
-
 model BlingProduct {
-  id           String    @id @default(uuid())
-  blingId      String    @unique
-  sku          String    @unique
-  name         String
-  category     String?
-  price        Float?
-  costPrice    Float?
-  imageUrl     String?
-  stockAmount  Int? // novo campo
-  lastSaleDate DateTime?
-  lastSynced   DateTime  @default(now())
-
-  integrationId String
-  integration   BlingIntegration @relation(fields: [integrationId], references: [id], onDelete: Cascade)
-
-  alerts ProductAlert[]
-}
-
-model BlingOrder {
-  id          String   @id @default(uuid())
-  blingId     String   @unique
-  orderNumber String
-  date        DateTime
-  total       Float
-  items       Json // Array de itens serializado
-}
-
-model UserSettings {
-  id     String @id @default(uuid())
-  userId String @unique
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  // 💰 Financial
-  capitalCost Float @default(3.0)
-  storageCost Float @default(0.5)
-
-  // ⚙️ Operational
-  defaultRestockTime Int @default(7)
-  safetyDays         Int @default(3)
-
-  // 🎯 Goals
-  recoveryTarget    Float @default(80.0)
-  maxRecoveryPeriod Int   @default(30)
+  id               String    @id @default(uuid())
+  blingProductId   String    @unique
+  categoryId       String?
+  name             String
+  sku              String
+  costPrice        Float     @default(0)
+  salePrice        Float     @default(0)
+  avgMonthlySales  Float?    @default(0)
+  stock            Int       @default(0)
+  image            String?   @db.Text
+  shortDescription String?   @db.Text
+  lastSaleDate     DateTime?
+  integrationId    String
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@map("user_settings")
+  integration   BlingIntegration      @relation(fields: [integrationId], references: [id], onDelete: Cascade)
+  category      BlingCategory?        @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  salesHistory  BlingSalesHistory[]
+  stockBalances BlingStockBalance[]
+  alerts        BlingAlert[]
+  settings      BlingProductSettings?
+
+  @@map("bling_products")
 }
 
-enum AlertType {
-  rupture
-  dead_stock
-  opportunity
+model BlingCategory {
+  id              String  @id @default(uuid())
+  name            String
+  blingCategoryId String  @unique
+  blingParentId   String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  products BlingProduct[]
+
+  @@map("bling_categories")
 }
+
+model BlingSalesHistory {
+  id          String   @id @default(uuid())
+  blingSaleId String
+  date        DateTime
+  productId   String
+  productSku  String
+  quantity    Int      @default(0)
+  totalValue  Float    @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  product BlingProduct @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([blingSaleId, productId])
+  @@index([productId])
+  @@map("bling_sales_history")
+}
+
+model BlingStockBalance {
+  id         String @id @default(uuid())
+  productId  String
+  productSku String
+  stock      Int    @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  product BlingProduct @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId, productSku])
+  @@map("bling_stock_balance")
+}
+
+model BlingAlert {
+  id              String            @id @default(uuid())
+  productId       String
+  type            BlingAlertType
+  risk            BlingRuptureRisk?
+  recommendations Json // array de recomendações ou estrutura completa
+  generatedAt     DateTime          @default(now())
+  acknowledged    Boolean           @default(false)
+  executedAt      DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  product BlingProduct @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId, type, generatedAt])
+  @@map("bling_alerts")
+}
+
+model BlingProductSettings {
+  id                           String @id @default(uuid())
+  productId                    String @unique
+  leadTimeDays                 Int    @default(15)
+  safetyDays                   Int    @default(5)
+  recoveryTarget               Float  @default(0.8)
+  opportunityGrowthThreshold   Float  @default(0.3)
+  liquidationIdleThresholdDays Int    @default(90)
+  liquidationMaxDays           Int    @default(30)
+  minSalesForOpportunity       Int    @default(3)
+  newProductMinDays            Int    @default(30)
+  minHistoryDaysForDecision    Int    @default(7)
+
+  product BlingProduct @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@map("bling_product_settings")
+}
+
+model BlingSyncJob {
+  id                String   @id @default(uuid())
+  integrationId     String
+  userId            String
+  type              BlingJobSyncType
+  totalBatches      Int
+  processedBatches  Int    @default(0)
+  status            BlingJobStatus @default(RUNNING)
+  startedAt         DateTime @default(now())
+  finishedAt        DateTime?
+  metadata          Json?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([integrationId, status, createdAt])
+  @@map("bling_sync_jobs")
+}
+

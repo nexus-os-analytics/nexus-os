@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import { IntegrationService } from '@/lib/bling/integration-service';
+import { BlingIntegration } from '@/lib/bling/bling-integration';
 import { authOptions } from '@/lib/next-auth';
 
 export async function POST() {
@@ -11,7 +11,7 @@ export async function POST() {
       return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
     }
 
-    await IntegrationService.disconnectBling(session.user.id);
+    await BlingIntegration.disconnectBling(session.user.id);
 
     return NextResponse.json({
       success: true,

@@ -1,5 +1,12 @@
-import axios, { type AxiosInstance } from 'axios';
+import axios, { type AxiosInstance, type AxiosRequestHeaders } from 'axios';
 import { rateLimited } from '../utils/rate-limiter';
+import {
+  adaptCategoryResponse,
+  adaptProductsResponse,
+  adaptSalesHistoryResponse,
+  adaptStockBalanceResponse,
+} from './bling-adapters';
+import type { Category, Product, SalesHistory, StockBalance } from './bling-types';
 
 export interface BlingClientOptions {
   accessToken: string;
@@ -15,102 +22,93 @@ export function createBlingClient({ accessToken }: BlingClientOptions) {
   });
 
   instance.interceptors.request.use((config) => {
-    config.headers = config.headers ?? {};
+    config.headers = config.headers ?? ({} as AxiosRequestHeaders);
     config.headers.Authorization = `Bearer ${accessToken}`;
     return config;
   });
 
   /**
    * Fetch products from Bling API
+   * @param page - Page number for pagination
    * @returns A list of products from Bling API
    */
-  async function fetchProducts(): Promise<any[]> {
+  async function getProducts(page: number = 1): Promise<Product[]> {
     return rateLimited(async () => {
-      const res = await instance.get('/produtos');
+      const res = await instance.get(
+        `/produtos?pagina=${page}&limite=100&criterio=2&tipo=P&filtroSaldoEstoque=1`
+      );
       const { data } = res.data;
-      return data?.map((p: any) => p.produto ?? p) ?? [];
+      return adaptProductsResponse(data);
     });
   }
 
   /**
-   * Fetch product stock by product code
-   * @param code
-   * @returns Stock information for the specified product code
+   * Fetch categories from Bling API
+   * @param page - Page number for pagination
+   * @returns A list of categories from Bling API
    */
-  async function fetchProductDetail(productId: string): Promise<any | null> {
+  async function getCategories(page: number = 1): Promise<Category[]> {
     return rateLimited(async () => {
-      try {
-        const res = await instance.get(`/produtos/${encodeURIComponent(productId)}`);
-        const { data } = res.data;
-        return data || null;
-      } catch {
-        return null;
-      }
+      const res = await instance.get(`/categorias/produtos?pagina=${page}&limite=100`);
+      const { data } = res.data;
+      return adaptCategoryResponse(data);
     });
   }
 
   /**
-   * Fetch orders from Bling API
-   * @param dateStart
-   * @param dateEnd
-   * @returns A list of orders from Bling API
+   * Fetch sales from Bling API
+   * @param dateStart - Start date for the sales query
+   * @param dateEnd - End date for the sales query
+   * @returns A list of sales from Bling API
    */
-  async function fetchOrders(dateStart: string, dateEnd: string): Promise<any[]> {
+  async function getSalesInRange(
+    dateStart: string,
+    dateEnd: string
+  ): Promise<Array<{ id: number }>> {
     return rateLimited(async () => {
       const res = await instance.get('/pedidos/vendas', {
         params: { dataInicial: dateStart, dataFinal: dateEnd },
       });
       const { data } = res.data;
-      return data?.map((p: any) => p.pedido ?? p) ?? [];
+      return data?.map((p: any) => ({ id: p.id })) ?? [];
     });
   }
 
   /**
-   * Fetch current stock balances for products by Bling product IDs and SKUs
-   * @param productIds - Array of Bling product IDs
-   * @param skus - Array of SKUs
-   * @returns Object keyed by SKU, each value is the stock info object
+   * Fetch sales history for a specific sale
+   * @param saleId - Sale ID to fetch history for
+   * @returns An array of SalesHistory objects or null if not found
    */
-  async function fetchStockHistory(productIds: string[]): Promise<
-    Record<
-      string,
-      {
-        saldoFisicoTotal: number;
-        saldoVirtualTotal: number;
-        depositos: Array<{ id: number; saldoFisico: number; saldoVirtual: number }>;
-        produto: { id: number; codigo: string };
-      }
-    >
-  > {
-    const idsQuery = productIds.map((id) => `idsProdutos[]=${encodeURIComponent(id)}`).join('&');
-    const queryString = `${idsQuery}&filtroSaldoEstoque=1`;
-
+  async function getSalesHistory(saleId: string): Promise<SalesHistory[] | null> {
     return rateLimited(async () => {
+      const res = await instance.get(`/pedidos/vendas/${encodeURIComponent(saleId)}`);
+      const { data } = res.data;
+
+      return adaptSalesHistoryResponse(data);
+    });
+  }
+
+  /**
+   * Fetch stock balance for a list of products
+   * @param productIds - Array of product IDs to fetch stock balance for
+   * @returns An array of StockBalance objects
+   */
+  async function getStockBalance(productIds: number[]): Promise<StockBalance[]> {
+    return rateLimited(async () => {
+      const idsQuery = productIds.map((id) => `idsProdutos[]=${encodeURIComponent(id)}`).join('&');
+      const queryString = `${idsQuery}&filtroSaldoEstoque=1`;
       const res = await instance.get(`/estoques/saldos?${queryString}`);
       const { data } = res.data;
-      const history: Record<
-        string,
-        {
-          saldoFisicoTotal: number;
-          saldoVirtualTotal: number;
-          depositos: Array<{ id: number; saldoFisico: number; saldoVirtual: number }>;
-          produto: { id: number; codigo: string };
-        }
-      > = {};
-      for (const item of data ?? []) {
-        const sku = item.produto?.codigo;
-        if (sku) {
-          history[sku] = item;
-        }
-      }
-      return history;
+
+      return adaptStockBalanceResponse(data);
     });
   }
 
   return {
-    fetchProducts,
-    fetchProductDetail,
-    fetchOrders,
-    fetchStockHistory,
+    getProducts,
+    getCategories,
+    getSalesInRange,
+    getSalesHistory,
+    getStockBalance,
   };
 }

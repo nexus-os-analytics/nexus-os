@@ -17,7 +17,7 @@ export async function middleware(request: NextRequest) {
   }
 
   if (token) {
-    const { role, required2FA, onboardingCompleted } = token;
+    const { role, required2FA } = token;
 
     if (isPrivateRoute(pathname) && required2FA) {
       return NextResponse.redirect(new URL(AUTH_ROUTES['sign-in'].path, request.url));
@@ -31,9 +31,9 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(new URL('/not-allowed', request.url));
     }
 
-    if (role === 'USER' && !onboardingCompleted && pathname !== '/onboarding') {
-      return NextResponse.redirect(new URL('/onboarding', request.url));
-    }
+    // if (role === 'USER' && !onboardingCompleted) {
+    //   return NextResponse.redirect(new URL('/onboarding', request.url));
+    // }
   }
 
   if (!token && isPrivateRoute(pathname)) {
