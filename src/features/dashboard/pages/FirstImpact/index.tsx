@@ -5,7 +5,6 @@ import {
   Card,
   Container,
   Group,
-  List,
   Paper,
   SimpleGrid,
   Stack,
@@ -131,32 +130,26 @@ export function FirstImpact() {
               <Title order={3} mb="lg">
                 Top 3 Ações Recomendadas
               </Title>
-              <List
-                spacing="md"
-                size="md"
-                center
-                icon={
-                  <ThemeIcon color="brand" size={24} radius="xl">
-                    <ArrowRight size={16} />
-                  </ThemeIcon>
-                }
-              >
+              <SimpleGrid cols={{ base: 1, sm: 3 }} mb="md" spacing="lg">
                 {data.topActions.map((action) => (
-                  <List.Item key={action.productName}>
-                    <Paper p="md" radius="md">
-                      <Text mb="xs">
-                        <strong>{action.productName}</strong>
-                      </Text>
-                      <Text size="sm" mb={4}>
+                  <Card key={action.productName} padding="xl" radius="md" withBorder shadow="md">
+                    <Text size="sm" fw={700} mb="md">
+                      <Group gap="xs">
+                        <ThemeIcon size={20} radius="md" color="brand" variant="light">
+                          <ArrowRight size={12} />
+                        </ThemeIcon>
+                        {action.productName}
+                      </Group>
+                    </Text>
+                    <Stack gap={0}>
+                      <Text size="sm" c="dimmed">
                         {action.action}
                       </Text>
-                      <Text size="sm" c="brand">
-                        💡 {action.impact}
-                      </Text>
-                    </Paper>
-                  </List.Item>
+                      <Text fw={500}>{action.impact}</Text>
+                    </Stack>
+                  </Card>
                 ))}
-              </List>
+              </SimpleGrid>
             </Card>
           )}
 

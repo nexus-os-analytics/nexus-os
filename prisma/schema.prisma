@@ -44,9 +44,17 @@ model User {
   apiKeys             ApiKey[]
   securityIncidents   SecurityIncident[]
   blingIntegration    BlingIntegration?
+  blingSyncStatus     BlingSyncStatus    @default(IDLE)
 
   @@index([email, createdAt, deletedAt])
   @@map("users")
+}
+
+enum BlingSyncStatus {
+  IDLE
+  SYNCING
+  COMPLETED
+  FAILED
 }
 
 model Account {
@@ -273,17 +281,21 @@ model BlingStockBalance {
 }
 
 model BlingAlert {
-  id              String            @id @default(uuid())
-  productId       String
-  type            BlingAlertType
-  risk            BlingRuptureRisk?
-  recommendations Json // array de recomendações ou estrutura completa
-  generatedAt     DateTime          @default(now())
-  acknowledged    Boolean           @default(false)
-  executedAt      DateTime?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id               String    @id @default(uuid())
+  productId        String    @unique
+  type             BlingAlertType
+  risk             BlingRuptureRisk?            // técnico (CRITICAL/HIGH/MEDIUM/LOW)
+  riskLabel        String?                      // label legível (ex: "alto","médio","baixo","crítico")
+  recommendations  String?                     // array de strings (texto já em pt) — "to persist"
+  finalRecommendation Json?                      // objeto JSON com action, justification, estimatedFinancialImpact, executionTime, risk
+  metrics          Json?                        // métricas calculadas (idleDays, stockCoverageDays, stockTurnover, trend, capitalStuck...)
+  pricing          Json?                        // saída do motor de pricing (cenários, preço sugerido, viabilidade)
+  acknowledged     Boolean     @default(false)
+  executedAt       DateTime?                      // se uma ação automatizada foi executada
+  generatedAt      DateTime    @default(now())    // momento em que a regra gerou/atualizou o alerta
+  jobId            String?                        // id do job / trace
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
 
   product BlingProduct @relation(fields: [productId], references: [id], onDelete: Cascade)
 

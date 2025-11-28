@@ -1,19 +1,20 @@
 // src/handlers/generate-alerts.ts
+
+import { BlingSyncStatus } from '@prisma/client';
 import pino from 'pino';
 import { evaluateAllProducts } from '@/lib/bling';
 import type {
   Product as EngineProduct,
   SalesHistory as EngineSale,
   StockBalance as EngineStock,
-} from '@/lib/bling/bling-types'; // ajuste o path se necessário
+  ProductEvaluation,
+} from '@/lib/bling/bling-types';
 import prisma from '@/lib/prisma';
 import { inngest } from '../../client';
 
 const logger = pino();
 
-/**
- * Map engine risk ('low'|'medium'|'high') to Prisma BlingRuptureRisk enum values
- */
+/** Helper maps */
 function mapToRiskEnum(risk?: 'low' | 'medium' | 'high') {
   if (!risk) return 'LOW';
   if (risk === 'high') return 'CRITICAL';
@@ -21,38 +22,44 @@ function mapToRiskEnum(risk?: 'low' | 'medium' | 'high') {
   return 'LOW';
 }
 
-/**
- * Map evaluation to BlingAlertType heuristic
- */
-function mapToAlertType(ev: {
-  recommendation?: { action?: string };
-  recommendationsStrings?: string[];
-}) {
+function mapToRiskLabel(risk?: 'low' | 'medium' | 'high') {
+  if (!risk) return 'baixo';
+  if (risk === 'high') return 'crítico';
+  if (risk === 'medium') return 'médio';
+  return 'baixo';
+}
+
+/** tipo do alerta legível */
+function mapToAlertType(ev: Partial<ProductEvaluation>) {
   const action = (ev.recommendation?.action ?? '').toLowerCase();
   const recs = (ev.recommendationsStrings ?? []).join(' ').toLowerCase();
 
-  if (action.includes('reorder') || recs.includes('reorder') || action.includes('rupture'))
+  if (
+    action.includes('reorder') ||
+    recs.includes('reorder') ||
+    action.includes('rupture') ||
+    recs.includes('repor')
+  )
     return 'RUPTURE';
   if (
     action.includes('liquidate') ||
     recs.includes('liquidate') ||
+    recs.includes('liquidar') ||
     recs.includes('money stuck') ||
+    recs.includes('capital parado') ||
     recs.includes('encalhado')
   )
     return 'DEAD_STOCK';
   return 'OPPORTUNITY';
 }
 
-/**
- * Build salesBySku: Record<string, EngineSale[]>
- * Map DB rows to engine SalesHistory shape and group by SKU
- */
+/** Build salesBySku map expected by engine */
 function buildSalesBySkuMap(
   salesRows: Array<{
     id: string;
     blingSaleId: string | null;
     date: Date;
-    productId: string | null; // DB internal product id (UUID)
+    productId: string | null;
     productSku: string | null;
     quantity: number;
     totalValue: number;
@@ -60,11 +67,9 @@ function buildSalesBySkuMap(
   skuToBlingId: Record<string, number>
 ): Record<string, EngineSale[]> {
   const bySku: Record<string, EngineSale[]> = {};
-
   for (const s of salesRows) {
     const sku = s.productSku ?? 'unknown';
     const blingProductId = skuToBlingId[sku] ?? 0;
-
     const engineSale: EngineSale = {
       id: Number(s.blingSaleId) || 0,
       date: s.date.toISOString(),
@@ -73,27 +78,18 @@ function buildSalesBySkuMap(
       quantity: s.quantity,
       totalValue: s.totalValue,
     };
-
     if (!bySku[sku]) bySku[sku] = [];
     bySku[sku].push(engineSale);
   }
-
-  // ensure chronological order (important for VVD and trend)
   for (const k of Object.keys(bySku)) {
     bySku[k].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
   }
-
   return bySku;
 }
 
-/**
- * Map Prisma BlingProduct -> engine Product
- * product.id MUST be the numeric blingProductId (external id) because price-engine uses it
- * to lookup product settings (getProductSettings expects blingId as number)
- */
+/** Map DB product -> engine product (product.id MUST be numeric bling id) */
 function mapToEngineProductRow(p: any): EngineProduct {
   const blingIdNum = Number(p.blingProductId) || 0;
-
   return {
     id: blingIdNum,
     name: p.name,
@@ -105,14 +101,11 @@ function mapToEngineProductRow(p: any): EngineProduct {
     shortDescription: p.shortDescription ?? null,
     avgMonthlySales: p.avgMonthlySales ?? 0,
     lastSaleDate: p.lastSaleDate ? p.lastSaleDate.toISOString() : null,
-    categoryId: null, // category external id not available as number; keep null
+    categoryId: null,
   };
 }
 
-/**
- * Map DB stock balances (prisma) to engine StockBalance[]
- * Engine expects productId = numeric bling id
- */
+/** Map DB stock balances -> engine stock balances (engine expects numeric bling id in productId) */
 function mapStockBalancesToEngine(
   stockRows: Array<{ productId: string; productSku: string; stock: number }>,
   dbIdToBlingId: Record<string, number>
@@ -127,6 +120,20 @@ function mapStockBalancesToEngine(
   });
 }
 
+/** sanitize metrics to avoid Infinity / NaN in JSON fields */
+function sanitizeMetrics(maybe: any) {
+  const out: Record<string, any> = {};
+  if (!maybe || typeof maybe !== 'object') return maybe;
+  for (const [k, v] of Object.entries(maybe)) {
+    if (typeof v === 'number') {
+      out[k] = Number.isFinite(v) ? v : null;
+    } else {
+      out[k] = v;
+    }
+  }
+  return out;
+}
+
 export const generateAlerts = inngest.createFunction(
   { id: 'bling/generate-alerts' },
   { event: 'bling/generate-alerts' },
@@ -137,36 +144,33 @@ export const generateAlerts = inngest.createFunction(
       jobId?: string;
     };
 
-    logger.info(`[bling/generate-alerts] generate-alerts started for user ${userId}`);
+    logger.info(`[bling/generate-alerts] start for user ${userId} integration ${integrationId}`);
 
     try {
-      // 1) Load relevant DB data
+      // 1) Load DB data
       const products = await prisma.blingProduct.findMany({
         where: { integrationId },
         include: { stockBalances: true },
       });
 
-      if (!products.length) {
-        logger.info(`[bling/generate-alerts] no products found for user ${userId}`);
+      if (!products || products.length === 0) {
+        logger.info(`[bling/generate-alerts] no products for integration ${integrationId}`);
         return;
       }
 
       const productDbIds = products.map((p) => p.id);
-
       const sales = await prisma.blingSalesHistory.findMany({
         where: { productId: { in: productDbIds } },
         orderBy: { date: 'asc' },
       });
-
       const stockBalances = await prisma.blingStockBalance.findMany({
         where: { productId: { in: productDbIds } },
       });
 
-      // 2) Build mappings: sku -> blingId, dbId -> blingId, blingId -> dbId
+      // 2) build maps
       const skuToBlingId: Record<string, number> = {};
       const dbIdToBlingId: Record<string, number> = {};
       const blingIdToDbId: Record<number, string> = {};
-
       for (const p of products) {
         const blingIdNum = Number(p.blingProductId) || 0;
         skuToBlingId[p.sku] = blingIdNum;
@@ -174,7 +178,7 @@ export const generateAlerts = inngest.createFunction(
         if (blingIdNum) blingIdToDbId[blingIdNum] = p.id;
       }
 
-      // 3) Map DB rows -> engine shapes
+      // 3) map to engine shapes
       const engineProducts: EngineProduct[] = products.map(mapToEngineProductRow);
       const salesBySku = buildSalesBySkuMap(
         sales.map((s) => ({
@@ -197,73 +201,82 @@ export const generateAlerts = inngest.createFunction(
         dbIdToBlingId
       );
 
-      // 4) Run rules engine (price-engine)
-      logger.info(
-        `[bling/generate-alerts] products found user ${userId}: ${engineProducts.length}`
-      );
-      const evaluations = await evaluateAllProducts(
+      // 4) run engine (same behavior as PoC)
+      logger.info(`[bling/generate-alerts] running engine for ${engineProducts.length} products`);
+      const evaluations: ProductEvaluation[] = await evaluateAllProducts(
         engineProducts,
         salesBySku,
         engineStockBalances
       );
 
-      // 5) Persist alerts: upsert per product
-      const upsertedAlerts: string[] = [];
-
+      // 5) persist: upsert per productId (we made productId unique in prisma schema)
+      const upserted: string[] = [];
       for (const ev of evaluations) {
         const blingNumericId = ev.productId;
         const internalProductId = blingIdToDbId[blingNumericId];
 
         if (!internalProductId) {
-          logger.warn(
-            `[bling/generate-alerts] could not find internal product ID for bling ID ${blingNumericId}, skipping alert generation`
-          );
+          logger.warn(`[bling/generate-alerts] no internal product for bling id ${blingNumericId}`);
           continue;
         }
 
-        const recs = ev.recommendationsStrings ?? [];
+        const recommendationsStrings = ev.recommendationsStrings ?? [];
         const alertType = mapToAlertType(ev);
-        const risk = mapToRiskEnum(ev.recommendation?.risk);
+        const riskEnumValue = mapToRiskEnum(ev.recommendation?.risk) as any; // Prisma enum
+        const riskLabel = mapToRiskLabel(ev.recommendation?.risk);
 
-        const existingAlert = await prisma.blingAlert.findFirst({
+        // sanitize metrics & finalRecommendation to ensure JSON-serializable numbers
+        const sanitizedMetrics = sanitizeMetrics(ev.metrics ?? {});
+        const finalRecommendation = ev.recommendation ?? null;
+        const pricing = (ev as any).pricingRecommendation ?? null;
+
+        // upsert by productId (requires productId unique in schema)
+        const upsertResult = await prisma.blingAlert.upsert({
           where: { productId: internalProductId },
+          create: {
+            productId: internalProductId,
+            type: alertType as any,
+            risk: riskEnumValue,
+            riskLabel,
+            recommendations: JSON.stringify(recommendationsStrings),
+            finalRecommendation: finalRecommendation ? (finalRecommendation as any) : null,
+            metrics: sanitizedMetrics,
+            pricing: pricing ? pricing : null,
+            generatedAt: new Date(),
+            jobId: jobId ?? null,
+            acknowledged: false,
+          },
+          update: {
+            type: alertType as any,
+            risk: riskEnumValue,
+            riskLabel,
+            recommendations: JSON.stringify(recommendationsStrings),
+            finalRecommendation: finalRecommendation ? (finalRecommendation as any) : null,
+            metrics: sanitizedMetrics,
+            pricing: pricing ? pricing : null,
+            generatedAt: new Date(),
+            jobId: jobId ?? null,
+            acknowledged: false,
+          },
         });
 
-        if (existingAlert) {
-          const updated = await prisma.blingAlert.update({
-            where: { id: existingAlert.id },
-            data: {
-              type: alertType,
-              risk,
-              recommendations: recs,
-              generatedAt: new Date(),
-            },
-          });
-
-          upsertedAlerts.push(updated.id);
-        } else {
-          const created = await prisma.blingAlert.create({
-            data: {
-              productId: internalProductId,
-              type: alertType,
-              risk,
-              recommendations: recs,
-              generatedAt: new Date(),
-            },
-          });
-
-          upsertedAlerts.push(created.id);
-        }
+        upserted.push(upsertResult.id);
       }
 
       logger.info(
-        `[bling/generate-alerts] upserted ${upsertedAlerts.length} alerts for user ${userId}`
+        `[bling/generate-alerts] upserted ${upserted.length} alerts for integration ${integrationId}`
       );
 
-      // emit completion event for UI/analytics
+      // emit completion event
       await step.sendEvent('bling/sync:complete', {
         name: 'bling/sync:complete',
         data: { userId, integrationId, jobId },
+      });
+
+      // 6) Done - update user sync status to COMPLETED
+      await prisma.user.update({
+        where: { id: userId },
+        data: { blingSyncStatus: BlingSyncStatus.COMPLETED },
       });
     } catch (err) {
       logger.error({ err, integrationId, jobId }, 'generate-alerts failed');

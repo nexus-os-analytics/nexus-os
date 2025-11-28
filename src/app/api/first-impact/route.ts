@@ -1,3 +1,4 @@
+import { BlingAlertType } from '@prisma/client';
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/next-auth';
@@ -38,18 +39,20 @@ export async function GET() {
     });
 
     // Rupturas
-    const ruptureCount = alerts.filter((a) => a.type === 'RUPTURE').length;
+    const ruptureCount = alerts.filter((a) => a.type === BlingAlertType.RUPTURE).length;
 
     // Oportunidades
-    const opportunityCount = alerts.filter((a) => a.type === 'OPPORTUNITY').length;
+    const opportunityCount = alerts.filter((a) => a.type === BlingAlertType.OPPORTUNITY).length;
 
     // Capital parado = produtos DEAD_STOCK * custo * estoque
     const capitalTied = alerts
-      .filter((a) => a.type === 'DEAD_STOCK')
+      .filter((a) => a.type === BlingAlertType.DEAD_STOCK)
       .reduce((sum, a) => {
         const p = a.product;
         if (!p) return sum;
-        return sum + (p.stock ?? 0) * (p.costPrice ?? 0);
+        // Usa costPrice, se não houver, usa salePrice, se não houver, 0
+        const unitValue = p.costPrice || p.salePrice || 0;
+        return sum + (p.stock ?? 0) * unitValue;
       }, 0);
 
     // Top Actions (prioridade: risk desc -> novo primeiro)

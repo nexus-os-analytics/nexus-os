@@ -17,10 +17,28 @@ export async function middleware(request: NextRequest) {
   }
 
   if (token) {
-    const { role, required2FA } = token;
+    const { role, required2FA, blingSyncStatus, hasBlingIntegration } = token;
 
     if (isPrivateRoute(pathname) && required2FA) {
       return NextResponse.redirect(new URL(AUTH_ROUTES['sign-in'].path, request.url));
+    }
+
+    // New Logic for Bling Integration and Sync
+    if (isPrivateRoute(pathname)) {
+        // 1. If user has no Bling integration, redirect to /bling (unless already there)
+        if (!hasBlingIntegration && !pathname.startsWith('/bling')) {
+             return NextResponse.redirect(new URL('/bling', request.url));
+        }
+
+        // 2. If sync is in progress, redirect to /syncing (unless already there)
+        if (hasBlingIntegration && blingSyncStatus === 'SYNCING' && !pathname.startsWith('/syncing')) {
+             return NextResponse.redirect(new URL('/syncing', request.url));
+        }
+        
+        // 3. If sync is NOT in progress and user is on /syncing, redirect to /dashboard
+        if (hasBlingIntegration && blingSyncStatus !== 'SYNCING' && pathname.startsWith('/syncing')) {
+             return NextResponse.redirect(new URL('/dashboard', request.url));
+        }
     }
 
     if (isAuthRoute(pathname) && !required2FA) {

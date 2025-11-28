@@ -3,6 +3,8 @@ import { getServerSession } from 'next-auth';
 import { BlingIntegration } from '@/lib/bling/bling-integration';
 import { inngest } from '@/lib/inngest/client';
 import { authOptions } from '@/lib/next-auth';
+import prisma from '@/lib/prisma';
+import { BlingSyncStatus } from '@prisma/client';
 
 export async function GET(request: NextRequest) {
   try {
@@ -55,10 +57,16 @@ export async function GET(request: NextRequest) {
     // Salvar integração no banco
     await BlingIntegration.connectBling(session?.user?.id, tokens);
 
-    // Disparar sincronização inicial
-    inngest.send({ name: 'bling/sync-user', data: { userId: session.user.id } });
+    // Atualizar status do usuário para SYNCING imediatamente
+    await prisma.user.update({
+      where: { id: session.user.id },
+      data: { blingSyncStatus: BlingSyncStatus.SYNCING },
+    });
 
-    return NextResponse.redirect(`${process.env.NEXTAUTH_URL}/bling?success=bling_connected`);
+    // Disparar sincronização inicial
+    await inngest.send({ name: 'bling/sync:user', data: { userId: session.user.id } });
+
+    return NextResponse.redirect(`${process.env.NEXTAUTH_URL}/syncing`);
   } catch (error) {
     console.error('Error in Bling callback:', error);
     return NextResponse.redirect(`${process.env.NEXTAUTH_URL}/bling?error=connection_failed`);
