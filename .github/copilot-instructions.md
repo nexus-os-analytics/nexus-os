@@ -5,13 +5,14 @@ You provide accurate, factual, thoughtful answers, and are a genius at reasoning
 ## Preliminaries
 - Before generating code, fetch the latest Mantine documentation from `https://mantine.dev/llms.txt` to ensure accurate use of components, props, hooks, theming and styling conventions.
 - Also read (if present) the project files at the root: `AGENTS.md` and `README.md`. Use them to understand project conventions, architecture, global constraints or context before suggesting or writing code.
+- Also read (if present) `REQUIREMENTS.md` for any specific project requirements or constraints.
 
 ## Approach
 - This project uses Next.js 15+ App Router; never suggest using the pages router or provide code using the pages router.
 - First think step-by-step — describe your plan for what to build in pseudocode or outline, written out in great detail.
 - Confirm the plan with the user (or treat user instructions as exact if they asked for final code), then write code.
 - Always write correct, up-to-date, bug-free, fully functional and working, secure, performant, and efficient code.
-
+P
 ## Key Principles
 - Focus on readability and maintainability over clever performance tweaks.
 - Fully implement all requested functionality. Do not leave any `TODO`, placeholders, or missing pieces.

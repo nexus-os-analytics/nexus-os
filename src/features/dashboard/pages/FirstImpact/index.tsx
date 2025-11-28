@@ -13,6 +13,7 @@ import {
   Title,
 } from '@mantine/core';
 import { AlertTriangle, ArrowRight, DollarSign, Sparkles, TrendingUp } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import type { FirstImpactData } from '@/types';
 
@@ -20,6 +21,7 @@ export function FirstImpact() {
   const [data, setData] = useState<FirstImpactData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
 
   useEffect(() => {
     async function fetchData() {
@@ -39,9 +41,7 @@ export function FirstImpact() {
     fetchData();
   }, []);
 
-  const onContinue = () => {
-    globalThis.location.href = '/dashboard';
-  };
+  const onContinue = () => router.push('/dashboard');
 
   return (
     <Box style={{ minHeight: '100vh', paddingTop: '4rem', paddingBottom: '4rem' }}>

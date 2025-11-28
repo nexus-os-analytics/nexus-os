@@ -30,8 +30,6 @@ interface ProductAlertCardProps {
   onGenerateCampaign?: () => void;
 }
 
-const FALLBACK_IMAGE = '/mnt/data/3c025a65-1cda-4feb-98e3-2d35945e4ce8.png'; // seu arquivo local (transforme em URL pública em produção)
-
 export function ProductCard({ alert, onGenerateCampaign }: ProductAlertCardProps) {
   const { product, metrics, finalRecommendation, pricingRecommendation } = alert;
 
@@ -102,13 +100,13 @@ export function ProductCard({ alert, onGenerateCampaign }: ProductAlertCardProps
     <Card padding="lg" radius="md" withBorder shadow="sm" style={{ height: '100%' }}>
       <Stack gap="md" style={{ height: '100%' }}>
         {/* header */}
-        <Group align="center">
+        <Stack>
           <Group align="center">
             <ThemeIcon size={44} radius="md" color={s.color} variant="light">
               <Icon size={20} />
             </ThemeIcon>
             <div>
-              <Text fw={700} lineClamp={2}>
+              <Text fw={700} truncate style={{ maxWidth: 250 }}>
                 {product.name}
               </Text>
               <Text size="xs" c="dimmed">
@@ -118,19 +116,20 @@ export function ProductCard({ alert, onGenerateCampaign }: ProductAlertCardProps
           </Group>
 
           <Group justify="space-between" align="center">
-            <Badge color={s.color} variant="light" style={{ marginBottom: 6 }}>
+            <Badge color={s.color} variant="light" size="md">
               {s.badgeLabel}
             </Badge>
             {riskLabelDisplay && (
               <Badge
                 color={RiskColorMap[(alert.risk as string) ?? 'LOW'] || 'gray'}
                 variant="filled"
+                size="md"
               >
                 {String(riskLabelDisplay).toUpperCase()}
               </Badge>
             )}
           </Group>
-        </Group>
+        </Stack>
 
         {/* imagem */}
         <Box>
@@ -364,7 +363,7 @@ export function ProductCard({ alert, onGenerateCampaign }: ProductAlertCardProps
             </Text>
 
             {alert.type === 'DEAD_STOCK' && onGenerateCampaign && (
-              <Button leftSection={<Sparkles size={14} />} onClick={onGenerateCampaign}>
+              <Button leftSection={<Sparkles size={14} />} onClick={onGenerateCampaign} fullWidth>
                 Gerar campanha
               </Button>
             )}
