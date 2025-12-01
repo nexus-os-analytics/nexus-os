@@ -8,8 +8,25 @@ export interface Product {
   image: string | null;
   shortDescription: string | null;
   avgMonthlySales: number;
+  replenishmentTime?: number | null;
+  safetyStock?: number | null;
+  capitalCostRate?: number | null;
+  storageCostRate?: number | null;
+  isActive: boolean;
   lastSaleDate: string | null; // ISO String
   categoryId: number | null;
+}
+
+export interface ProductSettings {
+  leadTimeDays: number | null;
+  safetyDays: number | null;
+  recoveryTarget: number | null;
+  opportunityGrowthThreshold: number | null;
+  liquidationIdleThresholdDays: number | null;
+  liquidationMaxDays: number | null;
+  minSalesForOpportunity: number | null;
+  newProductMinDays: number | null;
+  minHistoryDaysForDecision: number | null;
 }
 
 export interface Category {
@@ -49,6 +66,7 @@ export interface RecommendationResult {
   estimatedFinancialImpact?: string;
   executionTime?: string;
   risk?: 'low' | 'medium' | 'high';
+  financialImpactValue?: number;
 }
 
 export interface AlertMetrics {
@@ -57,4 +75,5 @@ export interface AlertMetrics {
   stockCoverageDays: number;
   trend: number;
   capitalStuck: number;
+  daysRemaining: number;
 }

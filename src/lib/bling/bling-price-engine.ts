@@ -207,6 +207,7 @@ export async function evaluateProduct(
     stockCoverageDays: Number.isFinite(stockCoverageDays) ? Number(stockCoverageDays) : Infinity,
     trend,
     capitalStuck,
+    daysRemaining: 0,
   };
 
   const recommendationsStrings: string[] = [];
