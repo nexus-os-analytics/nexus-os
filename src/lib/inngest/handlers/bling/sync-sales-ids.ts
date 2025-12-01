@@ -1,4 +1,4 @@
-import { BlingJobSyncType } from '@prisma/client';
+import { BlingJobStatus, BlingJobSyncType } from '@prisma/client';
 import pino from 'pino';
 import { BlingIntegration, createBlingClient } from '@/lib/bling';
 import prisma from '@/lib/prisma';
@@ -19,17 +19,31 @@ export const syncSalesIds = inngest.createFunction(
     // Fetch all sale IDs in the date range
     const saleIds = await blingClient.getSalesInRange(dateStart, dateEnd);
     const ids = saleIds.map((s) => ({ id: s.id }));
-
-    // Create SyncJob
     const batchSize = 50; // adjust
     const totalBatches = Math.ceil(ids.length / batchSize);
-    const job = await prisma.blingSyncJob.create({
-      data: {
+
+    // Verify if has a existing sync job in progress
+    const existingJob = await prisma.blingSyncJob.findFirst({
+      where: {
         integrationId,
-        userId,
         type: BlingJobSyncType.SALES,
+        status: BlingJobStatus.RUNNING,
+      },
+    });
+
+    // Create SyncJob
+    const job = await prisma.blingSyncJob.upsert({
+      where: existingJob?.id ? { id: existingJob.id } : { id: 'non-existent-id' },
+      update: {
         totalBatches,
-        metadata: { dateStart, dateEnd },
+        startedAt: new Date(),
+      },
+      create: {
+        userId,
+        integrationId,
+        type: BlingJobSyncType.SALES,
+        status: BlingJobStatus.RUNNING,
+        totalBatches,
       },
     });
 

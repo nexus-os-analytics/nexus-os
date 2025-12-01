@@ -1,8 +1,8 @@
+import { BlingSyncStatus } from '@prisma/client';
 import pino from 'pino';
 import { BlingIntegration } from '@/lib/bling';
-import { inngest } from '../../client';
 import prisma from '@/lib/prisma';
-import { BlingSyncStatus } from '@prisma/client';
+import { inngest } from '../../client';
 
 const logger = pino();
 
@@ -11,7 +11,7 @@ export const syncUser = inngest.createFunction(
   { event: 'bling/sync:user' },
   async ({ event, step }) => {
     const { userId } = event.data;
-    logger.info(`[sync-user] start sync for user ${userId}`);
+    logger.info(`[bling/sync:user] start sync for user ${userId}`);
 
     // fetch integration
     const integration = await BlingIntegration.getBlingIntegration(userId);
@@ -44,14 +44,14 @@ export const syncUser = inngest.createFunction(
     });
 
     if (!completionEvent) {
-       logger.error(`[bling/sync:user] timed out waiting for completion for user ${userId}`);
-       await step.run('update-user-failed', async () => {
-         await prisma.user.update({
-           where: { id: userId },
-           data: { blingSyncStatus: BlingSyncStatus.FAILED },
-         });
-       });
-       return;
+      logger.error(`[bling/sync:user] timed out waiting for completion for user ${userId}`);
+      await step.run('update-user-failed', async () => {
+        await prisma.user.update({
+          where: { id: userId },
+          data: { blingSyncStatus: BlingSyncStatus.FAILED },
+        });
+      });
+      return;
     }
 
     // 4) Update user status to COMPLETED
@@ -61,7 +61,7 @@ export const syncUser = inngest.createFunction(
         data: { blingSyncStatus: BlingSyncStatus.COMPLETED },
       });
     });
-    
+
     logger.info(`[sync-user] finished sync for user ${userId}`);
   }
 );
