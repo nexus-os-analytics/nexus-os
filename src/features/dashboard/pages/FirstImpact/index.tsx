@@ -15,10 +15,10 @@ import {
 import { AlertTriangle, ArrowRight, DollarSign, Sparkles, TrendingUp } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import type { FirstImpactData } from '@/types';
+import type { DashboardFirstImpact } from '../../types';
 
 export function FirstImpact() {
-  const [data, setData] = useState<FirstImpactData | null>(null);
+  const [data, setData] = useState<DashboardFirstImpact | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
@@ -85,7 +85,7 @@ export function FirstImpact() {
                   Capital Parado Detectado
                 </Text>
                 <Title order={2}>
-                  R$ {data.capitalTied.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                  R$ {data.capitalStuck.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                 </Title>
                 <Text size="xs" mt="xs">
                   Produtos sem venda há mais de 30 dias
@@ -145,7 +145,7 @@ export function FirstImpact() {
                       <Text size="sm" c="dimmed">
                         {action.action}
                       </Text>
-                      <Text fw={500}>{action.impact}</Text>
+                      <Text fw={500}>{action.action}</Text>
                     </Stack>
                   </Card>
                 ))}
