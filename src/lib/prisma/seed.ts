@@ -13,6 +13,7 @@ async function main() {
   await prisma.account.deleteMany();
   await prisma.verificationToken.deleteMany();
   await prisma.dataRegistry.deleteMany();
+  await prisma.blingSyncJob.deleteMany();
 
   // Agora pode excluir os usuários
   await prisma.user.deleteMany();

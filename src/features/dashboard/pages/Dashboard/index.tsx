@@ -1,7 +1,9 @@
 'use client';
+
 import {
   Badge,
   Box,
+  Button,
   Card,
   Group,
   SimpleGrid,
@@ -16,33 +18,25 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { BlingConnectBanner } from '@/features/bling/components/BlingConnectBanner';
 import { useBlingIntegration } from '@/hooks/useBlingIntegration';
-import { mockProducts } from '@/mock';
-import type { ProductAlert } from '@/types';
 import { ProductCard } from '../../components/ProductCard';
+import { useAlertsQuery } from '../../hooks/useAlertsQuery';
 
 export function Dashboard() {
   const { status, loading } = useBlingIntegration();
   const [filter, setFilter] = useState<string | null>('all');
   const router = useRouter();
 
-  const criticalLimitDays = 30;
+  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } =
+    useAlertsQuery(filter);
 
-  const filteredProducts =
-    filter === 'critical'
-      ? mockProducts.filter(
-          (p) =>
-            p.type === 'rupture' ||
-            (p.type === 'dead-stock' && (p.daysSinceLastSale || 0) > criticalLimitDays)
-        )
-      : mockProducts;
+  // Flatten pages
+  const alerts = data?.pages.flatMap((p) => p.data) ?? [];
 
-  const criticalCount = mockProducts.filter(
-    (p) =>
-      p.type === 'rupture' ||
-      (p.type === 'dead-stock' && (p.daysSinceLastSale || 0) > criticalLimitDays)
+  const criticalCount = alerts.filter(
+    (a) => a.alert.type === 'RUPTURE' || (a.alert.type === 'DEAD_STOCK' && (a.alert.metrics?.idleDays ?? 0) > 30)
   ).length;
 
-  const handleOpenCampaign = (product: ProductAlert) => {
+  const handleOpenCampaign = (product: any) => {
     router.push(`/campaign/${product.id}/generate`);
   };
 
@@ -71,7 +65,7 @@ export function Dashboard() {
             <Box>
               <Text size="sm">Total de Produtos</Text>
               <Title order={2} mt="xs">
-                {mockProducts.length}
+                {alerts.length}
               </Title>
             </Box>
             <ThemeIcon size={48} radius="md" color="brand" variant="light">
@@ -85,7 +79,7 @@ export function Dashboard() {
             <Box>
               <Text size="sm">Oportunidades</Text>
               <Title order={2} mt="xs">
-                {mockProducts.filter((p) => p.type === 'opportunity').length}
+                {alerts.filter((a) => a.alert.type === 'OPPORTUNITY').length}
               </Title>
             </Box>
             <ThemeIcon size={48} radius="md" color="teal" variant="light">
@@ -125,16 +119,29 @@ export function Dashboard() {
 
       {/* Product Cards Grid */}
       <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="lg">
-        {filteredProducts.map((product) => (
+        {alerts.map((alert) => (
           <ProductCard
-            key={product.id}
-            product={product}
-            onGenerateCampaign={() => handleOpenCampaign(product)}
+            key={alert.alert.id}
+            alert={alert}
+            onGenerateCampaign={() => handleOpenCampaign(alert)}
           />
         ))}
       </SimpleGrid>
 
-      {filteredProducts.length === 0 && (
+      {/* Infinite load button */}
+      {hasNextPage && (
+        <Button
+          variant="light"
+          onClick={() => fetchNextPage()}
+          loading={isFetchingNextPage}
+          mx="auto"
+          mt="lg"
+        >
+          Carregar mais
+        </Button>
+      )}
+
+      {alerts.length === 0 && !isLoading && (
         <Box style={{ textAlign: 'center', padding: '3rem 0' }}>
           <ThemeIcon size={48} radius="xl" variant="light" color="gray" mx="auto" mb="md">
             <Package size={24} />

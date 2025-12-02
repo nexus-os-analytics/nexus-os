@@ -4,7 +4,7 @@
   "editor.formatOnSave": true,
   "editor.codeActionsOnSave": {
     "source.organizeImports.biome": "explicit",
-    "source.fixAll.biome": "explicit"    
+    "source.fixAll.biome": "explicit"
   },
   "biome.lsp.bin": "npx --no -- biome",
   "eslint.enable": false,
@@ -49,6 +49,18 @@
     "editor.defaultFormatter": "stylelint.vscode-stylelint"
   },
   "cSpell.language": "en,pt,pt-BR",
+  "prisma-smart-formatter.typescript.defaultFormatter": "biomejs.biome",
+  "prisma-smart-formatter.typescriptreact.defaultFormatter": "biomejs.biome",
+  "prisma-smart-formatter.prisma.defaultFormatter": "Prisma.prisma",
+  "github.copilot.chat.codeGeneration.useInstructionFiles": true,
+  "github.copilot.enable": {
+    "*": true,
+    "markdown": true,
+    "plaintext": false
+  },
+  "github.copilot.advanced": {
+    "includeCopilotInstructions": true
+  }
 }
 
 

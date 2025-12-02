@@ -10,10 +10,16 @@ export interface BlingIntegrationStatus {
   };
 }
 
+export type BlingConnectionState = 'disconnected' | 'connected' | 'invalid-credentials';
+
 export function useBlingIntegration() {
   const { data: session } = useSession();
+
   const [status, setStatus] = useState<BlingIntegrationStatus | null>(null);
+  const [connectionState, setConnectionState] = useState<BlingConnectionState>('disconnected');
   const [loading, setLoading] = useState(true);
+
+  // ...
 
   useEffect(() => {
     if (session?.user?.id) {
@@ -26,7 +32,16 @@ export function useBlingIntegration() {
       const response = await fetch('/api/integrations/bling/status');
       const data = await response.json();
       setStatus(data);
+
+      if (!data.connected) {
+        setConnectionState('disconnected');
+      } else if (data.connected && !data.valid) {
+        setConnectionState('invalid-credentials');
+      } else if (data.connected && data.valid) {
+        setConnectionState('connected');
+      }
     } catch (error) {
+      setConnectionState('disconnected');
       console.error('Error checking Bling status:', error);
     } finally {
       setLoading(false);
@@ -48,6 +63,7 @@ export function useBlingIntegration() {
 
   return {
     status,
+    connectionState,
     loading,
     connect,
     disconnect,

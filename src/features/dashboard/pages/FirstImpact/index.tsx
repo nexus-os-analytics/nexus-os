@@ -5,7 +5,6 @@ import {
   Card,
   Container,
   Group,
-  List,
   Paper,
   SimpleGrid,
   Stack,
@@ -14,13 +13,15 @@ import {
   Title,
 } from '@mantine/core';
 import { AlertTriangle, ArrowRight, DollarSign, Sparkles, TrendingUp } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import type { FirstImpactData } from '@/types';
+import type { DashboardFirstImpact } from '../../types';
 
 export function FirstImpact() {
-  const [data, setData] = useState<FirstImpactData | null>(null);
+  const [data, setData] = useState<DashboardFirstImpact | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
 
   useEffect(() => {
     async function fetchData() {
@@ -40,9 +41,7 @@ export function FirstImpact() {
     fetchData();
   }, []);
 
-  const onContinue = () => {
-    globalThis.location.href = '/dashboard';
-  };
+  const onContinue = () => router.push('/dashboard');
 
   return (
     <Box style={{ minHeight: '100vh', paddingTop: '4rem', paddingBottom: '4rem' }}>
@@ -86,7 +85,7 @@ export function FirstImpact() {
                   Capital Parado Detectado
                 </Text>
                 <Title order={2}>
-                  R$ {data.capitalTied.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                  R$ {data.capitalStuck.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                 </Title>
                 <Text size="xs" mt="xs">
                   Produtos sem venda há mais de 30 dias
@@ -131,32 +130,26 @@ export function FirstImpact() {
               <Title order={3} mb="lg">
                 Top 3 Ações Recomendadas
               </Title>
-              <List
-                spacing="md"
-                size="md"
-                center
-                icon={
-                  <ThemeIcon color="brand" size={24} radius="xl">
-                    <ArrowRight size={16} />
-                  </ThemeIcon>
-                }
-              >
+              <SimpleGrid cols={{ base: 1, sm: 3 }} mb="md" spacing="lg">
                 {data.topActions.map((action) => (
-                  <List.Item key={action.productName}>
-                    <Paper p="md" radius="md">
-                      <Text mb="xs">
-                        <strong>{action.productName}</strong>
-                      </Text>
-                      <Text size="sm" mb={4}>
+                  <Card key={action.productName} padding="xl" radius="md" withBorder shadow="md">
+                    <Text size="sm" fw={700} mb="md">
+                      <Group gap="xs">
+                        <ThemeIcon size={20} radius="md" color="brand" variant="light">
+                          <ArrowRight size={12} />
+                        </ThemeIcon>
+                        {action.productName}
+                      </Group>
+                    </Text>
+                    <Stack gap={0}>
+                      <Text size="sm" c="dimmed">
                         {action.action}
                       </Text>
-                      <Text size="sm" c="brand">
-                        💡 {action.impact}
-                      </Text>
-                    </Paper>
-                  </List.Item>
+                      <Text fw={500}>{action.action}</Text>
+                    </Stack>
+                  </Card>
                 ))}
-              </List>
+              </SimpleGrid>
             </Card>
           )}
 
