@@ -33,7 +33,7 @@ export function Dashboard() {
   const alerts = data?.pages.flatMap((p) => p.data) ?? [];
 
   const criticalCount = alerts.filter(
-    (a) => a.type === 'RUPTURE' || (a.type === 'DEAD_STOCK' && (a.metrics?.idleDays ?? 0) > 30)
+    (a) => a.alert.type === 'RUPTURE' || (a.alert.type === 'DEAD_STOCK' && (a.alert.metrics?.idleDays ?? 0) > 30)
   ).length;
 
   const handleOpenCampaign = (product: any) => {
@@ -79,7 +79,7 @@ export function Dashboard() {
             <Box>
               <Text size="sm">Oportunidades</Text>
               <Title order={2} mt="xs">
-                {alerts.filter((a) => a.type === 'OPPORTUNITY').length}
+                {alerts.filter((a) => a.alert.type === 'OPPORTUNITY').length}
               </Title>
             </Box>
             <ThemeIcon size={48} radius="md" color="teal" variant="light">
@@ -121,7 +121,7 @@ export function Dashboard() {
       <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="lg">
         {alerts.map((alert) => (
           <ProductCard
-            key={alert.id}
+            key={alert.alert.id}
             alert={alert}
             onGenerateCampaign={() => handleOpenCampaign(alert)}
           />

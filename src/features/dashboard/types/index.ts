@@ -20,6 +20,15 @@ export interface DashboardFirstImpact {
   }>;
 }
 
+export interface DashboardAlertsResponse {
+  data: DashboardProductAlert[];
+  pagination: {
+    nextCursor: string | null;
+    hasNextPage: boolean;
+    totalCount?: number; // Opcional: pode ser caro de calcular
+  };
+}
+
 interface Product {
   id: string;
   blingProductId: string;

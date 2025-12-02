@@ -1,4 +1,8 @@
 'use client';
+// Função utilitária para moeda
+function formatCurrency(value?: number | null) {
+  return (value ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+}
 import {
   Badge,
   Box,
@@ -8,7 +12,6 @@ import {
   Group,
   Image,
   Paper,
-  Progress,
   Stack,
   Text,
   ThemeIcon,
@@ -23,15 +26,19 @@ import {
   Sparkles,
   TrendingUp,
 } from 'lucide-react';
-import type { ProductAlert } from '../../types';
+import { DashboardProductAlert } from '../../types';
+
+
 
 interface ProductAlertCardProps {
-  alert: ProductAlert;
+  alert: DashboardProductAlert;
   onGenerateCampaign?: () => void;
 }
 
 export function ProductCard({ alert, onGenerateCampaign }: ProductAlertCardProps) {
-  const { product, metrics, finalRecommendation, pricingRecommendation } = alert;
+  const { product, alert: alertData } = alert;
+  const { type, risk, riskLabel, metrics, recommendations, finalRecommendation, generatedAt } = alertData;
+// Função utilitária para moeda fora do componente
 
   // cores por risco técnico
   const RiskColorMap: Record<string, string> = {
@@ -51,7 +58,7 @@ export function ProductCard({ alert, onGenerateCampaign }: ProductAlertCardProps
       color: 'red' as const,
       icon: AlertTriangle,
       badgeLabel: 'Ruptura',
-      bg: alert.risk === 'CRITICAL' ? 'rgba(250,82,82,0.08)' : 'rgba(253,126,20,0.06)',
+      bg: risk === 'CRITICAL' ? 'rgba(250,82,82,0.08)' : 'rgba(253,126,20,0.06)',
     },
     DEAD_STOCK: {
       color: 'orange' as const,
@@ -67,13 +74,9 @@ export function ProductCard({ alert, onGenerateCampaign }: ProductAlertCardProps
     },
   } as const;
 
-  const s = styleByType[alert.type];
-
+  const s = styleByType[type as keyof typeof styleByType];
   const Icon = s.icon;
 
-  function formatCurrency(value?: number | null) {
-    return (value ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-  }
 
   function formatDate(iso?: string | null) {
     if (!iso) return 'N/A';
@@ -90,11 +93,11 @@ export function ProductCard({ alert, onGenerateCampaign }: ProductAlertCardProps
 
   // badge de risco legível (se tiver)
   const riskLabelDisplay =
-    (alert.riskLabel ? String(alert.riskLabel) : undefined) ||
-    (alert.risk ? String(alert.risk).toLowerCase() : undefined);
+    (riskLabel ? String(riskLabel) : undefined) ||
+    (risk ? String(risk).toLowerCase() : undefined);
 
   // recomendações
-  const recs = alert.recommendationsStrings ?? [];
+  const recs = recommendations ?? [];
 
   return (
     <Card padding="lg" radius="md" withBorder shadow="sm" style={{ height: '100%' }}>
@@ -110,7 +113,7 @@ export function ProductCard({ alert, onGenerateCampaign }: ProductAlertCardProps
                 {product.name}
               </Text>
               <Text size="xs" c="dimmed">
-                SKU: {product.sku ?? '—'} • {product.categoryName ?? 'Sem categoria'}
+                SKU: {product.sku ?? '—'} • {'Sem categoria'}
               </Text>
             </div>
           </Group>
@@ -121,7 +124,7 @@ export function ProductCard({ alert, onGenerateCampaign }: ProductAlertCardProps
             </Badge>
             {riskLabelDisplay && (
               <Badge
-                color={RiskColorMap[(alert.risk as string) ?? 'LOW'] || 'gray'}
+                color={RiskColorMap[(risk as string) ?? 'LOW'] || 'gray'}
                 variant="filled"
                 size="md"
               >
@@ -133,8 +136,8 @@ export function ProductCard({ alert, onGenerateCampaign }: ProductAlertCardProps
 
         {/* imagem */}
         <Box>
-          {product.imageUrl ? (
-            <Image src={product.imageUrl} alt={product.name} height={220} radius="md" fit="cover" />
+          {product.image ? (
+            <Image src={product.image} alt={product.name} height={220} radius="md" fit="cover" />
           ) : (
             <Box
               style={{
@@ -160,31 +163,30 @@ export function ProductCard({ alert, onGenerateCampaign }: ProductAlertCardProps
         {/* conteúdo principal - sempre visível */}
         <Paper p="md" radius="md" style={{ backgroundColor: s.bg }}>
           {/* Rupture block */}
-          {alert.type === 'RUPTURE' && (
+          {type === 'RUPTURE' && (
             <>
-              {alert.recommendationsStrings && alert.recommendationsStrings.length > 0 && (
+              {recs.length > 0 && (
                 <Paper
                   p="xs"
                   radius="sm"
                   mb="md"
                   style={{
                     backgroundColor:
-                      alert.risk === 'CRITICAL' ? 'rgba(250,82,82,0.12)' : 'rgba(253,126,20,0.08)',
-                    borderLeft: `3px solid ${alert.risk === 'CRITICAL' ? '#FA5252' : '#FD7E14'}`,
+                      risk === 'CRITICAL' ? 'rgba(250,82,82,0.12)' : 'rgba(253,126,20,0.08)',
+                    borderLeft: `3px solid ${risk === 'CRITICAL' ? '#FA5252' : '#FD7E14'}`,
                   }}
                 >
                   <Group gap="xs" align="flex-start">
                     <Info size={14} />
                     <Text size="xs" c="dimmed" style={{ flex: 1 }}>
-                      {alert.recommendationsStrings[0]}
+                      {recs[0]}
                     </Text>
                   </Group>
                 </Paper>
               )}
 
               <Text size="sm" mb="6px">
-                Restam <strong>{(metrics.stockCoverageDays ?? 0).toFixed(0)}</strong> dias de
-                estoque
+                Restam <strong>{(metrics.stockCoverageDays ?? 0).toFixed(0)}</strong> dias de estoque
               </Text>
 
               <Group gap="xs" mb="6px">
@@ -194,25 +196,25 @@ export function ProductCard({ alert, onGenerateCampaign }: ProductAlertCardProps
                 </Text>
               </Group>
 
-              <Text size="xs" c="dimmed" mb="6px">
-                VVD (real): {(metrics.vvd ?? metrics.vvd7 ?? 0).toFixed(2)} unid./dia
-              </Text>
+              {/* Se houver campo de venda diária, exiba aqui (ajuste conforme o novo tipo) */}
+              {/* <Text size="xs" c="dimmed" mb="6px">
+                Venda média diária: {metrics.dailySales?.toFixed(2) ?? '—'} unid./dia
+              </Text> */}
 
-              {typeof product.productSettings?.leadTimeDays !== 'undefined' && (
+              {/* Exemplo de lead time e safety stock, se existirem no produto */}
+              {product.replenishmentTime !== undefined && (
                 <Text size="xs" c="dimmed">
-                  Lead time: {product.productSettings?.leadTimeDays} dias • Safety days:{' '}
-                  {product.productSettings?.safetyDays}
+                  Lead time: {product.replenishmentTime} dias • Safety stock: {product.safetyStock}
                 </Text>
               )}
             </>
           )}
 
           {/* Dead stock block */}
-          {alert.type === 'DEAD_STOCK' && (
+          {type === 'DEAD_STOCK' && (
             <>
               <Text size="sm" mb="8px">
-                <strong>{formatCurrency(metrics.capitalStuck ?? product.stock! * cost)}</strong>{' '}
-                parados há <strong>{metrics.idleDays ?? 0} dias</strong>
+                <strong>{formatCurrency(metrics.capitalStuck ?? stock * cost)}</strong> parados há <strong>{metrics.idleDays ?? 0} dias</strong>
               </Text>
 
               <Group gap="xs" mb="6px">
@@ -233,90 +235,22 @@ export function ProductCard({ alert, onGenerateCampaign }: ProductAlertCardProps
                 Custo: {formatCurrency(cost)} • Venda: {formatCurrency(sale)}
               </Text>
 
-              {/* Pricing recommendation if exists */}
-              {pricingRecommendation && pricingRecommendation.feasible !== false && (
-                <>
-                  <Divider my="sm" />
-                  <Text size="sm" mb="6px">
-                    💰 <strong>Recomendação de preço</strong>
-                  </Text>
-
-                  <Text size="lg" mb="6px" style={{ color: '#C7A446' }}>
-                    {pricingRecommendation.optimalPrice ? (
-                      <>
-                        Liquide por{' '}
-                        <strong>{formatCurrency(pricingRecommendation.optimalPrice)}</strong>
-                      </>
-                    ) : (
-                      <>Sugestão disponível</>
-                    )}
-                  </Text>
-
-                  {typeof pricingRecommendation.discountPercent === 'number' && (
-                    <Text size="xs" c="dimmed" mb="6px">
-                      Desconto sugerido: <strong>{pricingRecommendation.discountPercent}%</strong>
-                    </Text>
-                  )}
-
-                  <Group gap="lg" align="center" mb="6px">
-                    <Box>
-                      <Text size="xs" c="dimmed">
-                        Recuperação
-                      </Text>
-                      <Text size="sm" fw={700}>
-                        {pricingRecommendation.capitalRecoveryPercent
-                          ? `${(pricingRecommendation.capitalRecoveryPercent * 100).toFixed(0)}%`
-                          : (pricingRecommendation.capitalRecoveryPercent ?? '—')}
-                      </Text>
-                    </Box>
-
-                    <Box>
-                      <Text size="xs" c="dimmed">
-                        Prazo
-                      </Text>
-                      <Text size="sm" fw={700}>
-                        {pricingRecommendation.recommendedDays ?? '—'} dias
-                      </Text>
-                    </Box>
-
-                    <Box>
-                      <Text size="xs" c="dimmed">
-                        Confiança
-                      </Text>
-                      <Text size="sm" fw={700}>
-                        {pricingRecommendation.probabilityOfSale
-                          ? `${(pricingRecommendation.probabilityOfSale * 100).toFixed(0)}%`
-                          : '—'}
-                      </Text>
-                    </Box>
-                  </Group>
-
-                  {typeof pricingRecommendation.probabilityOfSale === 'number' && (
-                    <Progress
-                      value={(pricingRecommendation.probabilityOfSale ?? 0) * 100}
-                      size="sm"
-                      color="yellow"
-                    />
-                  )}
-
-                  <Text size="xs" c="dimmed" mt="8px">
-                    Receita estimada: {formatCurrency(pricingRecommendation.expectedRevenue ?? 0)}
-                  </Text>
-                </>
-              )}
+              {/* Se houver recomendação de preço, exiba aqui (ajuste conforme o novo tipo) */}
+              {/* Recomendações de preço removidas, ajuste aqui se necessário */}
             </>
           )}
 
           {/* Opportunity block */}
-          {alert.type === 'OPPORTUNITY' && (
+          {type === 'OPPORTUNITY' && (
             <>
               <Text size="sm" mb="6px">
                 Crescimento detectado: <strong>{((metrics.trend ?? 0) * 100).toFixed(0)}%</strong>
               </Text>
-              <Text size="xs" c="dimmed" mb="6px">
-                VVD 7 dias: {metrics.vvd7?.toFixed(2) ?? '—'} • VVD 30 dias:{' '}
-                {metrics.vvd30?.toFixed(2) ?? '—'}
-              </Text>
+
+              {/* Se houver campos de venda diária, exiba aqui (ajuste conforme o novo tipo) */}
+              {/* <Text size="xs" c="dimmed" mb="6px">
+                Venda média diária: {metrics.dailySales?.toFixed(2) ?? '—'}
+              </Text> */}
 
               <Group gap="xs" mb="6px">
                 <PackageIcon size={14} />
@@ -331,8 +265,8 @@ export function ProductCard({ alert, onGenerateCampaign }: ProductAlertCardProps
                     Recomendações:
                   </Text>
                   <ul style={{ marginTop: 6, marginBottom: 0, paddingLeft: 16 }}>
-                    {recs.map((r, i) => (
-                      <li key={i}>
+                    {recs.map((r) => (
+                      <li key={r}>
                         <Text size="xs">{r}</Text>
                       </li>
                     ))}
@@ -359,10 +293,10 @@ export function ProductCard({ alert, onGenerateCampaign }: ProductAlertCardProps
 
           <Group align="center" mt="xs">
             <Text size="xs" c="dimmed">
-              Gerado em: {new Date(alert.generatedAt).toLocaleString('pt-BR')}
+              Gerado em: {new Date(generatedAt).toLocaleString('pt-BR')}
             </Text>
 
-            {alert.type === 'DEAD_STOCK' && onGenerateCampaign && (
+            {type === 'DEAD_STOCK' && onGenerateCampaign && (
               <Button leftSection={<Sparkles size={14} />} onClick={onGenerateCampaign} fullWidth>
                 Gerar campanha
               </Button>
