@@ -13,6 +13,8 @@ import {
   Text,
   TextInput,
 } from '@mantine/core';
+import { useModals } from '@mantine/modals';
+import { notifications } from '@mantine/notifications';
 import { IconSearch, IconTrash, IconUserEdit } from '@tabler/icons-react';
 import { useState } from 'react';
 
@@ -30,7 +32,75 @@ interface User {
   lockedUntil?: string | null;
 }
 
+function InviteUserForm({ onSuccess }: { onSuccess: () => void }) {
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [role, setRole] = useState<string | null>('USER');
+  const [loading, setLoading] = useState(false);
+
+  const submit = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch('/api/users/invite', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, role }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || 'Falha ao enviar convite');
+      }
+      notifications.show({
+        title: 'Convite enviado',
+        message: 'O usuário receberá um e-mail com instruções.',
+        color: 'green',
+      });
+      onSuccess();
+    } catch (e) {
+      notifications.show({ title: 'Erro', message: (e as Error).message, color: 'red' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <Stack>
+      <TextInput
+        label="Nome"
+        placeholder="Nome completo"
+        value={name}
+        onChange={(e) => setName(e.currentTarget.value)}
+        required
+      />
+      <TextInput
+        label="E-mail"
+        placeholder="email@exemplo.com"
+        value={email}
+        onChange={(e) => setEmail(e.currentTarget.value)}
+        required
+      />
+      <Select
+        label="Função"
+        data={[
+          { value: 'USER', label: 'Usuário' },
+          { value: 'ADMIN', label: 'Administrador' },
+          { value: 'SUPER_ADMIN', label: 'Super Admin' },
+        ]}
+        value={role}
+        onChange={setRole}
+        required
+      />
+      <Group justify="flex-end">
+        <Button loading={loading} onClick={submit} color="green.8">
+          Enviar convite
+        </Button>
+      </Group>
+    </Stack>
+  );
+}
+
 export default function UsersList() {
+  const modals = useModals();
   const [search, setSearch] = useState('');
   const [roleFilter, setRoleFilter] = useState<string | null>(null);
   const [page, setPage] = useState(1);
@@ -66,8 +136,17 @@ export default function UsersList() {
         <Text fw={700} size="xl">
           Gerenciar Usuários
         </Text>
-        <Button color="green.8" radius="md">
-          Novo Usuário
+        <Button
+          color="green.8"
+          radius="md"
+          onClick={() =>
+            modals.openModal({
+              title: 'Convidar novo usuário',
+              children: <InviteUserForm onSuccess={() => modals.closeAll()} />,
+            })
+          }
+        >
+          Convidar Usuário
         </Button>
       </Group>
 
