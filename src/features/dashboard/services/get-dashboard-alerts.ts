@@ -79,6 +79,7 @@ export async function getDashboardAlerts({
               products: { select: { id: true, name: true } },
             },
           },
+          settings: true,
         },
       },
     },
@@ -123,11 +124,12 @@ export async function getDashboardAlerts({
         integrationId: alert.product.integrationId,
         createdAt: alert.product.createdAt.toISOString(),
         updatedAt: alert.product.updatedAt.toISOString(),
-        capitalCostRate: Number(alert.product.capitalCostRate) ?? 0,
-        isActive: alert.product.isActive,
-        replenishmentTime: Number(alert.product.replenishmentTime) ?? 0,
-        safetyStock: Number(alert.product.safetyStock) ?? 0,
-        storageCostRate: Number(alert.product.storageCostRate) ?? 0,
+        // Campos não presentes no schema atual: usar defaults/derivados
+        capitalCostRate: 0,
+        isActive: true,
+        replenishmentTime: Number(alert.product.settings?.leadTimeDays ?? 0),
+        safetyStock: Number(alert.product.settings?.safetyDays ?? 0),
+        storageCostRate: 0,
         // Dados relacionados opcionais
         category: alert.product.category
           ? {
