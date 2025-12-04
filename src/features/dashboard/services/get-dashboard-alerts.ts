@@ -151,11 +151,11 @@ export async function getDashboardAlerts({
         jobId: alert.jobId as string,
         createdAt: alert.createdAt.toISOString(),
         updatedAt: alert.updatedAt.toISOString(),
-        pricing: alert.pricing as any,
-        expirationDate: alert.expirationDate?.toISOString() || null,
-        financialImpact: alert.financialImpact,
-        priority: alert.priority,
-        urgencyScore: alert.urgencyScore,
+        pricing: alert.pricing ? JSON.stringify(alert.pricing) : null,
+        expirationDate: null,
+        financialImpact: null,
+        priority: null,
+        urgencyScore: null,
         // Campos parseados do JSON
         finalRecommendation: {
           id: Number(finalRecommendation?.id) || 0,
