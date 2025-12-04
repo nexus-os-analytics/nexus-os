@@ -4,7 +4,7 @@ import { AUTH_ROUTES, canAccessRoute, isAuthRoute, isPrivateRoute } from './lib/
 
 const { NEXTAUTH_SECRET, NEXT_ENABLE_HOME_PAGE, NEXT_ENABLE_SIGN_UP_PAGE } = process.env;
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const token = await getToken({ req: request, secret: NEXTAUTH_SECRET });
   const { pathname } = request.nextUrl;
 
@@ -25,20 +25,24 @@ export async function middleware(request: NextRequest) {
 
     // New Logic for Bling Integration and Sync
     if (isPrivateRoute(pathname)) {
-        // 1. If user has no Bling integration, redirect to /bling (unless already there)
-        if (!hasBlingIntegration && !pathname.startsWith('/bling')) {
-             return NextResponse.redirect(new URL('/bling', request.url));
-        }
+      // 1. If user has no Bling integration, redirect to /bling (unless already there)
+      if (!hasBlingIntegration && !pathname.startsWith('/bling')) {
+        return NextResponse.redirect(new URL('/bling', request.url));
+      }
 
-        // 2. If sync is in progress, redirect to /syncing (unless already there)
-        if (hasBlingIntegration && blingSyncStatus === 'SYNCING' && !pathname.startsWith('/syncing')) {
-             return NextResponse.redirect(new URL('/syncing', request.url));
-        }
-        
-        // 3. If sync is NOT in progress and user is on /syncing, redirect to /dashboard
-        if (hasBlingIntegration && blingSyncStatus !== 'SYNCING' && pathname.startsWith('/syncing')) {
-             return NextResponse.redirect(new URL('/dashboard', request.url));
-        }
+      // 2. If sync is in progress, redirect to /syncing (unless already there)
+      if (
+        hasBlingIntegration &&
+        blingSyncStatus === 'SYNCING' &&
+        !pathname.startsWith('/syncing')
+      ) {
+        return NextResponse.redirect(new URL('/syncing', request.url));
+      }
+
+      // 3. If sync is NOT in progress and user is on /syncing, redirect to /dashboard
+      if (hasBlingIntegration && blingSyncStatus !== 'SYNCING' && pathname.startsWith('/syncing')) {
+        return NextResponse.redirect(new URL('/dashboard', request.url));
+      }
     }
 
     if (isAuthRoute(pathname) && !required2FA) {
@@ -65,5 +69,4 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: ['/((?!api|_next/static|_next/image|favicon.ico|public).*)'],
-  runtime: 'nodejs',
 };
