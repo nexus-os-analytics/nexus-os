@@ -17,6 +17,11 @@ export function adaptProductsResponse(data: any[]): Product[] {
     stock: item.estoque?.saldoVirtualTotal ?? 0,
     image: item.imagem || null,
     shortDescription: item.descricaoCurta || null,
+    isActive: true,
+    capitalCostRate: 0, // calc later
+    replenishmentTime: 0, // to be populated when lead time data is available
+    safetyStock: 0,
+    storageCostRate: 0, // calc later
     avgMonthlySales: 0, // calc later
     lastSaleDate: null, // fill from sales endpoint later
     categoryId: null, // to be populated when categories are integrated
