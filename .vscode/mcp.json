@@ -1,9 +1,13 @@
 {
+	"inputs": [],
 	"servers": {
-		"mcpdoc": {
-			"url": "http://localhost:8082",
-			"type": "http"
+		"next-devtools": {
+			"command": "npx",
+			"args": [
+				"-y",
+				"next-devtools-mcp@latest"
+			],
+			"type": "stdio"
 		}
-	},
-	"inputs": []
+	}
 }
