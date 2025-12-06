@@ -17,7 +17,7 @@ export function UserDropdown() {
   const handleLogout = () => {
     logout();
     signOut({
-      callbackUrl: '/sign-in',
+      callbackUrl: '/login',
     });
   };
 

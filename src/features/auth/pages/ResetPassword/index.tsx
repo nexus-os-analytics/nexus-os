@@ -5,7 +5,6 @@ import { zod4Resolver } from 'mantine-form-zod-resolver';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useQueryString } from '@/hooks';
-import { getRoute } from '@/lib/routes';
 import { ResetPasswordSchema, useResetPassword, useVerifyResetToken } from '../../services';
 
 export function ResetPassword() {
@@ -31,7 +30,7 @@ export function ResetPassword() {
       confirmPassword: values.confirmPassword,
     });
     form.reset();
-    router.push(getRoute('sign-in')?.path || '/sign-in');
+    router.push('/login');
   };
 
   if (isLoading) return <Skeleton height={400} radius="md" />;
@@ -46,7 +45,7 @@ export function ResetPassword() {
           <Text c="dimmed" fz="sm" ta="center">
             O token de redefinição de senha é inválido ou expirou. Por favor, solicite um novo link
             de redefinição de senha{' '}
-            <Anchor component={Link} href="/forgot-password">
+            <Anchor component={Link} href="/esqueci-minha-senha">
               clicando aqui
             </Anchor>
             .

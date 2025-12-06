@@ -1,4 +1,5 @@
 import type { UserRole } from '@prisma/client';
+import type { Route } from 'next';
 import { getPermissions } from '@/features/auth/services';
 import { AUTH_ROUTES, PRIVATE_ROUTES } from './routes.constants';
 import type { RouteObject, RoutesType } from './routes.types';
@@ -15,16 +16,21 @@ export function getRoute(path: RoutesType): RouteObject | undefined {
   return [...getPrivateRoutes(), ...getAuthRoutes()].find((r) => r.path === path);
 }
 
-export function isPrivateRoute(path: string) {
+export function isPrivateRoute(path: Route<string> | string) {
   return getPrivateRoutes().some((r) => {
-    if (r.children) return r.path.startsWith(path);
-
-    return r.path === path;
+    const current = typeof r.path === 'string' ? r.path : r.path.toString();
+    const target = typeof path === 'string' ? path : (path as string).toString();
+    if (r.children) return current.startsWith(target);
+    return current === target;
   });
 }
 
-export function isAuthRoute(path: string) {
-  return getAuthRoutes().some((r) => r.path === path);
+export function isAuthRoute(path: Route<string> | string) {
+  return getAuthRoutes().some((r) => {
+    const current = typeof r.path === 'string' ? r.path : r.path.toString();
+    const target = typeof path === 'string' ? path : (path as string).toString();
+    return current === target;
+  });
 }
 
 export function canAccessRoute(role: UserRole, route: RoutesType) {

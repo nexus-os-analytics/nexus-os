@@ -68,7 +68,7 @@ export function TwoFactorQRCode({ onSuccess }: TwoFactorQRCodeProps) {
           fullWidth
           disabled={!qr}
           loading={isVerifying}
-          onClick={() => signOut({ callbackUrl: '/sign-in' })}
+          onClick={() => signOut({ callbackUrl: '/login' })}
           radius="xl"
         >
           Encerrar Sessão

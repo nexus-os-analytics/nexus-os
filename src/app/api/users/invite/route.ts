@@ -38,7 +38,7 @@ export async function POST(req: NextRequest) {
   });
 
   const inviteLinkBase = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
-  const inviteLink = `${inviteLinkBase}/auth/sign-up?invite=${invite.token}`;
+  const inviteLink = `${inviteLinkBase}/auth/cadastre-se?invite=${invite.token}`;
 
   await sendEmail({
     toEmail: email,

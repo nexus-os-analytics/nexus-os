@@ -67,7 +67,7 @@ export async function POST(req: NextRequest) {
       { status: 200 }
     );
   } catch (err) {
-    console.error('Erro em /api/forgot-password:', err);
+    console.error('Erro em /api/esqueci-minha-senha:', err);
     return NextResponse.json({ error: 'Erro interno do servidor' }, { status: 500 });
   }
 }

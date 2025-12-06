@@ -18,7 +18,6 @@ import Link from 'next/link';
 import { signIn } from 'next-auth/react';
 import { useEffect, useState } from 'react';
 import { GoogleButton } from '@/components/commons/GoogleButton';
-import { getRoute } from '@/lib/routes';
 import { SignUpSchema, useSignUp } from '../../services';
 
 export function SignUp() {
@@ -49,7 +48,7 @@ export function SignUp() {
       await signIn('credentials', {
         email: values.email,
         password: values.password,
-        callbackUrl: getRoute('dashboard')?.path,
+        callbackUrl: '/bling',
         redirect: true,
       });
     } catch (error) {
@@ -131,14 +130,14 @@ export function SignUp() {
         <GoogleButton
           radius="xl"
           loading={isPending}
-          onClick={() => signIn('google', { callbackUrl: '/dashboard' })}
+          onClick={() => signIn('google', { callbackUrl: '/bling' })}
         >
           Google
         </GoogleButton>
       </Group>
 
       <Group justify="center">
-        <Anchor component={Link} href="/sign-in" type="button" c="dimmed" size="xs" ta="center">
+        <Anchor component={Link} href="/login" type="button" c="dimmed" size="xs" ta="center">
           Já tem uma conta? Entre agora!
         </Anchor>
       </Group>

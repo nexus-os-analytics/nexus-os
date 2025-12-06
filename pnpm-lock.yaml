@@ -114,6 +114,9 @@ importers:
       next-auth:
         specifier: ^4.24.13
         version: 4.24.13(next@16.0.7(@opentelemetry/api@1.9.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1))(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
+      nextjs-routes:
+        specifier: ^2.2.5
+        version: 2.2.5(next@16.0.7(@opentelemetry/api@1.9.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1))
       openai:
         specifier: ^6.10.0
         version: 6.10.0(zod@4.1.13)
@@ -2526,6 +2529,12 @@ packages:
         optional: true
       sass:
         optional: true
+
+  nextjs-routes@2.2.5:
+    resolution: {integrity: sha512-F8IwFj6JRm00lz0iIo7U7B1aOEClI8flcJVZFQIvwwxIL0eQtaroTi1IAKhxJVvETNfT5pYxVnF3pF0pn16npQ==}
+    hasBin: true
+    peerDependencies:
+      next: '*'
 
   node-fetch-native@1.6.7:
     resolution: {integrity: sha512-g9yhqoedzIUm0nTnTqAQvueMPVOuIY16bqgAJJC8XOOubYFNwz6IER9qs0Gq2Xd0+CecCKFjtdDTMA4u4xG06Q==}
@@ -5745,6 +5754,11 @@ snapshots:
     transitivePeerDependencies:
       - '@babel/core'
       - babel-plugin-macros
+
+  nextjs-routes@2.2.5(next@16.0.7(@opentelemetry/api@1.9.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)):
+    dependencies:
+      chokidar: 4.0.3
+      next: 16.0.7(@opentelemetry/api@1.9.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
 
   node-fetch-native@1.6.7: {}
 
