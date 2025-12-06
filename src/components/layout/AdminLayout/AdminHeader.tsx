@@ -7,7 +7,7 @@ import { UserDropdown } from '@/components/commons/UserDropdown';
 import { useBlingIntegration } from '@/hooks/useBlingIntegration';
 
 export function AdminHeader() {
-  const { status } = useBlingIntegration();
+  const { connectionState } = useBlingIntegration();
 
   return (
     <Container size="xl" h="100%">
@@ -16,7 +16,7 @@ export function AdminHeader() {
           <Image src="/img/logo.png" alt="Nexus OS" width={64} height={64} />
         </Link>
         <Group gap="xs">
-          {status?.connected && (
+          {connectionState === 'connected' && (
             <Tooltip label="Bling conectado!">
               <Group align="baseline" gap={4}>
                 <ThemeIcon color="green.9" variant="light" size={20}>

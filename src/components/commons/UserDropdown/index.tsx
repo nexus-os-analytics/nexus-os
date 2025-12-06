@@ -55,7 +55,7 @@ export function UserDropdown() {
               <Menu.Item
                 leftSection={<IconUsers size={16} stroke={1.5} />}
                 component={Link}
-                href="/users"
+                href="/usuarios"
               >
                 Ver usuários
               </Menu.Item>
@@ -66,7 +66,7 @@ export function UserDropdown() {
           <Menu.Item
             leftSection={<IconUserEdit size={16} stroke={1.5} />}
             component={Link}
-            href="/profile"
+            href="/minha-conta"
           >
             Editar Perfil
           </Menu.Item>

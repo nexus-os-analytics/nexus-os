@@ -14,21 +14,42 @@ export type BlingConnectionState = 'disconnected' | 'connected' | 'invalid-crede
 
 export function useBlingIntegration() {
   const { data: session } = useSession();
-
   const [status, setStatus] = useState<BlingIntegrationStatus | null>(null);
   const [connectionState, setConnectionState] = useState<BlingConnectionState>('disconnected');
   const [loading, setLoading] = useState(true);
 
-  // ...
-
-  useEffect(() => {
-    if (session?.user?.id) {
-      checkStatus();
-    }
-  }, [session]);
-
-  const checkStatus = async () => {
+  const connect = async (): Promise<string> => {
     try {
+      setLoading(true);
+      const response = await fetch('/api/integrations/bling/connect');
+      const data = await response.json();
+      setLoading(false);
+      return data.authUrl;
+    } catch (error) {
+      setLoading(false);
+      console.error('Error connecting to Bling integration:', error);
+      throw error;
+    }
+  };
+
+  const disconnect = async (): Promise<void> => {
+    try {
+      setLoading(true);
+      await fetch('/api/integrations/bling/disconnect', {
+        method: 'POST',
+      });
+      setStatus({ connected: false, valid: false });
+      setConnectionState('disconnected');
+      setLoading(false);
+    } catch (error) {
+      console.error('Error disconnecting Bling integration:', error);
+      setLoading(false);
+    }
+  };
+
+  const refresh = async () => {
+    try {
+      setLoading(true);
       const response = await fetch('/api/integrations/bling/status');
       const data = await response.json();
       setStatus(data);
@@ -48,18 +69,11 @@ export function useBlingIntegration() {
     }
   };
 
-  const connect = async (): Promise<string> => {
-    const response = await fetch('/api/integrations/bling/connect');
-    const data = await response.json();
-    return data.authUrl;
-  };
-
-  const disconnect = async (): Promise<void> => {
-    await fetch('/api/integrations/bling/disconnect', {
-      method: 'POST',
-    });
-    await checkStatus(); // Atualizar status
-  };
+  useEffect(() => {
+    if (session?.user?.id) {
+      refresh();
+    }
+  }, [session]);
 
   return {
     status,
@@ -67,6 +81,6 @@ export function useBlingIntegration() {
     loading,
     connect,
     disconnect,
-    refresh: checkStatus,
+    refresh,
   };
 }

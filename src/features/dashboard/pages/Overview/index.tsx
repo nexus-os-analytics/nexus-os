@@ -17,7 +17,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import type { DashboardFirstImpact } from '../../types';
 
-export function FirstImpact() {
+export function Overview() {
   const [data, setData] = useState<DashboardFirstImpact | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -133,7 +133,7 @@ export function FirstImpact() {
               <SimpleGrid cols={{ base: 1, sm: 3 }} mb="md" spacing="lg">
                 {data.topActions.map((action) => (
                   <Card key={action.productName} padding="xl" radius="md" withBorder shadow="md">
-                    <Text size="sm" fw={700} mb="md">
+                    <Text size="sm" fw={700} mb="md" component="div">
                       <Group gap="xs">
                         <ThemeIcon size={20} radius="md" color="brand" variant="light">
                           <ArrowRight size={12} />

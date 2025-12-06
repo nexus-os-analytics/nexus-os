@@ -26,11 +26,8 @@ export function NotFoundPage({
           {message}
         </Text>
         <Group mt="md">
-          <Button component={Link} href={backHref} variant="filled">
+          <Button component={Link} href={backHref} variant="filled" fullWidth>
             {backLabel}
-          </Button>
-          <Button component={Link} href="/private/dashboard" variant="light">
-            Ir para o dashboard
           </Button>
         </Group>
       </Stack>

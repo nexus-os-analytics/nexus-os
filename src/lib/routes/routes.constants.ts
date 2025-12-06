@@ -7,6 +7,11 @@ export const PRIVATE_ROUTES: Record<Route<string> | string, RouteObject> = {
     label: 'Bling',
     permissions: [],
   },
+  'visao-geral': {
+    path: '/visao-geral',
+    label: 'Visão Geral',
+    permissions: [],
+  },
   dashboard: {
     path: '/dashboard',
     label: 'Dashboard',
