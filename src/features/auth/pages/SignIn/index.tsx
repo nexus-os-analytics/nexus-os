@@ -60,6 +60,18 @@ export function SignIn() {
     }
   };
 
+  const handleGoogleSignIn = async () => {
+    try {
+      setLoading(true);
+      await signIn('google', { callbackUrl: redirect as string });
+    } catch (error) {
+      console.error('Erro ao autenticar com o Google:', error);
+      setErrorMessage('Erro ao autenticar com o Google. Tente novamente.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (status === 'authenticated' && !required2FA) {
       router.push(redirect as string);
@@ -134,11 +146,7 @@ export function SignIn() {
       <Divider label="Ou continue com" labelPosition="center" my="lg" />
 
       <Group grow mb="md" mt="md">
-        <GoogleButton
-          radius="xl"
-          loading={loading}
-          onClick={() => signIn('google', { callbackUrl: redirect as string })}
-        >
+        <GoogleButton radius="xl" loading={loading} onClick={handleGoogleSignIn}>
           Google
         </GoogleButton>
       </Group>
