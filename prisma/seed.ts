@@ -1,7 +1,11 @@
 import { PrismaClient, UserRole } from '@prisma/client';
-import * as bcrypt from 'bcryptjs';
+import { Pool } from 'pg';
+import { PrismaPg } from '@prisma/adapter-pg';
+import bcrypt from 'bcryptjs';
 
-const prisma = new PrismaClient();
+const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+const adapter = new PrismaPg(pool);
+const prisma = new PrismaClient({ adapter });
 
 async function main() {
   // Ordem de exclusão: das tabelas filhas para as pai
@@ -45,6 +49,9 @@ async function main() {
 }
 
 main()
+  .then(async () => {
+    console.log('Seed script finished successfully.');
+  })
   .catch((e) => {
     console.error('❌ A error occurs on seed:', e);
     process.exit(1);

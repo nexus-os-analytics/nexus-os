@@ -15,7 +15,7 @@ export function adaptProductsResponse(data: any[]): Product[] {
     costPrice: item.precoCusto ?? 0,
     salePrice: item.preco ?? 0,
     stock: item.estoque?.saldoVirtualTotal ?? 0,
-    image: item.imagem || null,
+    image: item.imagemURL || null,
     shortDescription: item.descricaoCurta || null,
     isActive: true,
     capitalCostRate: 0, // calc later

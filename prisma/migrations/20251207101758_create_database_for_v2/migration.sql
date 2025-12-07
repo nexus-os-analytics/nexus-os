@@ -1,89 +1,20 @@
-/*
-  Warnings:
-
-  - You are about to drop the `ApiKey` table. If the table is not empty, all the data it contains will be lost.
-  - You are about to drop the `AuditLog` table. If the table is not empty, all the data it contains will be lost.
-  - You are about to drop the `BlingOrder` table. If the table is not empty, all the data it contains will be lost.
-  - You are about to drop the `BlingProduct` table. If the table is not empty, all the data it contains will be lost.
-  - You are about to drop the `DataRegistry` table. If the table is not empty, all the data it contains will be lost.
-  - You are about to drop the `LoginActivity` table. If the table is not empty, all the data it contains will be lost.
-  - You are about to drop the `ProductAlert` table. If the table is not empty, all the data it contains will be lost.
-  - You are about to drop the `SecurityIncident` table. If the table is not empty, all the data it contains will be lost.
-  - You are about to drop the `User` table. If the table is not empty, all the data it contains will be lost.
-  - You are about to drop the `user_settings` table. If the table is not empty, all the data it contains will be lost.
-
-*/
 -- CreateEnum
-CREATE TYPE "BlingAlertType" AS ENUM ('RUPTURE', 'DEAD_STOCK', 'OPPORTUNITY');
+CREATE TYPE "UserRole" AS ENUM ('SUPER_ADMIN', 'ADMIN', 'USER', 'GUEST');
+
+-- CreateEnum
+CREATE TYPE "BlingAlertType" AS ENUM ('FINE', 'RUPTURE', 'DEAD_STOCK', 'OPPORTUNITY');
 
 -- CreateEnum
 CREATE TYPE "BlingRuptureRisk" AS ENUM ('LOW', 'MEDIUM', 'HIGH', 'CRITICAL');
 
--- DropForeignKey
-ALTER TABLE "public"."ApiKey" DROP CONSTRAINT "ApiKey_userId_fkey";
+-- CreateEnum
+CREATE TYPE "BlingSyncStatus" AS ENUM ('IDLE', 'SYNCING', 'COMPLETED', 'FAILED');
 
--- DropForeignKey
-ALTER TABLE "public"."AuditLog" DROP CONSTRAINT "AuditLog_userId_fkey";
+-- CreateEnum
+CREATE TYPE "BlingJobSyncType" AS ENUM ('SALES', 'FULL');
 
--- DropForeignKey
-ALTER TABLE "public"."BlingProduct" DROP CONSTRAINT "BlingProduct_integrationId_fkey";
-
--- DropForeignKey
-ALTER TABLE "public"."LoginActivity" DROP CONSTRAINT "LoginActivity_userId_fkey";
-
--- DropForeignKey
-ALTER TABLE "public"."ProductAlert" DROP CONSTRAINT "ProductAlert_blingProductId_fkey";
-
--- DropForeignKey
-ALTER TABLE "public"."ProductAlert" DROP CONSTRAINT "ProductAlert_integrationId_fkey";
-
--- DropForeignKey
-ALTER TABLE "public"."SecurityIncident" DROP CONSTRAINT "SecurityIncident_userId_fkey";
-
--- DropForeignKey
-ALTER TABLE "public"."accounts" DROP CONSTRAINT "accounts_user_id_fkey";
-
--- DropForeignKey
-ALTER TABLE "public"."bling_integrations" DROP CONSTRAINT "bling_integrations_userId_fkey";
-
--- DropForeignKey
-ALTER TABLE "public"."sessions" DROP CONSTRAINT "sessions_user_id_fkey";
-
--- DropForeignKey
-ALTER TABLE "public"."user_settings" DROP CONSTRAINT "user_settings_userId_fkey";
-
--- DropTable
-DROP TABLE "public"."ApiKey";
-
--- DropTable
-DROP TABLE "public"."AuditLog";
-
--- DropTable
-DROP TABLE "public"."BlingOrder";
-
--- DropTable
-DROP TABLE "public"."BlingProduct";
-
--- DropTable
-DROP TABLE "public"."DataRegistry";
-
--- DropTable
-DROP TABLE "public"."LoginActivity";
-
--- DropTable
-DROP TABLE "public"."ProductAlert";
-
--- DropTable
-DROP TABLE "public"."SecurityIncident";
-
--- DropTable
-DROP TABLE "public"."User";
-
--- DropTable
-DROP TABLE "public"."user_settings";
-
--- DropEnum
-DROP TYPE "public"."AlertType";
+-- CreateEnum
+CREATE TYPE "BlingJobStatus" AS ENUM ('RUNNING', 'FAILED', 'DONE');
 
 -- CreateTable
 CREATE TABLE "users" (
@@ -107,8 +38,58 @@ CREATE TABLE "users" (
     "onboardingCompleted" BOOLEAN NOT NULL DEFAULT false,
     "lockedUntil" TIMESTAMP(3),
     "emailVerified" TIMESTAMP(3),
+    "blingSyncStatus" "BlingSyncStatus" NOT NULL DEFAULT 'IDLE',
 
     CONSTRAINT "users_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "accounts" (
+    "id" TEXT NOT NULL,
+    "user_id" TEXT NOT NULL,
+    "type" TEXT NOT NULL,
+    "provider" TEXT NOT NULL,
+    "provider_account_id" TEXT NOT NULL,
+    "refresh_token" TEXT,
+    "access_token" TEXT,
+    "expires_at" INTEGER,
+    "token_type" TEXT,
+    "scope" TEXT,
+    "id_token" TEXT,
+    "session_state" TEXT,
+
+    CONSTRAINT "accounts_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "user_invitations" (
+    "id" TEXT NOT NULL,
+    "email" TEXT NOT NULL,
+    "token" TEXT NOT NULL,
+    "role" "UserRole" NOT NULL DEFAULT 'USER',
+    "invitedByUserId" TEXT NOT NULL,
+    "expiresAt" TIMESTAMP(3) NOT NULL,
+    "consumedAt" TIMESTAMP(3),
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "user_invitations_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "sessions" (
+    "id" TEXT NOT NULL,
+    "session_token" TEXT NOT NULL,
+    "user_id" TEXT NOT NULL,
+    "expires" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "sessions_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "verification_tokens" (
+    "identifier" TEXT NOT NULL,
+    "token" TEXT NOT NULL,
+    "expires" TIMESTAMP(3) NOT NULL
 );
 
 -- CreateTable
@@ -172,6 +153,21 @@ CREATE TABLE "data_registries" (
 );
 
 -- CreateTable
+CREATE TABLE "bling_integrations" (
+    "id" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "accessToken" TEXT NOT NULL,
+    "refreshToken" TEXT NOT NULL,
+    "expiresAt" TIMESTAMP(3) NOT NULL,
+    "tokenType" TEXT NOT NULL,
+    "scope" TEXT NOT NULL,
+    "connectedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "bling_integrations_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "bling_products" (
     "id" TEXT NOT NULL,
     "blingProductId" TEXT NOT NULL,
@@ -180,7 +176,6 @@ CREATE TABLE "bling_products" (
     "sku" TEXT NOT NULL,
     "costPrice" DOUBLE PRECISION NOT NULL DEFAULT 0,
     "salePrice" DOUBLE PRECISION NOT NULL DEFAULT 0,
-    "avgMonthlySales" DOUBLE PRECISION DEFAULT 0,
     "stock" INTEGER NOT NULL DEFAULT 0,
     "image" TEXT,
     "shortDescription" TEXT,
@@ -190,6 +185,23 @@ CREATE TABLE "bling_products" (
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "bling_products_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "bling_product_settings" (
+    "id" TEXT NOT NULL,
+    "productId" TEXT NOT NULL,
+    "leadTimeDays" INTEGER NOT NULL DEFAULT 15,
+    "safetyDays" INTEGER NOT NULL DEFAULT 5,
+    "recoveryTarget" DOUBLE PRECISION NOT NULL DEFAULT 0.8,
+    "opportunityGrowthThreshold" DOUBLE PRECISION NOT NULL DEFAULT 0.3,
+    "liquidationIdleThresholdDays" INTEGER NOT NULL DEFAULT 30,
+    "liquidationMaxDays" INTEGER NOT NULL DEFAULT 30,
+    "minSalesForOpportunity" INTEGER NOT NULL DEFAULT 3,
+    "newProductMinDays" INTEGER NOT NULL DEFAULT 30,
+    "minHistoryDaysForDecision" INTEGER NOT NULL DEFAULT 7,
+
+    CONSTRAINT "bling_product_settings_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -208,9 +220,8 @@ CREATE TABLE "bling_categories" (
 CREATE TABLE "bling_sales_history" (
     "id" TEXT NOT NULL,
     "blingSaleId" TEXT NOT NULL,
-    "date" TIMESTAMP(3) NOT NULL,
     "productId" TEXT NOT NULL,
-    "productSku" TEXT NOT NULL,
+    "date" TIMESTAMP(3) NOT NULL,
     "quantity" INTEGER NOT NULL DEFAULT 0,
     "totalValue" DOUBLE PRECISION NOT NULL DEFAULT 0,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -223,7 +234,6 @@ CREATE TABLE "bling_sales_history" (
 CREATE TABLE "bling_stock_balance" (
     "id" TEXT NOT NULL,
     "productId" TEXT NOT NULL,
-    "productSku" TEXT NOT NULL,
     "stock" INTEGER NOT NULL DEFAULT 0,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
@@ -235,33 +245,47 @@ CREATE TABLE "bling_stock_balance" (
 CREATE TABLE "bling_alerts" (
     "id" TEXT NOT NULL,
     "productId" TEXT NOT NULL,
-    "type" "BlingAlertType" NOT NULL,
-    "risk" "BlingRuptureRisk",
-    "recommendations" JSONB NOT NULL,
-    "generatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "acknowledged" BOOLEAN NOT NULL DEFAULT false,
-    "executedAt" TIMESTAMP(3),
+    "type" "BlingAlertType" NOT NULL DEFAULT 'FINE',
+    "risk" "BlingRuptureRisk" NOT NULL DEFAULT 'LOW',
+    "vvdReal" DOUBLE PRECISION NOT NULL DEFAULT 0,
+    "vvd30" DOUBLE PRECISION NOT NULL DEFAULT 0,
+    "vvd7" DOUBLE PRECISION NOT NULL DEFAULT 0,
+    "daysRemaining" INTEGER NOT NULL DEFAULT 0,
+    "reorderPoint" INTEGER NOT NULL DEFAULT 0,
+    "growthTrend" DOUBLE PRECISION NOT NULL DEFAULT 0,
+    "capitalStuck" DOUBLE PRECISION NOT NULL DEFAULT 0,
+    "daysSinceLastSale" INTEGER NOT NULL DEFAULT 0,
+    "suggestedPrice" DOUBLE PRECISION NOT NULL DEFAULT 0,
+    "estimatedDeadline" INTEGER NOT NULL DEFAULT 0,
+    "recoverableAmount" DOUBLE PRECISION NOT NULL DEFAULT 0,
+    "daysOutOfStock" INTEGER NOT NULL DEFAULT 0,
+    "estimatedLostSales" INTEGER NOT NULL DEFAULT 0,
+    "estimatedLostAmount" INTEGER NOT NULL DEFAULT 0,
+    "message" TEXT,
+    "recommendations" JSONB,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
+    "jobId" TEXT,
 
     CONSTRAINT "bling_alerts_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
-CREATE TABLE "bling_product_settings" (
+CREATE TABLE "bling_sync_jobs" (
     "id" TEXT NOT NULL,
-    "productId" TEXT NOT NULL,
-    "leadTimeDays" INTEGER NOT NULL DEFAULT 15,
-    "safetyDays" INTEGER NOT NULL DEFAULT 5,
-    "recoveryTarget" DOUBLE PRECISION NOT NULL DEFAULT 0.8,
-    "opportunityGrowthThreshold" DOUBLE PRECISION NOT NULL DEFAULT 0.3,
-    "liquidationIdleThresholdDays" INTEGER NOT NULL DEFAULT 90,
-    "liquidationMaxDays" INTEGER NOT NULL DEFAULT 30,
-    "minSalesForOpportunity" INTEGER NOT NULL DEFAULT 3,
-    "newProductMinDays" INTEGER NOT NULL DEFAULT 30,
-    "minHistoryDaysForDecision" INTEGER NOT NULL DEFAULT 7,
+    "integrationId" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "type" "BlingJobSyncType" NOT NULL,
+    "totalBatches" INTEGER NOT NULL,
+    "processedBatches" INTEGER NOT NULL DEFAULT 0,
+    "status" "BlingJobStatus" NOT NULL DEFAULT 'RUNNING',
+    "startedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "finishedAt" TIMESTAMP(3),
+    "metadata" JSONB,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
 
-    CONSTRAINT "bling_product_settings_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "bling_sync_jobs_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateIndex
@@ -269,6 +293,24 @@ CREATE UNIQUE INDEX "users_email_key" ON "users"("email");
 
 -- CreateIndex
 CREATE INDEX "users_email_createdAt_deletedAt_idx" ON "users"("email", "createdAt", "deletedAt");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "accounts_provider_provider_account_id_key" ON "accounts"("provider", "provider_account_id");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "user_invitations_token_key" ON "user_invitations"("token");
+
+-- CreateIndex
+CREATE INDEX "user_invitations_email_token_expiresAt_consumedAt_idx" ON "user_invitations"("email", "token", "expiresAt", "consumedAt");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "sessions_session_token_key" ON "sessions"("session_token");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "verification_tokens_token_key" ON "verification_tokens"("token");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "verification_tokens_identifier_token_key" ON "verification_tokens"("identifier", "token");
 
 -- CreateIndex
 CREATE INDEX "audit_logs_userId_createdAt_idx" ON "audit_logs"("userId", "createdAt");
@@ -289,7 +331,13 @@ CREATE INDEX "api_keys_key_userId_createdAt_idx" ON "api_keys"("key", "userId", 
 CREATE INDEX "data_registries_createdAt_idx" ON "data_registries"("createdAt");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "bling_integrations_userId_key" ON "bling_integrations"("userId");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "bling_products_blingProductId_key" ON "bling_products"("blingProductId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "bling_product_settings_productId_key" ON "bling_product_settings"("productId");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "bling_categories_blingCategoryId_key" ON "bling_categories"("blingCategoryId");
@@ -301,16 +349,22 @@ CREATE INDEX "bling_sales_history_productId_idx" ON "bling_sales_history"("produ
 CREATE UNIQUE INDEX "bling_sales_history_blingSaleId_productId_key" ON "bling_sales_history"("blingSaleId", "productId");
 
 -- CreateIndex
-CREATE INDEX "bling_stock_balance_productId_productSku_idx" ON "bling_stock_balance"("productId", "productSku");
+CREATE INDEX "bling_stock_balance_productId_idx" ON "bling_stock_balance"("productId");
 
 -- CreateIndex
-CREATE INDEX "bling_alerts_productId_type_generatedAt_idx" ON "bling_alerts"("productId", "type", "generatedAt");
+CREATE UNIQUE INDEX "bling_alerts_productId_key" ON "bling_alerts"("productId");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "bling_product_settings_productId_key" ON "bling_product_settings"("productId");
+CREATE INDEX "bling_alerts_productId_type_risk_idx" ON "bling_alerts"("productId", "type", "risk");
+
+-- CreateIndex
+CREATE INDEX "bling_sync_jobs_integrationId_status_createdAt_idx" ON "bling_sync_jobs"("integrationId", "status", "createdAt");
 
 -- AddForeignKey
 ALTER TABLE "accounts" ADD CONSTRAINT "accounts_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "user_invitations" ADD CONSTRAINT "user_invitations_invitedByUserId_fkey" FOREIGN KEY ("invitedByUserId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "sessions" ADD CONSTRAINT "sessions_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
@@ -337,6 +391,9 @@ ALTER TABLE "bling_products" ADD CONSTRAINT "bling_products_integrationId_fkey" 
 ALTER TABLE "bling_products" ADD CONSTRAINT "bling_products_categoryId_fkey" FOREIGN KEY ("categoryId") REFERENCES "bling_categories"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE "bling_product_settings" ADD CONSTRAINT "bling_product_settings_productId_fkey" FOREIGN KEY ("productId") REFERENCES "bling_products"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "bling_sales_history" ADD CONSTRAINT "bling_sales_history_productId_fkey" FOREIGN KEY ("productId") REFERENCES "bling_products"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
@@ -344,6 +401,3 @@ ALTER TABLE "bling_stock_balance" ADD CONSTRAINT "bling_stock_balance_productId_
 
 -- AddForeignKey
 ALTER TABLE "bling_alerts" ADD CONSTRAINT "bling_alerts_productId_fkey" FOREIGN KEY ("productId") REFERENCES "bling_products"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "bling_product_settings" ADD CONSTRAINT "bling_product_settings_productId_fkey" FOREIGN KEY ("productId") REFERENCES "bling_products"("id") ON DELETE CASCADE ON UPDATE CASCADE;
