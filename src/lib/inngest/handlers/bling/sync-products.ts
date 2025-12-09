@@ -3,8 +3,9 @@ import {
   BlingIntegration,
   createBlingClient,
   createBlingRepository,
-  type Product,
+  type BlingProductType as Product,
 } from '@/lib/bling';
+import { daysAgo } from '@/lib/utils';
 import { inngest } from '../../client';
 
 const logger = pino();
@@ -41,15 +42,15 @@ export const syncProducts = inngest.createFunction(
     });
 
     // emit stock sync (product external ids)
-    const externalIds = allProducts.map((p) => String(p.id));
+    const externalIds = allProducts.map((p) => String(p.blingProductId));
     await step.sendEvent('bling/sync:stock', {
       name: 'bling/sync:stock',
       data: { userId, integrationId, productExternalIds: externalIds },
     });
 
-    // emit sales id sync (last 90 days)
-    const dateEnd = new Date().toISOString().split('T')[0];
-    const dateStart = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+    // emit sales id sync (last 30 days)
+    const dateEnd = daysAgo(0);
+    const dateStart = daysAgo(30);
     await step.sendEvent('bling/sync:sales-ids', {
       name: 'bling/sync:sales-ids',
       data: { userId, integrationId, dateStart, dateEnd },

@@ -6,7 +6,12 @@ import {
   adaptSalesHistoryResponse,
   adaptStockBalanceResponse,
 } from './bling-adapters';
-import type { Category, Product, SalesHistory, StockBalance } from './bling-types';
+import type {
+  BlingCategoryType,
+  BlingProductType,
+  BlingSalesHistoryType,
+  BlingStockBalanceType,
+} from './bling-types';
 
 export interface BlingClientOptions {
   accessToken: string;
@@ -28,15 +33,13 @@ export function createBlingClient({ accessToken }: BlingClientOptions) {
   });
 
   /**
-   * Fetch products from Bling API
+   * Fetch products from Bling API (Only simple products)
    * @param page - Page number for pagination
-   * @returns A list of products from Bling API
+   * @returns `BlingProductType[]`
    */
-  async function getProducts(page: number = 1): Promise<Product[]> {
+  async function getProducts(page: number = 1): Promise<BlingProductType[]> {
     return rateLimited(async () => {
-      const res = await instance.get(
-        `/produtos?pagina=${page}&limite=100&criterio=2&tipo=P&filtroSaldoEstoque=1`
-      );
+      const res = await instance.get(`/produtos?pagina=${page}&limite=100&criterio=2&tipo=P`);
       const { data } = res.data;
       return adaptProductsResponse(data);
     });
@@ -45,9 +48,9 @@ export function createBlingClient({ accessToken }: BlingClientOptions) {
   /**
    * Fetch categories from Bling API
    * @param page - Page number for pagination
-   * @returns A list of categories from Bling API
+   * @returns `BlingCategoryType[]`
    */
-  async function getCategories(page: number = 1): Promise<Category[]> {
+  async function getCategories(page: number = 1): Promise<BlingCategoryType[]> {
     return rateLimited(async () => {
       const res = await instance.get(`/categorias/produtos?pagina=${page}&limite=100`);
       const { data } = res.data;
@@ -59,7 +62,7 @@ export function createBlingClient({ accessToken }: BlingClientOptions) {
    * Fetch sales from Bling API
    * @param dateStart - Start date for the sales query
    * @param dateEnd - End date for the sales query
-   * @returns A list of sales from Bling API
+   * @returns `Array<{ id: number }>`
    */
   async function getSalesInRange(
     dateStart: string,
@@ -77,9 +80,9 @@ export function createBlingClient({ accessToken }: BlingClientOptions) {
   /**
    * Fetch sales history for a specific sale
    * @param saleId - Sale ID to fetch history for
-   * @returns An array of SalesHistory objects or null if not found
+   * @returns `BlingSalesHistoryType[] | null`
    */
-  async function getSalesHistory(saleId: string): Promise<SalesHistory[] | null> {
+  async function getSalesHistory(saleId: string): Promise<BlingSalesHistoryType[] | null> {
     return rateLimited(async () => {
       const res = await instance.get(`/pedidos/vendas/${encodeURIComponent(saleId)}`);
       const { data } = res.data;
@@ -91,9 +94,9 @@ export function createBlingClient({ accessToken }: BlingClientOptions) {
   /**
    * Fetch stock balance for a list of products
    * @param productIds - Array of product IDs to fetch stock balance for
-   * @returns An array of StockBalance objects
+   * @returns `BlingStockBalanceType[]`
    */
-  async function getStockBalance(productIds: number[]): Promise<StockBalance[]> {
+  async function getStockBalance(productIds: number[]): Promise<BlingStockBalanceType[]> {
     return rateLimited(async () => {
       const idsQuery = productIds.map((id) => `idsProdutos[]=${encodeURIComponent(id)}`).join('&');
       const queryString = `${idsQuery}&filtroSaldoEstoque=1`;

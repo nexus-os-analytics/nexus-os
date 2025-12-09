@@ -79,8 +79,7 @@ model UserInvitation {
   expiresAt       DateTime
   consumedAt      DateTime?
   createdAt       DateTime  @default(now())
-
-  invitedBy User @relation(fields: [invitedByUserId], references: [id], onDelete: Cascade)
+  invitedBy       User      @relation(fields: [invitedByUserId], references: [id], onDelete: Cascade)
 
   @@index([email, token, expiresAt, consumedAt])
   @@map("user_invitations")
@@ -222,41 +221,41 @@ model BlingIntegration {
 model BlingProduct {
   id               String                @id @default(uuid())
   blingProductId   String                @unique
-  categoryId       String?
+  blingCategoryId  String?
   name             String
   sku              String
   costPrice        Float                 @default(0)
   salePrice        Float                 @default(0)
-  stock            Int                   @default(0)
+  currentStock     Int                   @default(0)
   image            String?               @db.Text
   shortDescription String?               @db.Text
-  lastSaleDate     DateTime?
   integrationId    String
   createdAt        DateTime              @default(now())
   updatedAt        DateTime              @updatedAt
   integration      BlingIntegration      @relation(fields: [integrationId], references: [id], onDelete: Cascade)
-  category         BlingCategory?        @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  category         BlingCategory?        @relation(fields: [blingCategoryId], references: [blingCategoryId], onDelete: SetNull)
+  alert            BlingAlert?
+  settings         BlingProductSettings?
   salesHistory     BlingSalesHistory[]
   stockBalances    BlingStockBalance[]
-  alerts           BlingAlert[]
-  settings         BlingProductSettings?
 
+  @@index([blingProductId, integrationId])
   @@map("bling_products")
 }
 
 model BlingProductSettings {
   id                           String       @id @default(uuid())
-  productId                    String       @unique
-  leadTimeDays                 Int          @default(15)
-  safetyDays                   Int          @default(5)
-  recoveryTarget               Float        @default(0.8)
-  opportunityGrowthThreshold   Float        @default(0.3)
-  liquidationIdleThresholdDays Int          @default(30)
-  liquidationMaxDays           Int          @default(30)
-  minSalesForOpportunity       Int          @default(3)
-  newProductMinDays            Int          @default(30)
-  minHistoryDaysForDecision    Int          @default(7)
-  product                      BlingProduct @relation(fields: [productId], references: [id], onDelete: Cascade)
+  blingProductId               String       @unique
+  leadTimeDays                 Int          @default(15) // Tempo de reposição em dias
+  safetyDays                   Int          @default(5) // Dias de segurança para evitar rupturas
+  recoveryTarget               Float        @default(0.8) // Percentual do estoque a ser recuperado
+  opportunityGrowthThreshold   Float        @default(0.3) // Crescimento mínimo para considerar oportunidade
+  liquidationIdleThresholdDays Int          @default(30) // Dias mínimos de inatividade para considerar liquidação
+  liquidationMaxDays           Int          @default(30) // Dias máximos para considerar liquidação
+  minSalesForOpportunity       Int          @default(3) // Vendas mínimas para considerar oportunidade
+  newProductMinDays            Int          @default(30) // Dias mínimos para considerar um produto como novo
+  minHistoryDaysForDecision    Int          @default(7) // Dias mínimos de histórico para tomar decisões
+  product                      BlingProduct @relation(fields: [blingProductId], references: [blingProductId], onDelete: Cascade)
 
   @@map("bling_product_settings")
 }
@@ -274,36 +273,36 @@ model BlingCategory {
 }
 
 model BlingSalesHistory {
-  id          String       @id @default(uuid())
-  blingSaleId String
-  productId   String
-  date        DateTime
-  quantity    Int          @default(0)
-  totalValue  Float        @default(0)
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
-  product     BlingProduct @relation(fields: [productId], references: [id], onDelete: Cascade)
+  id             String       @id @default(uuid())
+  blingSaleId    String
+  blingProductId String
+  date           DateTime
+  quantity       Int          @default(0)
+  totalValue     Float        @default(0)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  product        BlingProduct @relation(fields: [blingProductId], references: [blingProductId], onDelete: Cascade)
 
-  @@unique([blingSaleId, productId])
-  @@index([productId])
+  @@unique([blingSaleId, blingProductId])
+  @@index([blingProductId, blingSaleId, date])
   @@map("bling_sales_history")
 }
 
 model BlingStockBalance {
-  id        String       @id @default(uuid())
-  productId String
-  stock     Int          @default(0)
-  createdAt DateTime     @default(now())
-  updatedAt DateTime     @updatedAt
-  product   BlingProduct @relation(fields: [productId], references: [id], onDelete: Cascade)
+  id             String       @id @default(uuid())
+  blingProductId String
+  stock          Int          @default(0)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  product        BlingProduct @relation(fields: [blingProductId], references: [blingProductId], onDelete: Cascade)
 
-  @@index([productId])
+  @@index([blingProductId])
   @@map("bling_stock_balance")
 }
 
 model BlingAlert {
   id                  String           @id @default(uuid())
-  productId           String           @unique
+  blingProductId      String           @unique
   type                BlingAlertType   @default(FINE)
   risk                BlingRuptureRisk @default(LOW)
   vvdReal             Float            @default(0)
@@ -325,9 +324,9 @@ model BlingAlert {
   createdAt           DateTime         @default(now())
   updatedAt           DateTime         @updatedAt
   jobId               String?
-  product             BlingProduct     @relation(fields: [productId], references: [id], onDelete: Cascade)
+  product             BlingProduct     @relation(fields: [blingProductId], references: [blingProductId], onDelete: Cascade)
 
-  @@index([productId, type, risk])
+  @@index([blingProductId, type, risk])
   @@map("bling_alerts")
 }
 

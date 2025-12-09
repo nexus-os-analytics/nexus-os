@@ -171,15 +171,14 @@ CREATE TABLE "bling_integrations" (
 CREATE TABLE "bling_products" (
     "id" TEXT NOT NULL,
     "blingProductId" TEXT NOT NULL,
-    "categoryId" TEXT,
+    "blingCategoryId" TEXT,
     "name" TEXT NOT NULL,
     "sku" TEXT NOT NULL,
     "costPrice" DOUBLE PRECISION NOT NULL DEFAULT 0,
     "salePrice" DOUBLE PRECISION NOT NULL DEFAULT 0,
-    "stock" INTEGER NOT NULL DEFAULT 0,
+    "currentStock" INTEGER NOT NULL DEFAULT 0,
     "image" TEXT,
     "shortDescription" TEXT,
-    "lastSaleDate" TIMESTAMP(3),
     "integrationId" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
@@ -190,7 +189,7 @@ CREATE TABLE "bling_products" (
 -- CreateTable
 CREATE TABLE "bling_product_settings" (
     "id" TEXT NOT NULL,
-    "productId" TEXT NOT NULL,
+    "blingProductId" TEXT NOT NULL,
     "leadTimeDays" INTEGER NOT NULL DEFAULT 15,
     "safetyDays" INTEGER NOT NULL DEFAULT 5,
     "recoveryTarget" DOUBLE PRECISION NOT NULL DEFAULT 0.8,
@@ -220,7 +219,7 @@ CREATE TABLE "bling_categories" (
 CREATE TABLE "bling_sales_history" (
     "id" TEXT NOT NULL,
     "blingSaleId" TEXT NOT NULL,
-    "productId" TEXT NOT NULL,
+    "blingProductId" TEXT NOT NULL,
     "date" TIMESTAMP(3) NOT NULL,
     "quantity" INTEGER NOT NULL DEFAULT 0,
     "totalValue" DOUBLE PRECISION NOT NULL DEFAULT 0,
@@ -233,7 +232,7 @@ CREATE TABLE "bling_sales_history" (
 -- CreateTable
 CREATE TABLE "bling_stock_balance" (
     "id" TEXT NOT NULL,
-    "productId" TEXT NOT NULL,
+    "blingProductId" TEXT NOT NULL,
     "stock" INTEGER NOT NULL DEFAULT 0,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
@@ -244,7 +243,7 @@ CREATE TABLE "bling_stock_balance" (
 -- CreateTable
 CREATE TABLE "bling_alerts" (
     "id" TEXT NOT NULL,
-    "productId" TEXT NOT NULL,
+    "blingProductId" TEXT NOT NULL,
     "type" "BlingAlertType" NOT NULL DEFAULT 'FINE',
     "risk" "BlingRuptureRisk" NOT NULL DEFAULT 'LOW',
     "vvdReal" DOUBLE PRECISION NOT NULL DEFAULT 0,
@@ -337,25 +336,28 @@ CREATE UNIQUE INDEX "bling_integrations_userId_key" ON "bling_integrations"("use
 CREATE UNIQUE INDEX "bling_products_blingProductId_key" ON "bling_products"("blingProductId");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "bling_product_settings_productId_key" ON "bling_product_settings"("productId");
+CREATE INDEX "bling_products_blingProductId_integrationId_idx" ON "bling_products"("blingProductId", "integrationId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "bling_product_settings_blingProductId_key" ON "bling_product_settings"("blingProductId");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "bling_categories_blingCategoryId_key" ON "bling_categories"("blingCategoryId");
 
 -- CreateIndex
-CREATE INDEX "bling_sales_history_productId_idx" ON "bling_sales_history"("productId");
+CREATE INDEX "bling_sales_history_blingProductId_blingSaleId_date_idx" ON "bling_sales_history"("blingProductId", "blingSaleId", "date");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "bling_sales_history_blingSaleId_productId_key" ON "bling_sales_history"("blingSaleId", "productId");
+CREATE UNIQUE INDEX "bling_sales_history_blingSaleId_blingProductId_key" ON "bling_sales_history"("blingSaleId", "blingProductId");
 
 -- CreateIndex
-CREATE INDEX "bling_stock_balance_productId_idx" ON "bling_stock_balance"("productId");
+CREATE INDEX "bling_stock_balance_blingProductId_idx" ON "bling_stock_balance"("blingProductId");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "bling_alerts_productId_key" ON "bling_alerts"("productId");
+CREATE UNIQUE INDEX "bling_alerts_blingProductId_key" ON "bling_alerts"("blingProductId");
 
 -- CreateIndex
-CREATE INDEX "bling_alerts_productId_type_risk_idx" ON "bling_alerts"("productId", "type", "risk");
+CREATE INDEX "bling_alerts_blingProductId_type_risk_idx" ON "bling_alerts"("blingProductId", "type", "risk");
 
 -- CreateIndex
 CREATE INDEX "bling_sync_jobs_integrationId_status_createdAt_idx" ON "bling_sync_jobs"("integrationId", "status", "createdAt");
@@ -388,16 +390,16 @@ ALTER TABLE "bling_integrations" ADD CONSTRAINT "bling_integrations_userId_fkey"
 ALTER TABLE "bling_products" ADD CONSTRAINT "bling_products_integrationId_fkey" FOREIGN KEY ("integrationId") REFERENCES "bling_integrations"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "bling_products" ADD CONSTRAINT "bling_products_categoryId_fkey" FOREIGN KEY ("categoryId") REFERENCES "bling_categories"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "bling_products" ADD CONSTRAINT "bling_products_blingCategoryId_fkey" FOREIGN KEY ("blingCategoryId") REFERENCES "bling_categories"("blingCategoryId") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "bling_product_settings" ADD CONSTRAINT "bling_product_settings_productId_fkey" FOREIGN KEY ("productId") REFERENCES "bling_products"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "bling_product_settings" ADD CONSTRAINT "bling_product_settings_blingProductId_fkey" FOREIGN KEY ("blingProductId") REFERENCES "bling_products"("blingProductId") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "bling_sales_history" ADD CONSTRAINT "bling_sales_history_productId_fkey" FOREIGN KEY ("productId") REFERENCES "bling_products"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "bling_sales_history" ADD CONSTRAINT "bling_sales_history_blingProductId_fkey" FOREIGN KEY ("blingProductId") REFERENCES "bling_products"("blingProductId") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "bling_stock_balance" ADD CONSTRAINT "bling_stock_balance_productId_fkey" FOREIGN KEY ("productId") REFERENCES "bling_products"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "bling_stock_balance" ADD CONSTRAINT "bling_stock_balance_blingProductId_fkey" FOREIGN KEY ("blingProductId") REFERENCES "bling_products"("blingProductId") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "bling_alerts" ADD CONSTRAINT "bling_alerts_productId_fkey" FOREIGN KEY ("productId") REFERENCES "bling_products"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "bling_alerts" ADD CONSTRAINT "bling_alerts_blingProductId_fkey" FOREIGN KEY ("blingProductId") REFERENCES "bling_products"("blingProductId") ON DELETE CASCADE ON UPDATE CASCADE;
