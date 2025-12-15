@@ -175,6 +175,7 @@ enum BlingAlertType {
   RUPTURE
   DEAD_STOCK
   OPPORTUNITY
+  LIQUIDATION
 }
 
 enum BlingRuptureRisk {
@@ -244,18 +245,23 @@ model BlingProduct {
 }
 
 model BlingProductSettings {
-  id                           String       @id @default(uuid())
-  blingProductId               String       @unique
-  leadTimeDays                 Int          @default(15) // Tempo de reposição em dias
-  safetyDays                   Int          @default(5) // Dias de segurança para evitar rupturas
-  recoveryTarget               Float        @default(0.8) // Percentual do estoque a ser recuperado
-  opportunityGrowthThreshold   Float        @default(0.3) // Crescimento mínimo para considerar oportunidade
-  liquidationIdleThresholdDays Int          @default(30) // Dias mínimos de inatividade para considerar liquidação
-  liquidationMaxDays           Int          @default(30) // Dias máximos para considerar liquidação
-  minSalesForOpportunity       Int          @default(3) // Vendas mínimas para considerar oportunidade
-  newProductMinDays            Int          @default(30) // Dias mínimos para considerar um produto como novo
-  minHistoryDaysForDecision    Int          @default(7) // Dias mínimos de histórico para tomar decisões
-  product                      BlingProduct @relation(fields: [blingProductId], references: [blingProductId], onDelete: Cascade)
+  id                                String       @id @default(uuid())
+  blingProductId                    String       @unique
+  leadTimeDays                      Int          @default(15)
+  safetyDays                        Int          @default(5)
+  criticalDaysRemainingThreshold    Int          @default(7)
+  highDaysRemainingThreshold        Int          @default(15)
+  mediumDaysRemainingThreshold      Int          @default(30)
+  opportunityGrowthThresholdPct     Float        @default(0.5)
+  opportunityDemandVvd              Float        @default(1)
+  deadStockCapitalThreshold         Float        @default(5000)
+  capitalOptimizationThreshold      Float        @default(10000)
+  ruptureCapitalThreshold           Float        @default(5000)
+  liquidationDiscount               Float        @default(0.3)
+  costFactor                        Float        @default(0.8)
+  liquidationExcessCapitalThreshold Float        @default(2000)
+  fineExcessCapitalMax              Float        @default(5000)
+  product                           BlingProduct @relation(fields: [blingProductId], references: [blingProductId], onDelete: Cascade)
 
   @@map("bling_product_settings")
 }
@@ -319,6 +325,11 @@ model BlingAlert {
   daysOutOfStock      Int              @default(0)
   estimatedLostSales  Int              @default(0)
   estimatedLostAmount Int              @default(0)
+  // New excess/cover metrics
+  idealStock          Float            @default(0)
+  excessUnits         Int              @default(0)
+  excessPercentage    Float            @default(0)
+  excessCapital       Float            @default(0)
   message             String?          @db.Text
   recommendations     Json?
   createdAt           DateTime         @default(now())

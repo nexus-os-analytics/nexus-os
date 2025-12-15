@@ -33,7 +33,9 @@ export function Dashboard() {
   const alerts = data?.pages.flatMap((p) => p.data) ?? [];
 
   const criticalCount = alerts.filter(
-    (a) => a.alert.type === 'RUPTURE' || (a.alert.type === 'DEAD_STOCK' && (a.alert.metrics?.idleDays ?? 0) > 30)
+    (a) =>
+      a.alert.type === 'RUPTURE' ||
+      (a.alert.type === 'DEAD_STOCK' && (a.alert.metrics?.idleDays ?? 0) > 30)
   ).length;
 
   const handleOpenCampaign = (product: any) => {

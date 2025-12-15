@@ -3,6 +3,7 @@
 function formatCurrency(value?: number | null) {
   return (value ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 }
+
 import {
   Badge,
   Box,
@@ -26,9 +27,7 @@ import {
   Sparkles,
   TrendingUp,
 } from 'lucide-react';
-import { DashboardProductAlert } from '../../types';
-
-
+import type { DashboardProductAlert } from '../../types';
 
 interface ProductAlertCardProps {
   alert: DashboardProductAlert;
@@ -37,8 +36,9 @@ interface ProductAlertCardProps {
 
 export function ProductCard({ alert, onGenerateCampaign }: ProductAlertCardProps) {
   const { product, alert: alertData } = alert;
-  const { type, risk, riskLabel, metrics, recommendations, finalRecommendation, generatedAt } = alertData;
-// Função utilitária para moeda fora do componente
+  const { type, risk, riskLabel, metrics, recommendations, finalRecommendation, generatedAt } =
+    alertData;
+  // Função utilitária para moeda fora do componente
 
   // cores por risco técnico
   const RiskColorMap: Record<string, string> = {
@@ -77,7 +77,6 @@ export function ProductCard({ alert, onGenerateCampaign }: ProductAlertCardProps
   const s = styleByType[type as keyof typeof styleByType];
   const Icon = s.icon;
 
-
   function formatDate(iso?: string | null) {
     if (!iso) return 'N/A';
     try {
@@ -93,8 +92,7 @@ export function ProductCard({ alert, onGenerateCampaign }: ProductAlertCardProps
 
   // badge de risco legível (se tiver)
   const riskLabelDisplay =
-    (riskLabel ? String(riskLabel) : undefined) ||
-    (risk ? String(risk).toLowerCase() : undefined);
+    (riskLabel ? String(riskLabel) : undefined) || (risk ? String(risk).toLowerCase() : undefined);
 
   // recomendações
   const recs = recommendations ?? [];
@@ -186,7 +184,8 @@ export function ProductCard({ alert, onGenerateCampaign }: ProductAlertCardProps
               )}
 
               <Text size="sm" mb="6px">
-                Restam <strong>{(metrics.stockCoverageDays ?? 0).toFixed(0)}</strong> dias de estoque
+                Restam <strong>{(metrics.stockCoverageDays ?? 0).toFixed(0)}</strong> dias de
+                estoque
               </Text>
 
               <Group gap="xs" mb="6px">
@@ -214,7 +213,8 @@ export function ProductCard({ alert, onGenerateCampaign }: ProductAlertCardProps
           {type === 'DEAD_STOCK' && (
             <>
               <Text size="sm" mb="8px">
-                <strong>{formatCurrency(metrics.capitalStuck ?? stock * cost)}</strong> parados há <strong>{metrics.idleDays ?? 0} dias</strong>
+                <strong>{formatCurrency(metrics.capitalStuck ?? stock * cost)}</strong> parados há{' '}
+                <strong>{metrics.idleDays ?? 0} dias</strong>
               </Text>
 
               <Group gap="xs" mb="6px">

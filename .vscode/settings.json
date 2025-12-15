@@ -49,7 +49,7 @@
     "editor.defaultFormatter": "stylelint.vscode-stylelint"
   },
   "cSpell.language": "en,pt,pt-BR",
-  "prisma-smart-formatter.typescript.defaultFormatter": "biomejs.biome",
+  "prisma-smart-formatter.typescript.defaultFormatter": "vscode.typescript-language-features",
   "prisma-smart-formatter.typescriptreact.defaultFormatter": "biomejs.biome",
   "prisma-smart-formatter.prisma.defaultFormatter": "Prisma.prisma",
   "github.copilot.chat.codeGeneration.useInstructionFiles": true,

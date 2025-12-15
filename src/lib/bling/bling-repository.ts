@@ -31,20 +31,6 @@ export function createBlingRepository({ integrationId }: BlingRepositoryOptions)
           shortDescription,
         } = product;
 
-        const settings = await prisma.blingProductSettings.findFirst({
-          where: {
-            blingProductId: String(blingProductId),
-          },
-        });
-
-        if (!settings) {
-          await prisma.blingProductSettings.create({
-            data: {
-              blingProductId: String(blingProductId),
-            },
-          });
-        }
-
         await prisma.blingProduct.upsert({
           where: { blingProductId: String(blingProductId) },
           create: {
@@ -69,6 +55,15 @@ export function createBlingRepository({ integrationId }: BlingRepositoryOptions)
             shortDescription,
             integrationId,
           },
+        });
+
+        // Ensure settings exist AFTER product upsert to satisfy FK constraint
+        await prisma.blingProductSettings.upsert({
+          where: { blingProductId: String(blingProductId) },
+          create: {
+            blingProductId: String(blingProductId),
+          },
+          update: {},
         });
       }
     } catch (error) {
@@ -173,13 +168,18 @@ export function createBlingRepository({ integrationId }: BlingRepositoryOptions)
         blingProductId: settings.blingProductId,
         leadTimeDays: settings.leadTimeDays,
         safetyDays: settings.safetyDays,
-        recoveryTarget: settings.recoveryTarget,
-        opportunityGrowthThreshold: settings.opportunityGrowthThreshold,
-        liquidationIdleThresholdDays: settings.liquidationIdleThresholdDays,
-        liquidationMaxDays: settings.liquidationMaxDays,
-        minSalesForOpportunity: settings.minSalesForOpportunity,
-        newProductMinDays: settings.newProductMinDays,
-        minHistoryDaysForDecision: settings.minHistoryDaysForDecision,
+        criticalDaysRemainingThreshold: settings.criticalDaysRemainingThreshold,
+        highDaysRemainingThreshold: settings.highDaysRemainingThreshold,
+        mediumDaysRemainingThreshold: settings.mediumDaysRemainingThreshold,
+        opportunityGrowthThresholdPct: settings.opportunityGrowthThresholdPct,
+        opportunityDemandVvd: settings.opportunityDemandVvd,
+        deadStockCapitalThreshold: settings.deadStockCapitalThreshold,
+        capitalOptimizationThreshold: settings.capitalOptimizationThreshold,
+        ruptureCapitalThreshold: settings.ruptureCapitalThreshold,
+        liquidationDiscount: settings.liquidationDiscount,
+        costFactor: settings.costFactor,
+        liquidationExcessCapitalThreshold: settings.liquidationExcessCapitalThreshold,
+        fineExcessCapitalMax: settings.fineExcessCapitalMax,
       };
     } catch (error) {
       console.error('Error fetching Bling product settings:', error);

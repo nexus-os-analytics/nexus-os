@@ -2,8 +2,6 @@ import { BlingSyncStatus } from '@prisma/client';
 import pino from 'pino';
 import {
   calculateAllMetrics,
-  calculateDaysRemaining,
-  calculateRealVVD,
   createBlingRepository,
   getDaysWithSales,
   getLastSaleDate,
@@ -13,7 +11,50 @@ import {
 import prisma from '@/lib/prisma';
 import { inngest } from '../../client';
 
+// Named time window constants to avoid magic numbers
+const DAYS_IN_30 = 30;
+const DAYS_IN_7 = 7;
+const DEFAULT_COST_FACTOR = 0.8;
+
 const logger = pino();
+
+function resolveCurrentStock(
+  productStock: number | null | undefined,
+  stockBalanceStock: number | null | undefined,
+  stockBalanceUpdatedAt: Date | string | null | undefined,
+  lastSaleDate: Date | null
+): number {
+  const balanceIsOlderThanLastSale = Boolean(
+    stockBalanceUpdatedAt &&
+      lastSaleDate &&
+      new Date(stockBalanceUpdatedAt).getTime() < new Date(lastSaleDate).getTime()
+  );
+  if (balanceIsOlderThanLastSale) return productStock ?? 0;
+  return stockBalanceStock ?? productStock ?? 0;
+}
+
+function getDaysWithSalesWithinWindow(sales: { date: Date | string }[], days: number): number {
+  const now = new Date();
+  const cutoff = new Date(now);
+  cutoff.setDate(now.getDate() - days);
+  const uniqueDays = new Set(
+    sales
+      .filter((s) => new Date(s.date) >= cutoff)
+      .map((s) => new Date(s.date).toISOString().split('T')[0])
+  );
+  return uniqueDays.size;
+}
+
+function inferStockOutDate(
+  hasStockOut: boolean,
+  stockBalanceStock: number | null | undefined,
+  stockBalanceUpdatedAt: Date | string | null | undefined,
+  lastSaleDate: Date | null
+): Date | undefined {
+  if (!hasStockOut) return undefined;
+  if (stockBalanceStock === 0 && stockBalanceUpdatedAt) return new Date(stockBalanceUpdatedAt);
+  return lastSaleDate ?? undefined;
+}
 
 export const generateAlerts = inngest.createFunction(
   {
@@ -59,20 +100,36 @@ export const generateAlerts = inngest.createFunction(
             blingRepository.getProductSettings(product.blingProductId),
           ]);
 
-          const vvdReal = calculateRealVVD(getTotalSales(sales), getDaysWithSales(sales));
-          const daysRemaining = calculateDaysRemaining(product.currentStock || 0, vvdReal);
+          const lastSaleDate = getLastSaleDate(sales) ?? null;
 
-          const costPrice = product.costPrice || 0;
+          const currentStockForCalc = resolveCurrentStock(
+            product.currentStock,
+            stockBalance?.stock,
+            stockBalance?.updatedAt ?? null,
+            lastSaleDate
+          );
+
           const salePrice = product.salePrice || 0;
-          const currentStock = product.currentStock || 0;
+          const costFallbackFactor = productSettings?.costFactor ?? DEFAULT_COST_FACTOR;
+          const costPrice = salePrice * costFallbackFactor;
+          const currentStock = currentStockForCalc;
           const daysWithSales = getDaysWithSales(sales);
           const totalSales = getTotalSales(sales);
-          const hasStockOut =
-            product.currentStock === 0 || !stockBalance || stockBalance.stock === 0;
-          const lastSaleDate = getLastSaleDate(sales) || new Date(0);
-          const totalLast30DaysSales = getTotalLastSales(sales, 30);
-          const totalLast7DaysSales = getTotalLastSales(sales, 7);
-          const stockOutDate = new Date(Date.now() + daysRemaining * 86400000);
+          const hasStockOut = currentStockForCalc === 0;
+
+          // Compute windowed totals and unique sale days within windows
+          const totalLast30DaysSales = getTotalLastSales(sales, DAYS_IN_30);
+          const totalLast7DaysSales = getTotalLastSales(sales, DAYS_IN_7);
+          const daysWithSalesWithinLast30 = getDaysWithSalesWithinWindow(sales, DAYS_IN_30);
+          const daysWithSalesWithinLast7 = getDaysWithSalesWithinWindow(sales, DAYS_IN_7);
+
+          // Infer stock-out date when zero stock
+          const stockOutDate = inferStockOutDate(
+            hasStockOut,
+            stockBalance?.stock,
+            stockBalance?.updatedAt ?? null,
+            lastSaleDate
+          );
 
           const productMetrics = calculateAllMetrics(
             {
@@ -86,6 +143,8 @@ export const generateAlerts = inngest.createFunction(
               totalLast30DaysSales,
               totalLast7DaysSales,
               stockOutDate,
+              daysWithSalesWithinLast30,
+              daysWithSalesWithinLast7,
             },
             productSettings
           );

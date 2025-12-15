@@ -1,5 +1,5 @@
 import { useInfiniteQuery } from '@tanstack/react-query';
-import { DashboardAlertsResponse } from '../types';
+import type { DashboardAlertsResponse } from '../types';
 
 export function useAlertsQuery(filter: string | null) {
   return useInfiniteQuery<DashboardAlertsResponse>({

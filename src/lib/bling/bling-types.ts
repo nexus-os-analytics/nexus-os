@@ -28,13 +28,18 @@ export interface BlingProductSettingsType {
   blingProductId: string;
   leadTimeDays: number;
   safetyDays: number;
-  recoveryTarget: number;
-  opportunityGrowthThreshold: number;
-  liquidationIdleThresholdDays: number;
-  liquidationMaxDays: number;
-  minSalesForOpportunity: number;
-  newProductMinDays: number;
-  minHistoryDaysForDecision: number;
+  criticalDaysRemainingThreshold: number;
+  highDaysRemainingThreshold: number;
+  mediumDaysRemainingThreshold: number;
+  opportunityGrowthThresholdPct: number;
+  opportunityDemandVvd: number;
+  deadStockCapitalThreshold: number;
+  capitalOptimizationThreshold: number;
+  ruptureCapitalThreshold: number;
+  liquidationDiscount: number;
+  costFactor: number;
+  liquidationExcessCapitalThreshold: number;
+  fineExcessCapitalMax: number;
   product?: BlingProductType;
 }
 
@@ -69,7 +74,31 @@ export interface BlingStockBalanceType {
   product?: BlingProductType | null;
 }
 
-export type BlingProductMetrics = {};
+export interface BlingProductMetrics {
+  vvdReal: number;
+  vvd30: number;
+  vvd7: number;
+  daysRemaining: number;
+  reorderPoint: number;
+  growthTrend: number;
+  capitalStuck: number;
+  daysSinceLastSale: number;
+  suggestedPrice: number;
+  estimatedDeadline: number;
+  recoverableAmount: number;
+  daysOutOfStock: number;
+  estimatedLostSales: number;
+  estimatedLostAmount: number;
+  risk: RuptureRiskEnum;
+  type: AlertTypeEnum;
+  message: string;
+  recommendations: string[];
+  // Optional surfaced values for UI
+  idealStock?: number;
+  excessUnits?: number;
+  excessPercentage?: number;
+  excessCapital?: number;
+}
 
 export interface BlingProductData {
   totalSales: number;
@@ -79,9 +108,11 @@ export interface BlingProductData {
   currentStock: number;
   costPrice: number;
   salePrice: number;
-  lastSaleDate: Date;
+  lastSaleDate: Date | null;
   hasStockOut: boolean;
   stockOutDate?: Date;
+  daysWithSalesWithinLast30?: number;
+  daysWithSalesWithinLast7?: number;
 }
 
 export interface BlingAlertType {
@@ -103,6 +134,10 @@ export interface BlingAlertType {
   daysOutOfStock: number;
   estimatedLostSales: number;
   estimatedLostAmount: number;
+  idealStock: number;
+  excessUnits: number;
+  excessPercentage: number;
+  excessCapital: number;
   message?: string | null;
   recommendations?: string | null; // JSON stringified array of strings
   createdAt: Date;
