@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
-import { getDashboardFirstImpact } from '@/features/dashboard/services';
-import { BlingIntegration } from '@/lib/bling';
+import { BlingIntegration, createBlingRepository } from '@/lib/bling';
 import { authOptions } from '@/lib/next-auth';
 
 export async function GET() {
@@ -22,11 +21,12 @@ export async function GET() {
       );
     }
 
-    const data = await getDashboardFirstImpact(integration.id);
+    const blingRepository = createBlingRepository({ integrationId: integration.id });
+    const result = await blingRepository.getOverviewMetrics({ integrationId: integration.id });
 
-    return NextResponse.json(data);
+    return NextResponse.json(result);
   } catch (err) {
-    console.error('[first-impact]', err);
-    return NextResponse.json({ error: 'Erro ao buscar dados do First Impact.' }, { status: 500 });
+    console.error('[overview-metrics]', err);
+    return NextResponse.json({ error: 'Erro ao buscar dados da visão geral.' }, { status: 500 });
   }
 }

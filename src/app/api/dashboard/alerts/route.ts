@@ -1,11 +1,12 @@
+import type { BlingAlertType, BlingRuptureRisk } from '@prisma/client';
 import { type NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import { getDashboardAlerts } from '@/features/dashboard/services';
-import type { DashboardAlertsResponse } from '@/features/dashboard/types';
-import { BlingIntegration } from '@/lib/bling';
+import pino from 'pino';
+import { BlingIntegration, createBlingRepository } from '@/lib/bling';
 import { authOptions } from '@/lib/next-auth';
 
 const PAGE_SIZE_DEFAULT = 20;
+const logger = pino({ name: 'api/dashboard/alerts' });
 
 export async function GET(req: NextRequest) {
   try {
@@ -25,31 +26,45 @@ export async function GET(req: NextRequest) {
       );
     }
 
+    const blingRepository = createBlingRepository({ integrationId: integration.id });
     const { searchParams } = new URL(req.url);
 
     const limit = Number(searchParams.get('limit')) || PAGE_SIZE_DEFAULT;
     const cursor = searchParams.get('cursor') as string; // ISO timestamp or id
+    const typeParam = searchParams.get('type');
+    const riskParam = searchParams.get('risk');
 
-    const result = await getDashboardAlerts({
+    const filters: {
+      type?: BlingAlertType[];
+      risk?: BlingRuptureRisk[];
+    } = {};
+
+    if (typeParam) {
+      filters.type = typeParam.split(',') as BlingAlertType[];
+    }
+
+    if (riskParam) {
+      filters.risk = riskParam.split(',') as BlingRuptureRisk[];
+    }
+
+    logger.info(
+      { filters, limit, cursor, integrationId: integration.id },
+      'Fetching product alerts'
+    );
+
+    const result = await blingRepository.getProductAlerts({
       integrationId: integration.id,
       limit,
       cursor,
+      filters,
     });
 
-    const response: DashboardAlertsResponse = {
-      data: result.data,
-      pagination: {
-        nextCursor: result.nextCursor,
-        hasNextPage: result.hasNextPage,
-      },
-    };
-
-    return new Response(JSON.stringify(response), {
+    return new Response(JSON.stringify(result), {
       status: 200,
       headers: { 'Content-Type': 'application/json' },
     });
   } catch (err) {
     console.error('[alerts]', err);
-    return NextResponse.json({ error: 'Erro ao buscar dados dos alertas.' }, { status: 500 });
+    return NextResponse.json({ error: 'Erro ao buscar os alertas.' }, { status: 500 });
   }
 }

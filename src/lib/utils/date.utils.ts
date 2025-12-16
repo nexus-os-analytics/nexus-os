@@ -1,10 +1,9 @@
-/**
- * Returns the date string for a given number of days ago
- * @param days Number of days ago
- * @returns Date string in ISO format (YYYY-MM-DD)
- */
 export function daysAgo(days: number): string {
   const date = new Date();
   date.setDate(date.getDate() - days);
   return date.toISOString().split('T')[0];
+}
+
+export function formatDate(date: Date): string {
+  return date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
 }

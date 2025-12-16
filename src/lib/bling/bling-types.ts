@@ -17,10 +17,40 @@ export interface BlingProductType {
   createdAt: Date;
   updatedAt: Date;
   category?: BlingCategoryType | null;
-  alert?: BlingAlertType | null;
+  alert?: BlingProductAlertType | null;
   settings?: BlingProductSettingsType | null;
   salesHistory?: BlingSalesHistoryType[];
   stockBalances?: BlingStockBalanceType[];
+}
+
+export interface BlingProductAlertType {
+  id: string;
+  blingProductId: string;
+  type: AlertTypeEnum;
+  risk: RuptureRiskEnum;
+  vvdReal: number;
+  vvd30: number;
+  vvd7: number;
+  daysRemaining: number;
+  reorderPoint: number;
+  growthTrend: number;
+  capitalStuck: number;
+  daysSinceLastSale: number;
+  suggestedPrice: number;
+  estimatedDeadline: number;
+  recoverableAmount: number;
+  daysOutOfStock: number;
+  estimatedLostSales: number;
+  estimatedLostAmount: number;
+  idealStock: number;
+  excessUnits: number;
+  excessPercentage: number;
+  excessCapital: number;
+  message?: string | null;
+  recommendations?: string | null; // JSON stringified array of strings
+  createdAt: Date;
+  updatedAt: Date;
+  product?: BlingProductType | null;
 }
 
 export interface BlingProductSettingsType {
@@ -74,6 +104,21 @@ export interface BlingStockBalanceType {
   product?: BlingProductType | null;
 }
 
+export interface BlingProductData {
+  totalSales: number;
+  daysWithSales: number;
+  totalLast30DaysSales: number;
+  totalLast7DaysSales: number;
+  currentStock: number;
+  costPrice: number;
+  salePrice: number;
+  lastSaleDate: Date | null;
+  hasStockOut: boolean;
+  stockOutDate?: Date;
+  daysWithSalesWithinLast30?: number;
+  daysWithSalesWithinLast7?: number;
+}
+
 export interface BlingProductMetrics {
   vvdReal: number;
   vvd30: number;
@@ -93,54 +138,8 @@ export interface BlingProductMetrics {
   type: AlertTypeEnum;
   message: string;
   recommendations: string[];
-  // Optional surfaced values for UI
   idealStock?: number;
   excessUnits?: number;
   excessPercentage?: number;
   excessCapital?: number;
-}
-
-export interface BlingProductData {
-  totalSales: number;
-  daysWithSales: number;
-  totalLast30DaysSales: number;
-  totalLast7DaysSales: number;
-  currentStock: number;
-  costPrice: number;
-  salePrice: number;
-  lastSaleDate: Date | null;
-  hasStockOut: boolean;
-  stockOutDate?: Date;
-  daysWithSalesWithinLast30?: number;
-  daysWithSalesWithinLast7?: number;
-}
-
-export interface BlingAlertType {
-  id: string;
-  blingProductId: string;
-  type: AlertTypeEnum;
-  risk: RuptureRiskEnum;
-  vvdReal: number;
-  vvd30: number;
-  vvd7: number;
-  daysRemaining: number;
-  reorderPoint: number;
-  growthTrend: number;
-  capitalStuck: number;
-  daysSinceLastSale: number;
-  suggestedPrice: number;
-  estimatedDeadline: number;
-  recoverableAmount: number;
-  daysOutOfStock: number;
-  estimatedLostSales: number;
-  estimatedLostAmount: number;
-  idealStock: number;
-  excessUnits: number;
-  excessPercentage: number;
-  excessCapital: number;
-  message?: string | null;
-  recommendations?: string | null; // JSON stringified array of strings
-  createdAt: Date;
-  updatedAt: Date;
-  product?: BlingProductType | null;
 }

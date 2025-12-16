@@ -1,3 +1,9 @@
+import type {
+  GetOverviewMetricsParams,
+  GetOverviewMetricsResponse,
+  GetProductAlertsResponse,
+  GetProductsAlertsParams,
+} from '@/features/products/types';
 import prisma from '../prisma';
 import type {
   BlingCategoryType,
@@ -118,6 +124,10 @@ export function createBlingRepository({ integrationId }: BlingRepositoryOptions)
           integrationId,
           blingProductId: String(blingProductId),
         },
+        include: {
+          alert: true,
+          settings: true,
+        },
       });
 
       if (!product) {
@@ -137,6 +147,56 @@ export function createBlingRepository({ integrationId }: BlingRepositoryOptions)
         shortDescription: product.shortDescription,
         createdAt: product.createdAt,
         updatedAt: product.updatedAt,
+        alert: product.alert
+          ? {
+              id: product.alert.id,
+              blingProductId: product.alert.blingProductId,
+              type: product.alert.type,
+              risk: product.alert.risk,
+              vvdReal: product.alert.vvdReal,
+              vvd30: product.alert.vvd30,
+              vvd7: product.alert.vvd7,
+              daysRemaining: product.alert.daysRemaining,
+              reorderPoint: product.alert.reorderPoint,
+              growthTrend: product.alert.growthTrend,
+              capitalStuck: product.alert.capitalStuck,
+              daysSinceLastSale: product.alert.daysSinceLastSale,
+              suggestedPrice: product.alert.suggestedPrice,
+              estimatedDeadline: product.alert.estimatedDeadline,
+              recoverableAmount: product.alert.recoverableAmount,
+              daysOutOfStock: product.alert.daysOutOfStock,
+              estimatedLostSales: product.alert.estimatedLostSales,
+              estimatedLostAmount: product.alert.estimatedLostAmount,
+              idealStock: product.alert.idealStock,
+              excessUnits: product.alert.excessUnits,
+              excessPercentage: product.alert.excessPercentage,
+              excessCapital: product.alert.excessCapital,
+              message: product.alert.message,
+              recommendations: JSON.stringify(product.alert.recommendations),
+              createdAt: product.alert.createdAt,
+              updatedAt: product.alert.updatedAt,
+            }
+          : null,
+        settings: product.settings
+          ? {
+              id: product.settings.id,
+              blingProductId: product.settings.blingProductId,
+              leadTimeDays: product.settings.leadTimeDays,
+              safetyDays: product.settings.safetyDays,
+              criticalDaysRemainingThreshold: product.settings.criticalDaysRemainingThreshold,
+              highDaysRemainingThreshold: product.settings.highDaysRemainingThreshold,
+              mediumDaysRemainingThreshold: product.settings.mediumDaysRemainingThreshold,
+              opportunityGrowthThresholdPct: product.settings.opportunityGrowthThresholdPct,
+              opportunityDemandVvd: product.settings.opportunityDemandVvd,
+              deadStockCapitalThreshold: product.settings.deadStockCapitalThreshold,
+              capitalOptimizationThreshold: product.settings.capitalOptimizationThreshold,
+              ruptureCapitalThreshold: product.settings.ruptureCapitalThreshold,
+              liquidationDiscount: product.settings.liquidationDiscount,
+              costFactor: product.settings.costFactor,
+              liquidationExcessCapitalThreshold: product.settings.liquidationExcessCapitalThreshold,
+              fineExcessCapitalMax: product.settings.fineExcessCapitalMax,
+            }
+          : null,
       };
     } catch (error) {
       console.error('Error fetching Bling product by ID:', error);
@@ -183,6 +243,28 @@ export function createBlingRepository({ integrationId }: BlingRepositoryOptions)
       };
     } catch (error) {
       console.error('Error fetching Bling product settings:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Update product settings
+   * @param blingProductId - The Bling product ID
+   * @param settings - Partial settings to update
+   */
+  async function updateProductSettings(
+    blingProductId: string,
+    settings: Partial<BlingProductSettingsType>
+  ): Promise<void> {
+    try {
+      await prisma.blingProductSettings.updateMany({
+        where: {
+          blingProductId: String(blingProductId),
+        },
+        data: settings,
+      });
+    } catch (error) {
+      console.error('Error updating product settings:', error);
       throw error;
     }
   }
@@ -504,11 +586,153 @@ export function createBlingRepository({ integrationId }: BlingRepositoryOptions)
     }
   }
 
+  // TODO: Implement pagination with cursor
+  /**
+   * Get product alerts with pagination and filtering
+   * @param params - Parameters for fetching product alerts
+   * @returns Paginated product alerts
+   */
+  async function getProductAlerts(
+    params: GetProductsAlertsParams
+  ): Promise<GetProductAlertsResponse> {
+    const { limit = 20, integrationId, filters } = params;
+
+    const products = await prisma.blingProduct.findMany({
+      where: {
+        integrationId,
+        alert: {
+          type: filters?.type ? { in: filters.type } : undefined,
+          risk: filters?.risk ? { in: filters.risk } : undefined,
+        },
+      },
+      include: {
+        alert: true,
+      },
+      take: limit,
+      // skip: cursor ? 1 : 0, // Skip the cursor item if provided
+      // cursor: cursor
+      //   ? {
+      //     id: cursor,
+      //   }
+      //   : undefined,
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+
+    const hasNextPage = products.length > limit;
+    const data = hasNextPage ? products.slice(0, -1) : products;
+
+    return {
+      data: data.map((product) => ({
+        id: product.id,
+        blingProductId: product.blingProductId,
+        blingCategoryId: product.blingCategoryId,
+        sku: product.sku,
+        name: product.name,
+        costPrice: product.costPrice,
+        salePrice: product.salePrice,
+        currentStock: product.currentStock,
+        image: product.image,
+        shortDescription: product.shortDescription,
+        createdAt: product.createdAt,
+        updatedAt: product.updatedAt,
+        alert: product.alert
+          ? {
+              id: product.alert.id,
+              blingProductId: product.alert.blingProductId,
+              type: product.alert.type,
+              risk: product.alert.risk,
+              vvdReal: product.alert.vvdReal,
+              vvd30: product.alert.vvd30,
+              vvd7: product.alert.vvd7,
+              daysRemaining: product.alert.daysRemaining,
+              reorderPoint: product.alert.reorderPoint,
+              growthTrend: product.alert.growthTrend,
+              capitalStuck: product.alert.capitalStuck,
+              daysSinceLastSale: product.alert.daysSinceLastSale,
+              suggestedPrice: product.alert.suggestedPrice,
+              estimatedDeadline: product.alert.estimatedDeadline,
+              recoverableAmount: product.alert.recoverableAmount,
+              daysOutOfStock: product.alert.daysOutOfStock,
+              estimatedLostSales: product.alert.estimatedLostSales,
+              estimatedLostAmount: product.alert.estimatedLostAmount,
+              idealStock: product.alert.idealStock,
+              excessUnits: product.alert.excessUnits,
+              excessPercentage: product.alert.excessPercentage,
+              excessCapital: product.alert.excessCapital,
+              message: product.alert.message,
+              recommendations: JSON.stringify(product.alert.recommendations),
+              createdAt: product.alert.createdAt,
+              updatedAt: product.alert.updatedAt,
+            }
+          : null,
+      })),
+      nextCursor: hasNextPage ? data[data.length - 1].id : null,
+      hasNextPage,
+    };
+  }
+
+  /**
+   * Get overview metrics for the dashboard
+   * @param params - Parameters for fetching overview metrics
+   * @returns Overview metrics
+   */
+  async function getOverviewMetrics({
+    integrationId,
+  }: GetOverviewMetricsParams): Promise<GetOverviewMetricsResponse> {
+    const products = await prisma.blingProduct.findMany({
+      where: {
+        integrationId,
+        alert: {
+          isNot: null,
+        },
+      },
+      include: {
+        alert: true,
+      },
+    });
+
+    let capitalStuck = 0;
+    let ruptureCount = 0;
+    let opportunityCount = 0;
+    const topActions = [];
+
+    for (const product of products) {
+      if (product.alert) {
+        capitalStuck += product.alert.capitalStuck;
+
+        if (product.alert.type === 'DEAD_STOCK') {
+          ruptureCount += 1;
+        } else if (product.alert.type === 'OPPORTUNITY') {
+          opportunityCount += 1;
+        }
+
+        topActions.push({
+          id: product.id,
+          name: product.name,
+          sku: product.sku,
+          recommendations: product.alert.recommendations
+            ? JSON.stringify(product.alert.recommendations)
+            : null,
+        });
+      }
+    }
+
+    return {
+      capitalStuck,
+      ruptureCount,
+      opportunityCount,
+      topActions,
+    };
+  }
+
   return {
     upsertProducts,
     getProducts,
     getProductById,
     getProductSettings,
+    updateProductSettings,
     getCategories,
     getCategoryById,
     upsertCategories,
@@ -517,5 +741,7 @@ export function createBlingRepository({ integrationId }: BlingRepositoryOptions)
     getSaleHistoryByProductId,
     getStockBalanceByProductId,
     upsertProductAlert,
+    getProductAlerts,
+    getOverviewMetrics,
   };
 }
