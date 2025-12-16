@@ -1,10 +1,12 @@
-import type { NextApiRequest } from 'next';
 import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth/next';
+import { getServerSession } from 'next-auth';
+import pino from 'pino';
 import { BlingIntegration, createBlingRepository } from '@/lib/bling';
 import { authOptions } from '@/lib/next-auth';
 
-export async function GET(req: NextApiRequest) {
+const logger = pino({ name: 'api/products/[id]' });
+
+export async function GET(_req: Request, ctx: RouteContext<'/api/products/[id]'>) {
   try {
     const session = await getServerSession(authOptions);
     const userId = session?.user?.id;
@@ -22,9 +24,11 @@ export async function GET(req: NextApiRequest) {
       );
     }
 
-    const { id } = req.query;
+    const { id } = await ctx.params;
     const blingRepository = createBlingRepository({ integrationId: integration.id });
     const product = await blingRepository.getProductById(id as string);
+
+    logger.info({ productId: id, found: Boolean(product) }, 'Product fetched');
 
     if (!product) {
       return NextResponse.json({ error: 'Produto não encontrado.' }, { status: 404 });
@@ -32,7 +36,7 @@ export async function GET(req: NextApiRequest) {
 
     return NextResponse.json(product);
   } catch (err) {
-    console.error('[overview-metrics]', err);
-    return NextResponse.json({ error: 'Erro ao buscar dados da visão geral.' }, { status: 500 });
+    logger.error({ err }, 'Erro ao buscar detalhe do produto');
+    return NextResponse.json({ error: 'Erro ao buscar detalhe do produto.' }, { status: 500 });
   }
 }

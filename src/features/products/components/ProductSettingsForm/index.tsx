@@ -1,17 +1,86 @@
+'use client';
 import { Button, Card, Divider, Grid, Group, NumberInput, Text, Title } from '@mantine/core';
-import { useState } from 'react';
+import { notifications } from '@mantine/notifications';
+import { useState, useTransition } from 'react';
+import { saveProductSettingsAction } from '@/features/products/actions/product-settings.actions';
+import {
+  type SaveProductSettingsInput,
+  SaveProductSettingsSchema,
+} from '@/features/products/schemas/product-settings.schema';
 import type { BlingProductSettingsType } from '@/lib/bling';
 
 interface ProductSettingsFormProps {
   settings?: BlingProductSettingsType | null;
+  blingProductId: string;
 }
 
-export function ProductSettingsForm({ settings }: ProductSettingsFormProps) {
-  const [formSettings, setSettings] = useState<BlingProductSettingsType | null>(settings || null);
+const DEFAULT_SETTINGS: SaveProductSettingsInput = {
+  blingProductId: '',
+  leadTimeDays: 15,
+  safetyDays: 5,
+  criticalDaysRemainingThreshold: 7,
+  highDaysRemainingThreshold: 15,
+  mediumDaysRemainingThreshold: 30,
+  opportunityGrowthThresholdPct: 0.5,
+  opportunityDemandVvd: 1,
+  deadStockCapitalThreshold: 5000,
+  capitalOptimizationThreshold: 10000,
+  ruptureCapitalThreshold: 5000,
+  liquidationDiscount: 0.3,
+  costFactor: 0.8,
+  liquidationExcessCapitalThreshold: 2000,
+  fineExcessCapitalMax: 5000,
+};
+
+export function ProductSettingsForm({ settings, blingProductId }: ProductSettingsFormProps) {
+  const initial: SaveProductSettingsInput = settings
+    ? {
+        blingProductId,
+        leadTimeDays: settings.leadTimeDays,
+        safetyDays: settings.safetyDays,
+        criticalDaysRemainingThreshold: settings.criticalDaysRemainingThreshold,
+        highDaysRemainingThreshold: settings.highDaysRemainingThreshold,
+        mediumDaysRemainingThreshold: settings.mediumDaysRemainingThreshold,
+        opportunityGrowthThresholdPct: settings.opportunityGrowthThresholdPct,
+        opportunityDemandVvd: settings.opportunityDemandVvd,
+        deadStockCapitalThreshold: settings.deadStockCapitalThreshold,
+        capitalOptimizationThreshold: settings.capitalOptimizationThreshold,
+        ruptureCapitalThreshold: settings.ruptureCapitalThreshold,
+        liquidationDiscount: settings.liquidationDiscount,
+        costFactor: settings.costFactor,
+        liquidationExcessCapitalThreshold: settings.liquidationExcessCapitalThreshold,
+        fineExcessCapitalMax: settings.fineExcessCapitalMax,
+      }
+    : { ...DEFAULT_SETTINGS, blingProductId };
+  const [formSettings, setSettings] = useState<SaveProductSettingsInput>(initial);
+  const [submitting, startTransition] = useTransition();
+  const [error, setError] = useState<string | null>(null);
+
+  const handleSave = async () => {
+    setError(null);
+    const parsed = SaveProductSettingsSchema.safeParse({ ...formSettings, blingProductId });
+    if (!parsed.success) {
+      setError(parsed.error.issues[0]?.message ?? 'Verifique os campos informados.');
+      return;
+    }
+    startTransition(async () => {
+      try {
+        await saveProductSettingsAction(parsed.data);
+        notifications.show({
+          title: 'Configurações salvas',
+          message: 'As configurações do produto foram salvas com sucesso.',
+          color: 'green',
+        });
+      } catch (e) {
+        console.error('Error saving product settings:', e);
+        setError('Falha ao salvar configurações.');
+      }
+    });
+  };
 
   return (
-    <Card padding="lg" radius="md" withBorder shadow="sm" style={{ background: '#FFFFFF' }}>
-      <Title order={5} mb="md" style={{ color: '#2E2E2E' }}>
+    <Card padding="lg" radius="md" withBorder shadow="sm">
+      <Title order={5} mb="md">
         Configurações do Produto
       </Title>
       <Text size="sm" mb="xl">
@@ -28,10 +97,8 @@ export function ProductSettingsForm({ settings }: ProductSettingsFormProps) {
           <NumberInput
             label="Lead Time (dias)"
             description="Tempo de reposição do fornecedor"
-            value={formSettings?.leadTimeDays}
-            onChange={(val) =>
-              setSettings((prev) => (prev ? { ...prev, leadTimeDays: Number(val) } : prev))
-            }
+            value={formSettings.leadTimeDays}
+            onChange={(val) => setSettings((prev) => ({ ...prev, leadTimeDays: Number(val) }))}
             min={1}
             max={90}
           />
@@ -41,10 +108,8 @@ export function ProductSettingsForm({ settings }: ProductSettingsFormProps) {
           <NumberInput
             label="Dias de Segurança"
             description="Margem de segurança para variações"
-            value={formSettings?.safetyDays}
-            onChange={(val) =>
-              setSettings((prev) => (prev ? { ...prev, safetyDays: Number(val) } : prev))
-            }
+            value={formSettings.safetyDays}
+            onChange={(val) => setSettings((prev) => ({ ...prev, safetyDays: Number(val) }))}
             min={0}
             max={30}
           />
@@ -54,11 +119,9 @@ export function ProductSettingsForm({ settings }: ProductSettingsFormProps) {
           <NumberInput
             label="Fator de Custo"
             description="Multiplicador para cálculos financeiros"
-            value={formSettings?.costFactor}
-            onChange={(val) =>
-              setSettings((prev) => (prev ? { ...prev, costFactor: Number(val) } : prev))
-            }
-            min={1}
+            value={formSettings.costFactor}
+            onChange={(val) => setSettings((prev) => ({ ...prev, costFactor: Number(val) }))}
+            min={0.1}
             max={3}
             step={0.1}
             decimalScale={1}
@@ -74,11 +137,9 @@ export function ProductSettingsForm({ settings }: ProductSettingsFormProps) {
           <NumberInput
             label="Crítico (dias)"
             description="Dias restantes para risco crítico"
-            value={formSettings?.criticalDaysRemainingThreshold}
+            value={formSettings.criticalDaysRemainingThreshold}
             onChange={(val) =>
-              setSettings((prev) =>
-                prev ? { ...prev, criticalDaysRemainingThreshold: Number(val) } : prev
-              )
+              setSettings((prev) => ({ ...prev, criticalDaysRemainingThreshold: Number(val) }))
             }
             min={1}
             max={30}
@@ -89,11 +150,9 @@ export function ProductSettingsForm({ settings }: ProductSettingsFormProps) {
           <NumberInput
             label="Alto (dias)"
             description="Dias restantes para risco alto"
-            value={formSettings?.highDaysRemainingThreshold}
+            value={formSettings.highDaysRemainingThreshold}
             onChange={(val) =>
-              setSettings((prev) =>
-                prev ? { ...prev, highDaysRemainingThreshold: Number(val) } : prev
-              )
+              setSettings((prev) => ({ ...prev, highDaysRemainingThreshold: Number(val) }))
             }
             min={1}
             max={30}
@@ -104,11 +163,9 @@ export function ProductSettingsForm({ settings }: ProductSettingsFormProps) {
           <NumberInput
             label="Médio (dias)"
             description="Dias restantes para risco médio"
-            value={formSettings?.mediumDaysRemainingThreshold}
+            value={formSettings.mediumDaysRemainingThreshold}
             onChange={(val) =>
-              setSettings((prev) =>
-                prev ? { ...prev, mediumDaysRemainingThreshold: Number(val) } : prev
-              )
+              setSettings((prev) => ({ ...prev, mediumDaysRemainingThreshold: Number(val) }))
             }
             min={1}
             max={60}
@@ -128,11 +185,9 @@ export function ProductSettingsForm({ settings }: ProductSettingsFormProps) {
           <NumberInput
             label="Crescimento Mínimo (%)"
             description="% de crescimento para ser oportunidade"
-            value={formSettings?.opportunityGrowthThresholdPct}
+            value={formSettings.opportunityGrowthThresholdPct}
             onChange={(val) =>
-              setSettings((prev) =>
-                prev ? { ...prev, opportunityGrowthThresholdPct: Number(val) } : prev
-              )
+              setSettings((prev) => ({ ...prev, opportunityGrowthThresholdPct: Number(val) }))
             }
             min={10}
             max={100}
@@ -144,9 +199,9 @@ export function ProductSettingsForm({ settings }: ProductSettingsFormProps) {
           <NumberInput
             label="VVD Mínima"
             description="VVD mínima para considerar oportunidade"
-            value={formSettings?.opportunityDemandVvd}
+            value={formSettings.opportunityDemandVvd}
             onChange={(val) =>
-              setSettings((prev) => (prev ? { ...prev, opportunityDemandVvd: Number(val) } : prev))
+              setSettings((prev) => ({ ...prev, opportunityDemandVvd: Number(val) }))
             }
             min={1}
             max={20}
@@ -168,9 +223,9 @@ export function ProductSettingsForm({ settings }: ProductSettingsFormProps) {
           <NumberInput
             label="Desconto de Liquidação (%)"
             description="% de desconto padrão para liquidação"
-            value={formSettings?.liquidationDiscount}
+            value={formSettings.liquidationDiscount}
             onChange={(val) =>
-              setSettings((prev) => (prev ? { ...prev, liquidationDiscount: Number(val) } : prev))
+              setSettings((prev) => ({ ...prev, liquidationDiscount: Number(val) }))
             }
             min={5}
             max={50}
@@ -182,11 +237,9 @@ export function ProductSettingsForm({ settings }: ProductSettingsFormProps) {
           <NumberInput
             label="Capital Mínimo (R$)"
             description="Capital parado mínimo para alerta"
-            value={formSettings?.deadStockCapitalThreshold}
+            value={formSettings.deadStockCapitalThreshold}
             onChange={(val) =>
-              setSettings((prev) =>
-                prev ? { ...prev, deadStockCapitalThreshold: Number(val) } : prev
-              )
+              setSettings((prev) => ({ ...prev, deadStockCapitalThreshold: Number(val) }))
             }
             min={100}
             max={50000}
@@ -199,11 +252,9 @@ export function ProductSettingsForm({ settings }: ProductSettingsFormProps) {
           <NumberInput
             label="Capital Excesso Liquidação (R$)"
             description="Excesso de capital para liquidação"
-            value={formSettings?.liquidationExcessCapitalThreshold}
+            value={formSettings.liquidationExcessCapitalThreshold}
             onChange={(val) =>
-              setSettings((prev) =>
-                prev ? { ...prev, liquidationExcessCapitalThreshold: Number(val) } : prev
-              )
+              setSettings((prev) => ({ ...prev, liquidationExcessCapitalThreshold: Number(val) }))
             }
             min={1000}
             max={50000}
@@ -213,8 +264,16 @@ export function ProductSettingsForm({ settings }: ProductSettingsFormProps) {
         </Grid.Col>
       </Grid>
 
+      {error ? (
+        <Text c="red" size="sm" mt="md">
+          {error}
+        </Text>
+      ) : null}
+
       <Group justify="flex-end" mt="xl">
-        <Button color="brand">Salvar Configurações</Button>
+        <Button color="brand" onClick={handleSave} loading={submitting} disabled={submitting}>
+          Salvar Configurações
+        </Button>
       </Group>
     </Card>
   );

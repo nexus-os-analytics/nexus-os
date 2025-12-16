@@ -29,7 +29,7 @@ export function ProductMetrics({ product }: ProductMetricsProps) {
     <Grid gutter="lg">
       {/* Product Information */}
       <Grid.Col span={{ base: 12, md: 6 }}>
-        <Card padding="lg" radius="md" withBorder shadow="sm">
+        <Card padding="lg" radius="md" withBorder shadow="sm" h="100%">
           <Group mb="md">
             <ThemeIcon size={32} radius="md" color="blue" variant="light">
               <PackageIcon size={18} />
@@ -183,7 +183,7 @@ export function ProductMetrics({ product }: ProductMetricsProps) {
 
       {/* Recommendations */}
       <Grid.Col span={{ base: 12, md: 6 }}>
-        <Card padding="lg" radius="md" withBorder shadow="sm">
+        <Card padding="lg" radius="md" withBorder shadow="sm" h="100%">
           <Group mb="md">
             <ThemeIcon size={32} radius="md" color="violet" variant="light">
               <ShoppingCart size={18} />
@@ -225,13 +225,13 @@ export function ProductMetrics({ product }: ProductMetricsProps) {
             <Grid.Col span={{ base: 6, sm: 3 }}>
               <Stack gap={4}>
                 <Text size="xs">Criado em</Text>
-                <Text size="sm">{formatDate(alert.createdAt)}</Text>
+                <Text size="sm">{formatDate(alert.createdAt.toString())}</Text>
               </Stack>
             </Grid.Col>
             <Grid.Col span={{ base: 6, sm: 3 }}>
               <Stack gap={4}>
                 <Text size="xs">Atualizado em</Text>
-                <Text size="sm">{formatDate(alert.updatedAt)}</Text>
+                <Text size="sm">{formatDate(alert.updatedAt.toString())}</Text>
               </Stack>
             </Grid.Col>
             <Grid.Col span={{ base: 6, sm: 3 }}>
