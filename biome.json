@@ -7,7 +7,14 @@
   },
   "files": {
     "ignoreUnknown": true,
-    "includes": ["src/**/*", "!*.json", "!.next/**/*", "!node_modules/**/*"]
+    "includes": [
+      "src/**/*",
+      "next.config.*",
+      "prisma.config.*",
+      "!*.json",
+      "!.next/**/*",
+      "!node_modules/**/*"
+    ]
   },
   "formatter": {
     "enabled": true,
