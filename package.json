@@ -3,8 +3,10 @@
   "version": "2.0.0",
   "private": true,
   "scripts": {
+    "predev": "next typegen",
     "dev": "next dev --turbopack",
-    "build": "next build --turbopack",
+    "prebuild": "next typegen",
+    "build": "next build",
     "start": "next start",
     "lint": "biome check --fix ./src",
     "format": "biome format --write ./src",
