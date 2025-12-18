@@ -1,6 +1,7 @@
 import { getServerSession } from 'next-auth';
 import { AdminLayout } from '@/components/layout/AdminLayout';
 import { PublicLayout } from '@/components/layout/PublicLayout';
+import { NotFoundPage } from '@/components/pages/NotFound';
 import { authOptions } from '@/lib/next-auth';
 
 export default async function NotFound() {
@@ -9,13 +10,13 @@ export default async function NotFound() {
   if (!session)
     return (
       <PublicLayout>
-        <h1>Not Found</h1>
+        <NotFoundPage />
       </PublicLayout>
     );
 
   return (
     <AdminLayout>
-      <h1>Not Found</h1>
+      <NotFoundPage backHref="/dashboard" backLabel="Voltar para dashboard" />
     </AdminLayout>
   );
 }

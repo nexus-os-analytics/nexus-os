@@ -1,5 +1,5 @@
 import { PrismaAdapter } from '@next-auth/prisma-adapter';
-import { UserRole, BlingSyncStatus } from '@prisma/client';
+import { BlingSyncStatus, UserRole } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import type { AuthOptions } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
@@ -17,8 +17,8 @@ export const authOptions: AuthOptions = {
   secret: process.env.NEXTAUTH_SECRET,
 
   pages: {
-    signIn: '/sign-in',
-    error: '/sign-in?error=invalid_credentials',
+    signIn: '/login',
+    error: '/login?error=invalid_credentials',
   },
 
   session: {
@@ -88,7 +88,13 @@ export const authOptions: AuthOptions = {
         // Se o usuário tem 2FA ativo, o código deve estar presente
         if (user.isTwoFactorEnabled) {
           if (!credentials.code) {
-            return { id: user.id, role: UserRole.GUEST, required2FA: true, blingSyncStatus: user.blingSyncStatus, onboardingCompleted: user.onboardingCompleted };
+            return {
+              id: user.id,
+              role: UserRole.GUEST,
+              required2FA: true,
+              blingSyncStatus: user.blingSyncStatus,
+              onboardingCompleted: user.onboardingCompleted,
+            };
           }
 
           const isCodeValid = authenticator.verify({
@@ -263,16 +269,16 @@ export const authOptions: AuthOptions = {
         token.image = user.image;
         token.onboardingCompleted = user.onboardingCompleted;
         token.required2FA = user.required2FA;
-        
+
         // Fetch additional user data
         const dbUser = await prisma.user.findUnique({
-             where: { id: user.id },
-             include: { blingIntegration: true }
+          where: { id: user.id },
+          include: { blingIntegration: true },
         });
-        
+
         if (dbUser) {
-            token.blingSyncStatus = dbUser.blingSyncStatus;
-            token.hasBlingIntegration = !!dbUser.blingIntegration;
+          token.blingSyncStatus = dbUser.blingSyncStatus;
+          token.hasBlingIntegration = !!dbUser.blingIntegration;
         }
       }
 

@@ -1,12 +1,12 @@
 import '@mantine/core/styles.css';
 import '@mantine/notifications/styles.css';
-import './globals.css';
 import { ColorSchemeScript, mantineHtmlProps } from '@mantine/core';
+import { APP_DESCRIPTION, APP_NAME } from '@/lib/constants';
 import { Providers } from '@/providers';
 
 export const metadata = {
-  title: 'Next.js Base',
-  description: 'A base project for Next.js applications with authentication and Mantine UI',
+  title: APP_NAME,
+  description: APP_DESCRIPTION,
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

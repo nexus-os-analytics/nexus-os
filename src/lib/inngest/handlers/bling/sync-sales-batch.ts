@@ -29,13 +29,13 @@ export const syncSalesBatch = inngest.createFunction(
         const res = await Promise.all(
           b.map((s: any) =>
             blingClient.getSalesHistory(String(s.id)).catch((e) => {
-              logger.error(`Error fetching sale ${s.id}: ${e.message}`);
+              logger.error(`[bling/sync:sales-batch] Error fetching sale ${s.id}: ${e.message}`);
               return null;
             })
           )
         );
         fetched.push(...res.filter(Boolean).flat());
-        sleep(200); // to avoid rate limits
+        sleep(2000); // to avoid rate limits
       }
       logger.info(
         `[bling/sync:sales-batch] fetched ${fetched.length} sales history records for batch ${event.data.batchIndex} user ${userId}`

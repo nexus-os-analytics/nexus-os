@@ -1,77 +1,179 @@
 # Project Context & Agent Guidelines
 
-## 🚀 Project Overview
-**Name**: NexusOS / Next.js Base
-**Type**: SaaS Boilerplate / ERP Integration
-**Description**: A robust Full-Stack Next.js 15 application designed for SaaS products, featuring built-in authentication, database management, background jobs, and ERP integrations (Bling).
+## 1. Purpose
+This document provides the required context, architecture, and execution rules for all agents contributing to the **NexusOS** codebase.
+Agents must follow these guidelines rigorously to ensure consistency, maintainability, and correctness across the project.
 
-## 🛠 Tech Stack
-- **Framework**: Next.js 15 (App Router)
-- **Language**: TypeScript (Strict Mode)
-- **Package Manager**: pnpm (>=10)
-- **UI Library**: Mantine UI v8
-- **Styling**: PostCSS / Mantine Modules
-- **Database**: PostgreSQL
-- **ORM**: Prisma ORM
-- **Auth**: NextAuth.js v4
-- **State/Data**: TanStack React Query v5
-- **Validation**: Zod + React Hook Form
-- **Background Jobs**: Inngest
-- **Linting/Formatting**: Biome
-- **Logging**: Pino
+Before producing or modifying any code, components, database models, or architecture, agents must always follow the documentation sources and rules listed below.
 
-## 📂 Architecture
-The project follows a **Feature-Based Architecture** inside `src/features`.
-- **`src/features/*`**: Contains domain-specific logic (components, hooks, utils).
-- **`src/app/*`**: Next.js App Router pages (should be thin wrappers around feature components).
-- **`src/components/*`**: Shared/Generic UI components (Atomic design).
-- **`src/lib/*`**: Third-party integrations (Bling, Brevo, Inngest, Prisma).
-- **`src/hooks/*`**: Global hooks.
+## 2. Mandatory Documentation Sources (Always Fetch First)
 
-## 📏 Coding Rules & Standards
+### UI & Components (Mantine)
+Before generating, modifying, or suggesting **any UI code**, always fetch:
+- **https://mantine.dev/llms.txt**
 
-### 1. Code Quality (Biome)
-- **Linter/Formatter**: We use **Biome** instead of ESLint/Prettier.
-- **Strict Rules**:
-  - No `console.log` (Use `pino` logger or proper error handling).
-  - No `any` types.
-  - No CommonJS (`require`).
-  - Always use `import type` for type-only imports.
-- **Commands**:
-  - `pnpm lint`: Check for issues.
-  - `pnpm format`: Fix formatting.
+### Next.js Architecture & APIs
+Before working with routing, layouts, server components, client components, caching, data fetching, or actions:
+- **https://nextjs.org/docs/llms-full.txt**
 
-### 2. Component Design
-- Use **Mantine UI** components as the base.
-- Prefer **Functional Components**.
-- Use **Server Components** by default, add `'use client'` only when interactivity is needed.
-- **Forms**: Use `react-hook-form` with `zod` resolvers (`mantine-form-zod-resolver` or standard resolvers).
+### Database Models & Prisma Client
+Before touching Prisma schema, migrations, or database access layers:
+- **https://www.prisma.io/docs/llms.txt**
 
-### 3. Data Fetching
-- **Server Side**: Use Prisma directly in Server Components or Server Actions.
-- **Client Side**: Use **TanStack React Query** for data fetching and caching.
-- **Mutations**: Use Server Actions or API routes via React Query mutations.
+These URLs override any outdated assumptions or cached knowledge and must be consulted first.
 
-### 4. Database (Prisma)
-- Schema is located at `prisma/schema.prisma`.
-- Always run `npx prisma generate` after schema changes.
-- Use `npx prisma migrate dev` for local migrations.
+## 3. Project Overview
 
-### 5. Git & Commits
-- Follow **Conventional Commits** (e.g., `feat: add user profile`, `fix: login bug`).
-- Husky hooks are enabled to enforce linting and commit message format.
+**Name:** NexusOS
+**Version:** 2.0.0
+**Framework:** Next.js 15+ (App Router, Turbopack)
+**Type:** Full-Stack SaaS Platform with authentication, ERP integrations, background jobs, and dashboards.
 
-## 📦 Key Libraries & Integrations
-- **Bling ERP**: Integration logic in `src/lib/bling` and `src/features/bling`.
-- **Inngest**: Background jobs defined in `src/inngest`.
-- **NextAuth**: Configuration in `src/lib/next-auth`.
+## 4. Tech Stack
 
-## 🚀 Development Commands
+### Core
+- **Next.js 15+** (App Router only)
+- **React 19**
+- **TypeScript (strict mode)**
+- **pnpm** (required by the project, enforced via `preinstall`)
+- **Mantine UI v8** for all styling and components
+- **PostgreSQL** + **Prisma ORM**
+- **NextAuth.js v4** for authentication
+- **TanStack React Query v5** for client data fetching
+- **Zod** + **React Hook Form** for validation and forms
+- **Inngest** for background jobs
+- **Pino** for logging
+- **Biome** as linter/formatter (replaces ESLint/Prettier)
+
+### Dev Tools
+- Husky + Commitlint
+- Turbopack for dev and build
+- TypeScript type checks
+- Prisma migrations + deploy
+- Seed scripts via tsx
+
+## 5. Architecture
+
+The project follows a **Feature-Based Architecture** under `src/features`.
+
+### `src/app/*`
+Next.js App Router: routes, layouts, pages.
+Pages must remain thin — logic stays in features.
+
+### `src/features/*`
+Domain-driven feature modules, each containing:
+- UI components
+- Hooks
+- Domain logic
+- Schema/validators
+- Server actions
+
+### `src/components/*`
+Shared cross-feature UI components.
+
+### `src/lib/*`
+Integrations and global utilities:
+- `prisma/` ORM client + seed
+- `bling/` ERP
+- `next-auth/` authentication
+- `inngest/` job definitions
+- `pino/` logging config
+
+### `src/hooks/*`
+Global client or server hooks (non-feature specific).
+
+## 6. Engineering Rules (Critical)
+
+### 6.1 Code Generation Flow
+All agents must follow this sequence before generating code:
+1. Fetch required documentation URLs (Mantine, Next.js, Prisma).
+2. Produce a detailed step-by-step plan or pseudocode.
+3. Only then generate final code.
+
+### 6.2 React & Next.js Rules
+- Prefer **React Server Components**.
+- Only add `"use client"` when necessary.
+- Use **Server Actions** preferentially for mutations.
+- Avoid `useEffect` and client state unless required.
+- Do not use Pages Router patterns — App Router only.
+
+### 6.3 Mantine UI Rules
+- Mantine is the **only** UI and styling system.
+- Avoid Tailwind and raw CSS unless absolutely necessary.
+- Use Mantine theme tokens, props, `sx`, `styles`, etc.
+- Forms must use Mantine + React Hook Form + Zod.
+- Any new component must comply with Mantine official patterns.
+
+### 6.4 TypeScript Rules
+- Always use TypeScript.
+- Prefer `interface` over `type`.
+- Avoid custom enums; use Prisma enums where applicable.
+- Never duplicate Prisma types or enums.
+- No `any`.
+- Use `import type` for type-only imports.
+
+### 6.5 Prisma & Database Rules
+- Read Prisma docs before creating or modifying models.
+- Schema: `prisma/schema.prisma`.
+- After schema edits:
+  - `npx prisma generate`
+  - `npx prisma migrate dev`
+- Always use Prisma Client enums and types.
+- Never write raw SQL unless approved.
+
+### 6.6 Logging & Debugging
+- No `console.log`.
+- Use Pino or structured error handling.
+
+### 6.7 Code Quality (Biome)
+- Biome enforces code style and linting.
+- Commands:
+  - `pnpm lint`
+  - `pnpm format`
+
+## 7. Git Workflow
+
+- Uses **Conventional Commits**.
+- Husky prevents invalid commits.
+- Lint-staged applies Biome fixes on staged files.
+
+## 8. Integrations
+
+### Bling ERP
+Located in:
+- `src/lib/bling`
+- `src/features/bling`
+
+### Inngest
+Background jobs in:
+- `src/inngest`
+
+### NextAuth
+Configured in:
+- `src/lib/next-auth`
+
+## 9. Development Commands
+
 ```bash
-pnpm dev        # Start development server
+pnpm dev        # Development server (Turbopack)
 pnpm build      # Build for production
-pnpm start      # Start production server
-pnpm lint       # Run Biome checks
-pnpm format     # Run Biome formatting
-pnpm typecheck  # Run TypeScript checks
-```
+pnpm start      # Serve production build
+pnpm lint       # Biome checks
+pnpm format     # Biome formatting
+pnpm typecheck  # TypeScript type checking
+pnpm seed       # Run database seed
+pnpm inngest:dev # Inngest local worker
+````
+
+## 10. Agent Expectations
+
+Agents are expected to:
+
+* Always consult documentation URLs BEFORE generating code.
+* Produce correct, production-ready outputs without TODOs or placeholders.
+* Respect architecture boundaries.
+* Provide explicit file paths and directory structures.
+* Avoid guessing when requirements are unclear; request clarification instead.
+* Maintain strict type safety.
+
+Failure to respect these constraints will result in invalid contributions.

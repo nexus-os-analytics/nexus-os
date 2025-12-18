@@ -26,10 +26,10 @@ import { SignInSchema } from '../../services';
 
 export function SignIn() {
   const [loading, setLoading] = useState(false);
-  const { required2FA, status, user } = useAuth();
+  const { required2FA, status } = useAuth();
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const { getQueryParam } = useQueryString();
-  const nextPage = user?.onboardingCompleted ? '/dashboard' : '/onboarding';
+  const nextPage = '/bling';
   const redirect = getQueryParam('redirect') || nextPage;
   const router = useRouter();
 
@@ -57,6 +57,18 @@ export function SignIn() {
 
     if (result?.error) {
       setErrorMessage('E-mail ou senha inválidos');
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    try {
+      setLoading(true);
+      await signIn('google', { callbackUrl: redirect as string });
+    } catch (error) {
+      console.error('Erro ao autenticar com o Google:', error);
+      setErrorMessage('Erro ao autenticar com o Google. Tente novamente.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -122,7 +134,7 @@ export function SignIn() {
         </Stack>
 
         <Group justify="space-between" mt="xl">
-          <Anchor component={Link} href="/forgot-password" type="button" c="dimmed" size="xs">
+          <Anchor component={Link} href="/esqueci-minha-senha" type="button" c="dimmed" size="xs">
             Esqueceu sua senha?
           </Anchor>
           <Button type="submit" radius="xl" loading={loading}>
@@ -134,17 +146,13 @@ export function SignIn() {
       <Divider label="Ou continue com" labelPosition="center" my="lg" />
 
       <Group grow mb="md" mt="md">
-        <GoogleButton
-          radius="xl"
-          loading={loading}
-          onClick={() => signIn('google', { callbackUrl: redirect as string })}
-        >
+        <GoogleButton radius="xl" loading={loading} onClick={handleGoogleSignIn}>
           Google
         </GoogleButton>
       </Group>
 
       <Group justify="center">
-        <Anchor component={Link} href="/sign-up" type="button" c="dimmed" size="xs" ta="center">
+        <Anchor component={Link} href="/cadastre-se" type="button" c="dimmed" size="xs" ta="center">
           Não tem uma conta? Crie uma agora!
         </Anchor>
       </Group>

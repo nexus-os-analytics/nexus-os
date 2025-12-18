@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { BlingIntegration } from '@/lib/bling/bling-integration';
 import { authOptions } from '@/lib/next-auth';
+import prisma from '@/lib/prisma';
 
 export async function GET() {
   try {
@@ -11,6 +12,11 @@ export async function GET() {
       return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
     }
 
+    const user = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { id: true, blingSyncStatus: true },
+    });
+
     const integration = await BlingIntegration.getBlingIntegration(session.user.id);
     const isConnected = !!integration;
     const isValid = integration ? await BlingIntegration.isBlingTokenValid(session.user.id) : false;
@@ -18,6 +24,7 @@ export async function GET() {
     return NextResponse.json({
       connected: isConnected,
       valid: isValid,
+      syncStatus: user?.blingSyncStatus || null,
       integration: integration
         ? {
             connected_at: integration.connected_at,

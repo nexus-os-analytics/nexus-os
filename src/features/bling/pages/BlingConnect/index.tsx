@@ -1,4 +1,3 @@
-// BlingConnect.tsx
 'use client';
 import {
   Alert,
@@ -48,6 +47,9 @@ export function BlingConnect() {
         case 'invalid_callback':
           setError('Callback inválido do Bling. Tente novamente.');
           break;
+        case 'unauthorized':
+          setError('Usuário não autorizado. Faça login e tente novamente.');
+          break;
         default:
           setError('Erro desconhecido ao conectar com o Bling.');
       }
@@ -61,14 +63,14 @@ export function BlingConnect() {
 
   // Verificar se já está conectado
   useEffect(() => {
-    if (status?.connected && state === 'idle') {
+    if (status?.syncStatus === 'COMPLETED' && state === 'idle') {
       setState('complete');
       setProgress(100);
     }
   }, [status, state]);
 
   const handleComplete = () => {
-    router.push('/first-impact');
+    router.push('/visao-geral');
   };
 
   useEffect(() => {
@@ -121,7 +123,7 @@ export function BlingConnect() {
 
   const getDescription = () => {
     if (state === 'idle')
-      return 'Conecte sua conta Bling via OAuth 2.0 para começar a análise inteligente do seu estoque.';
+      return 'Conecte sua conta Bling para começar a análise inteligente do seu estoque.';
     if (state === 'connecting') return 'Redirecionando para o Bling...';
     if (state === 'analyzing')
       return 'Analisando Produtos ⏳ | Importando dados dos últimos 7 dias para gerar valor rápido...';
@@ -180,7 +182,7 @@ export function BlingConnect() {
                   </List.Item>
                   <List.Item>💰 Identificação de capital parado e dias sem vender</List.Item>
                   <List.Item>📈 Oportunidades de vendas (produtos em alta)</List.Item>
-                  <List.Item>🤖 Gerador de campanhas com IA (GPT-3.5-Turbo)</List.Item>
+                  <List.Item>🤖 Gerador de campanhas com IA</List.Item>
                 </List>
               </Paper>
               <Paper
@@ -194,7 +196,7 @@ export function BlingConnect() {
                 </Text>
               </Paper>
               <Button onClick={handleConnect} fullWidth size="lg" color="green.9" loading={loading}>
-                Conectar com Bling (OAuth)
+                Conectar com Bling
               </Button>
             </Stack>
           )}

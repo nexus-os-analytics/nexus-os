@@ -1,77 +1,84 @@
-import type { Category, Product, SalesHistory, StockBalance } from './bling-types';
+import type {
+  BlingCategoryType,
+  BlingProductType,
+  BlingSalesHistoryType,
+  BlingStockBalanceType,
+} from './bling-types';
 
 /**
- * Adapt list of products returned from Bling API to Product[]
- * @param data - The raw product data from the API
- * @returns An array of Product objects
+ * Adapt list of products returned from Bling API to `BlingProductType[]`
+ * @param data - Raw Bling products array from the API
+ * @returns `BlingProductType[]`
  */
-export function adaptProductsResponse(data: any[]): Product[] {
+export function adaptProductsResponse(data: any[]): BlingProductType[] {
   if (!Array.isArray(data)) return [];
 
   return data.map((item) => ({
-    id: item.id,
+    id: item.id, // local DB id will be assigned by Prisma
+    blingProductId: item.id,
     name: item.nome || '',
     sku: item.codigo || '',
     costPrice: item.precoCusto ?? 0,
     salePrice: item.preco ?? 0,
-    stock: item.estoque?.saldoVirtualTotal ?? 0,
-    image: item.imagem || null,
+    currentStock: item.estoque?.saldoVirtualTotal ?? 0,
+    image: item.imagemURL || null,
     shortDescription: item.descricaoCurta || null,
-    isActive: true,
-    capitalCostRate: 0, // calc later
-    replenishmentTime: 0, // to be populated when lead time data is available
-    safetyStock: 0,
-    storageCostRate: 0, // calc later
-    avgMonthlySales: 0, // calc later
-    lastSaleDate: null, // fill from sales endpoint later
-    categoryId: null, // to be populated when categories are integrated
+    createdAt: new Date(), // local DB timestamps will be assigned by Prisma
+    updatedAt: new Date(), // local DB timestamps will be assigned by Prisma
   }));
 }
 
 /**
- * Adapt category response from Bling API
- * @param data - The raw category data from the API
- * @returns An array of Category objects
+ * Adapt categories returned from Bling API to `BlingCategoryType[]`
+ * @param data - Raw Bling categories array from the API
+ * @returns `BlingCategoryType[]`
  */
-export function adaptCategoryResponse(data: any): Category[] {
+export function adaptCategoryResponse(data: any): BlingCategoryType[] {
   if (!Array.isArray(data)) return [];
 
   return data.map((item) => ({
-    id: item.id,
+    id: item.id, // local DB id will be assigned by Prisma
+    blingCategoryId: item.id,
     name: item.descricao || 'Sem categoria',
-    parentId: item.categoriaPai?.id || null,
+    blingParentId: item.categoriaPai?.id || null,
+    createdAt: new Date(), // local DB timestamps will be assigned by Prisma
+    updatedAt: new Date(), // local DB timestamps will be assigned by Prisma
   }));
 }
 
 /**
- * Adapt sales history response from Bling API
- * @param data - The raw sales history data from the API
- * @returns An array of SalesHistory objects
+ * Adapt a Bling sale payload to `BlingSalesHistoryType[]`
+ * @param data - Raw Bling sale object containing `data` and `itens`
+ * @returns `BlingSalesHistoryType[]`
  */
-export function adaptSalesHistoryResponse(data: any): SalesHistory[] {
+export function adaptSalesHistoryResponse(data: any): BlingSalesHistoryType[] {
   const dateIso = new Date(data.data).toISOString();
 
   return data.itens.map((item: any) => ({
-    id: data.id,
+    id: data.id, // local DB id will be assigned by Prisma
+    blingSaleId: data.id,
+    blingProductId: item.produto.id,
     date: dateIso,
-    productId: item.produto.id,
-    productSku: item.codigo,
     quantity: item.quantidade,
     totalValue: item.valor * item.quantidade - item.desconto,
+    createdAt: new Date(), // local DB timestamps will be assigned by Prisma
+    updatedAt: new Date(), // local DB timestamps will be assigned by Prisma
   }));
 }
 
 /**
- * Adapt stock balance response from Bling API
- * @param data - The raw stock balance data from the API
- * @returns An array of StockBalance objects
+ * Adapt stock balances returned from Bling API to `BlingStockBalanceType[]`
+ * @param data - Raw Bling stock balances array from the API
+ * @returns `BlingStockBalanceType[]`
  */
-export function adaptStockBalanceResponse(data: any): StockBalance[] {
+export function adaptStockBalanceResponse(data: any): BlingStockBalanceType[] {
   if (!Array.isArray(data)) return [];
 
   return data.map((item: any) => ({
-    productId: item.produto.id,
-    productSku: item.produto.codigo,
+    id: Date.now().toString(), // local DB id will be assigned by Prisma
+    blingProductId: item.produto.id,
     stock: item.saldoFisicoTotal || item.saldoVirtualTotal || 0,
+    createdAt: new Date(), // local DB timestamps will be assigned by Prisma
+    updatedAt: new Date(), // local DB timestamps will be assigned by Prisma
   }));
 }
