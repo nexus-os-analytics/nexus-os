@@ -1,79 +1,145 @@
-export interface Product {
-  id: number;
+import type {
+  BlingAlertType as AlertTypeEnum,
+  BlingRuptureRisk as RuptureRiskEnum,
+} from '@prisma/client';
+
+export interface BlingProductType {
+  id: string;
+  blingProductId: string;
+  blingCategoryId?: string | null;
   name: string;
   sku: string;
   costPrice: number;
   salePrice: number;
-  stock: number;
-  image: string | null;
-  shortDescription: string | null;
-  avgMonthlySales: number;
-  replenishmentTime?: number | null;
-  safetyStock?: number | null;
-  capitalCostRate?: number | null;
-  storageCostRate?: number | null;
-  isActive: boolean;
-  lastSaleDate: string | null; // ISO String
-  categoryId: number | null;
+  currentStock: number;
+  image?: string | null;
+  shortDescription?: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+  category?: BlingCategoryType | null;
+  alert?: BlingProductAlertType | null;
+  settings?: BlingProductSettingsType | null;
+  salesHistory?: BlingSalesHistoryType[];
+  stockBalances?: BlingStockBalanceType[];
 }
 
-export interface ProductSettings {
-  leadTimeDays: number | null;
-  safetyDays: number | null;
-  recoveryTarget: number | null;
-  opportunityGrowthThreshold: number | null;
-  liquidationIdleThresholdDays: number | null;
-  liquidationMaxDays: number | null;
-  minSalesForOpportunity: number | null;
-  newProductMinDays: number | null;
-  minHistoryDaysForDecision: number | null;
+export interface BlingProductAlertType {
+  id: string;
+  blingProductId: string;
+  type: AlertTypeEnum;
+  risk: RuptureRiskEnum;
+  vvdReal: number;
+  vvd30: number;
+  vvd7: number;
+  daysRemaining: number;
+  reorderPoint: number;
+  growthTrend: number;
+  capitalStuck: number;
+  daysSinceLastSale: number;
+  suggestedPrice: number;
+  estimatedDeadline: number;
+  recoverableAmount: number;
+  daysOutOfStock: number;
+  estimatedLostSales: number;
+  estimatedLostAmount: number;
+  idealStock: number;
+  excessUnits: number;
+  excessPercentage: number;
+  excessCapital: number;
+  message?: string | null;
+  recommendations?: string | null; // JSON stringified array of strings
+  createdAt: Date;
+  updatedAt: Date;
+  product?: BlingProductType | null;
 }
 
-export interface Category {
-  id: number;
+export interface BlingProductSettingsType {
+  id: string;
+  blingProductId: string;
+  leadTimeDays: number;
+  safetyDays: number;
+  criticalDaysRemainingThreshold: number;
+  highDaysRemainingThreshold: number;
+  mediumDaysRemainingThreshold: number;
+  opportunityGrowthThresholdPct: number;
+  opportunityDemandVvd: number;
+  deadStockCapitalThreshold: number;
+  capitalOptimizationThreshold: number;
+  ruptureCapitalThreshold: number;
+  liquidationDiscount: number;
+  costFactor: number;
+  liquidationExcessCapitalThreshold: number;
+  fineExcessCapitalMax: number;
+  product?: BlingProductType;
+}
+
+export interface BlingCategoryType {
+  id: string;
   name: string;
-  parentId: number | null;
+  blingCategoryId: string;
+  blingParentId?: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+  products?: BlingProductType[];
 }
 
-export interface SalesHistory {
-  id: number;
-  date: string; // ISO String
-  productId: number;
-  productSku: string;
+export interface BlingSalesHistoryType {
+  id: string;
+  blingSaleId: string;
+  blingProductId: string;
+  date: Date;
   quantity: number;
   totalValue: number;
+  createdAt: Date;
+  updatedAt: Date;
+  product?: BlingProductType | null;
 }
 
-export interface StockBalance {
-  productId: number;
-  productSku: string;
+export interface BlingStockBalanceType {
+  id: string;
+  blingProductId: string;
   stock: number;
+  createdAt: Date;
+  updatedAt: Date;
+  product?: BlingProductType | null;
 }
 
-export interface ProductEvaluation {
-  productId: number;
-  productSku: string;
-  productName: string;
-  metrics: AlertMetrics;
-  recommendationsStrings: string[]; // array to persist as you planned
-  recommendation: RecommendationResult; // single final recommendation
+export interface BlingProductData {
+  totalSales: number;
+  daysWithSales: number;
+  totalLast30DaysSales: number;
+  totalLast7DaysSales: number;
+  currentStock: number;
+  costPrice: number;
+  salePrice: number;
+  lastSaleDate: Date | null;
+  hasStockOut: boolean;
+  stockOutDate?: Date;
+  daysWithSalesWithinLast30?: number;
+  daysWithSalesWithinLast7?: number;
 }
 
-export interface RecommendationResult {
-  id: number;
-  action?: string;
-  justification?: string;
-  estimatedFinancialImpact?: string;
-  executionTime?: string;
-  risk?: 'low' | 'medium' | 'high';
-  financialImpactValue?: number;
-}
-
-export interface AlertMetrics {
-  idleDays: number;
-  stockTurnover: number;
-  stockCoverageDays: number;
-  trend: number;
-  capitalStuck: number;
+export interface BlingProductMetrics {
+  vvdReal: number;
+  vvd30: number;
+  vvd7: number;
   daysRemaining: number;
+  reorderPoint: number;
+  growthTrend: number;
+  capitalStuck: number;
+  daysSinceLastSale: number;
+  suggestedPrice: number;
+  estimatedDeadline: number;
+  recoverableAmount: number;
+  daysOutOfStock: number;
+  estimatedLostSales: number;
+  estimatedLostAmount: number;
+  risk: RuptureRiskEnum;
+  type: AlertTypeEnum;
+  message: string;
+  recommendations: string[];
+  idealStock?: number;
+  excessUnits?: number;
+  excessPercentage?: number;
+  excessCapital?: number;
 }

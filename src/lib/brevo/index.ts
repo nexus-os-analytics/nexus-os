@@ -1,4 +1,5 @@
 import axios, { isAxiosError } from 'axios';
+import inviteTemplate from './templates/invite-user.template';
 import resetPasswordTemplate from './templates/reset-password.template';
 import welcomeTemplate from './templates/welcome.template';
 
@@ -9,6 +10,7 @@ const BREVO_SENDER_EMAIL = process.env.BREVO_SENDER_EMAIL;
 const emailTemplates = {
   welcome: welcomeTemplate,
   resetPassword: resetPasswordTemplate,
+  inviteUser: inviteTemplate,
 };
 
 export async function sendEmail({

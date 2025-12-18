@@ -4,7 +4,6 @@ import { useForm } from '@mantine/form';
 import { zod4Resolver } from 'mantine-form-zod-resolver';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { getRoute } from '@/lib/routes';
 import { ForgotPasswordSchema, useForgotPassword } from '../../services';
 
 export function ForgotPassword() {
@@ -20,7 +19,7 @@ export function ForgotPassword() {
   const handleSubmit = async (values: typeof form.values) => {
     await forgotPassword({ email: values.email });
     form.reset();
-    router.push(getRoute('sign-in')?.path || '/sign-in');
+    router.push('/login');
   };
 
   return (
@@ -52,7 +51,7 @@ export function ForgotPassword() {
         </form>
 
         <Group justify="center">
-          <Anchor component={Link} href="/sign-in" type="button" c="dimmed" size="xs" ta="center">
+          <Anchor component={Link} href="/login" type="button" c="dimmed" size="xs" ta="center">
             Lembrou sua senha? Entre agora!
           </Anchor>
         </Group>

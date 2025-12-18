@@ -18,10 +18,10 @@ import Link from 'next/link';
 import { signIn } from 'next-auth/react';
 import { useEffect, useState } from 'react';
 import { GoogleButton } from '@/components/commons/GoogleButton';
-import { getRoute } from '@/lib/routes';
 import { SignUpSchema, useSignUp } from '../../services';
 
 export function SignUp() {
+  const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const { mutateAsync: signUp, isPending, error } = useSignUp();
 
@@ -49,11 +49,23 @@ export function SignUp() {
       await signIn('credentials', {
         email: values.email,
         password: values.password,
-        callbackUrl: getRoute('dashboard')?.path,
+        callbackUrl: '/bling',
         redirect: true,
       });
     } catch (error) {
       console.error('Error during sign up:', error);
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    try {
+      setLoading(true);
+      await signIn('google', { callbackUrl: '/bling' });
+    } catch (error) {
+      console.error('Erro ao autenticar com o Google:', error);
+      setErrorMessage('Erro ao autenticar com o Google. Tente novamente.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -119,7 +131,7 @@ export function SignUp() {
             onChange={(event) => form.setFieldValue('terms', event.currentTarget.checked)}
             error={form.errors.terms}
           />
-          <Button type="submit" radius="xl" fullWidth loading={isPending}>
+          <Button type="submit" radius="xl" fullWidth loading={isPending || loading}>
             Criar conta
           </Button>
         </Group>
@@ -128,17 +140,13 @@ export function SignUp() {
       <Divider label="Ou continue com" labelPosition="center" my="lg" />
 
       <Group grow mb="md" mt="md">
-        <GoogleButton
-          radius="xl"
-          loading={isPending}
-          onClick={() => signIn('google', { callbackUrl: '/dashboard' })}
-        >
+        <GoogleButton radius="xl" loading={isPending || loading} onClick={handleGoogleSignIn}>
           Google
         </GoogleButton>
       </Group>
 
       <Group justify="center">
-        <Anchor component={Link} href="/sign-in" type="button" c="dimmed" size="xs" ta="center">
+        <Anchor component={Link} href="/login" type="button" c="dimmed" size="xs" ta="center">
           Já tem uma conta? Entre agora!
         </Anchor>
       </Group>

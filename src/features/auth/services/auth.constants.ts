@@ -1,17 +1,21 @@
 import { UserRole } from '@prisma/client';
 
 export const PERMISSIONS = {
+  bling: {
+    read: [],
+    write: [UserRole.USER],
+  },
   dashboard: {
+    read: [],
+    write: [],
+  },
+  products: {
     read: [],
     write: [],
   },
   campaign: {
     read: [],
-    write: [UserRole.USER],
-  },
-  bling: {
-    read: [],
-    write: [UserRole.USER],
+    write: [],
   },
   users: {
     read: [UserRole.SUPER_ADMIN],

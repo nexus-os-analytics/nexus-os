@@ -23,10 +23,10 @@ export function PublicHeader() {
         </Group>
 
         <Group visibleFrom="sm">
-          <Button component={Link} href="/sign-in" variant="default">
+          <Button component={Link} href="/login" variant="default">
             Entrar
           </Button>
-          <Button component={Link} href="/sign-up" variant="outline">
+          <Button component={Link} href="/cadastre-se" variant="outline">
             Criar Conta
           </Button>
         </Group>
@@ -56,10 +56,10 @@ export function PublicHeader() {
           <Divider my="sm" />
 
           <Group justify="center" grow pb="xl" px="md">
-            <Button component={Link} href="/sign-in" variant="default">
+            <Button component={Link} href="/login" variant="default">
               Entrar
             </Button>
-            <Button component={Link} href="/sign-up" variant="outline">
+            <Button component={Link} href="/cadastre-se" variant="outline">
               Criar Conta
             </Button>
           </Group>

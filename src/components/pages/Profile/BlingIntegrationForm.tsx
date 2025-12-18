@@ -5,11 +5,12 @@ import { useRouter } from 'next/navigation';
 import { useBlingIntegration } from '@/hooks/useBlingIntegration';
 
 export default function BlingIntegrationForm() {
-  const { status, loading, disconnect } = useBlingIntegration();
+  const { status, loading, disconnect, refresh } = useBlingIntegration();
   const router = useRouter();
 
   const handleDisconnect = async () => {
     await disconnect();
+    await refresh();
     notifications.show({
       title: 'Desconectado',
       message: 'A integração com o Bling foi desconectada com sucesso.',
