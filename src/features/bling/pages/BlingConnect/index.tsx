@@ -63,13 +63,12 @@ export function BlingConnect() {
 
   // Verificar se já está conectado
   useEffect(() => {
-    if (status?.connected && state === 'idle') {
+    if (status?.syncStatus === 'COMPLETED' && state === 'idle') {
       setState('complete');
       setProgress(100);
     }
   }, [status, state]);
 
-  // TODO: Show first impact Modal after complete
   const handleComplete = () => {
     router.push('/visao-geral');
   };

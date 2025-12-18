@@ -1,12 +1,13 @@
 'use client';
 import {
   Anchor,
+  Avatar,
   Badge,
   Box,
   Card,
   Divider,
+  Flex,
   Group,
-  Image,
   Paper,
   Stack,
   Text,
@@ -87,39 +88,38 @@ export function ProductCard({ product }: ProductCardProps) {
               </Badge>
             </Group>
 
-            {/* Product Image */}
-            {product.image ? (
-              <Image
+            {/* Product Description */}
+            <Flex gap="xs">
+              <Avatar
                 src={product.image}
                 alt={product.name}
-                h={120}
+                size={80}
                 radius="md"
-                mb="sm"
-                fit="cover"
+                variant="filled"
+                style={{ aspectRatio: '1 / 1', objectFit: 'contain' }}
               />
-            ) : null}
-
-            <Text lineClamp={2} mb={4}>
-              {product.name}
-            </Text>
-            <Text size="sm">SKU: {product.sku}</Text>
-            <Text size="xs" mb="xs">
-              Categoria: {product.category?.name ?? '—'}
-            </Text>
-
-            {/* Product commercial info */}
-            <Group justify="space-between" align="center" mb="sm">
-              <Text fw={600}>{formatCurrency(product.salePrice || 0)}</Text>
-              <Group gap={8} style={{ color: 'var(--mantine-color-dimmed)' }}>
-                <Group gap={4}>
-                  <PackageIcon size={14} />
-                  <Text size="xs">Estoque: {product.currentStock} unid.</Text>
+              <Stack gap={4}>
+                <Text lineClamp={2}>{product.name}</Text>
+                <Group gap="xs">
+                  <Text size="sm">SKU: {product.sku}</Text>
+                  <Text size="xs">Categoria: {product.category?.name ?? '—'}</Text>
                 </Group>
-                {typeof alert.idealStock === 'number' && (
-                  <Text size="xs">Ideal: {alert.idealStock}</Text>
-                )}
-              </Group>
-            </Group>
+
+                {/* Product commercial info */}
+                <Group justify="space-between" align="center" mb="sm">
+                  <Text fw={600}>{formatCurrency(product.salePrice || 0)}</Text>
+                  <Group gap={8} style={{ color: 'var(--mantine-color-dimmed)' }}>
+                    <Group gap={4}>
+                      <PackageIcon size={14} />
+                      <Text size="xs">Estoque: {product.currentStock} unid.</Text>
+                    </Group>
+                    {typeof alert.idealStock === 'number' && (
+                      <Text size="xs">Ideal: {alert.idealStock}</Text>
+                    )}
+                  </Group>
+                </Group>
+              </Stack>
+            </Flex>
           </Box>
 
           {/* Content by Type */}

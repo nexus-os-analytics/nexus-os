@@ -1,9 +1,11 @@
+import type { BlingSyncStatus } from '@prisma/client';
 import { useSession } from 'next-auth/react';
 import { useEffect, useState } from 'react';
 
 export interface BlingIntegrationStatus {
   connected: boolean;
   valid: boolean;
+  syncStatus: BlingSyncStatus | null;
   integration?: {
     connected_at: Date;
     scope: string;
@@ -38,7 +40,7 @@ export function useBlingIntegration() {
       await fetch('/api/integrations/bling/disconnect', {
         method: 'POST',
       });
-      setStatus({ connected: false, valid: false });
+      setStatus({ connected: false, syncStatus: null, valid: false });
       setConnectionState('disconnected');
       setLoading(false);
     } catch (error) {

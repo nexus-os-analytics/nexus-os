@@ -719,11 +719,21 @@ export function createBlingRepository({ integrationId }: BlingRepositoryOptions)
       }
     }
 
+    // Ensure all possible BlingRuptureRisk values are covered
+    const riskOrder: Record<string, number> = { CRITICAL: 4, HIGH: 3, MEDIUM: 2, LOW: 1 };
+
+    // Use toSorted for compliance and clarity
+    const sortedTopActions = topActions.toSorted((a, b) => {
+      const aRisk = products.find((p) => p.id === a.id)?.alert?.risk ?? 'LOW';
+      const bRisk = products.find((p) => p.id === b.id)?.alert?.risk ?? 'LOW';
+      return (riskOrder[bRisk] ?? 0) - (riskOrder[aRisk] ?? 0);
+    });
+
     return {
       capitalStuck,
       ruptureCount,
       opportunityCount,
-      topActions,
+      topActions: sortedTopActions.slice(0, 3), // Top 3 actions
     };
   }
 

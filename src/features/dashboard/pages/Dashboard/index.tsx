@@ -1,7 +1,6 @@
 'use client';
 import { Box, Button, Card, Group, SimpleGrid, Stack, Text, ThemeIcon, Title } from '@mantine/core';
 import { Filter, Package, Sparkles } from 'lucide-react';
-// import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { BlingConnectBanner } from '@/features/bling/components/BlingConnectBanner';
 import { ProductCard } from '@/features/products/components/ProductCard';
@@ -13,23 +12,9 @@ export function Dashboard() {
   const { status, loading } = useBlingIntegration();
   const [criticalCount, setCriticalCount] = useState(0);
   const [params, _] = useState<GetProductsAlertsParams | undefined>();
-  // const router = useRouter();
 
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } =
     useProductAlerts(params);
-
-  // Flatten pages
-  // const alerts = data?.pages.flatMap((p) => p.data) ?? [];
-
-  // const criticalCount = alerts.filter(
-  //   (a) =>
-  //     a.alert.type === 'RUPTURE' ||
-  //     (a.alert.type === 'DEAD_STOCK' && (a.alert.metrics?.idleDays ?? 0) > 30)
-  // ).length;
-
-  // const handleOpenCampaign = (product: any) => {
-  //   router.push(`/campaign/${product.id}/generate`);
-  // };
 
   useEffect(() => {
     if (data) {
