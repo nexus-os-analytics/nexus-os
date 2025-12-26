@@ -6,7 +6,7 @@
 
 ## Estrutural
 
-- [ ] Refatorar a estrutura de pastas para melhor organização dos módulos.
+- [x] Refatorar a estrutura de pastas para melhor organização dos módulos.
 - [ ] Adicionar o Dockerfile e o docker-compose.yml para facilitar a implantação.
 - [ ] Implementar testes e2e com playwright.
 - [ ] Configurar CI/CD com GitHub Actions para automação de testes e deploy.

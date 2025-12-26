@@ -1,7 +1,7 @@
 # Project Context & Agent Guidelines
 
 ## 1. Purpose
-This document provides the required context, architecture, and execution rules for all agents contributing to the **NexusOS** codebase.
+This document provides the required context, architecture, and execution rules for all agents contributing to the **Nexus OS** codebase.
 Agents must follow these guidelines rigorously to ensure consistency, maintainability, and correctness across the project.
 
 Before producing or modifying any code, components, database models, or architecture, agents must always follow the documentation sources and rules listed below.
@@ -24,15 +24,15 @@ These URLs override any outdated assumptions or cached knowledge and must be con
 
 ## 3. Project Overview
 
-**Name:** NexusOS
+**Name:** Nexus OS
 **Version:** 2.0.0
-**Framework:** Next.js 15+ (App Router, Turbopack)
+**Framework:** Next.js 16+ (App Router, Turbopack)
 **Type:** Full-Stack SaaS Platform with authentication, ERP integrations, background jobs, and dashboards.
 
 ## 4. Tech Stack
 
 ### Core
-- **Next.js 15+** (App Router only)
+- **Next.js 16+** (App Router only)
 - **React 19**
 - **TypeScript (strict mode)**
 - **pnpm** (required by the project, enforced via `preinstall`)
@@ -74,7 +74,7 @@ Shared cross-feature UI components.
 ### `src/lib/*`
 Integrations and global utilities:
 - `prisma/` ORM client + seed
-- `bling/` ERP
+- `bling/` ERP integration
 - `next-auth/` authentication
 - `inngest/` job definitions
 - `pino/` logging config
@@ -163,10 +163,9 @@ pnpm format     # Biome formatting
 pnpm typecheck  # TypeScript type checking
 pnpm seed       # Run database seed
 pnpm inngest:dev # Inngest local worker
-````
+```
 
 ## 10. Agent Expectations
-
 Agents are expected to:
 
 * Always consult documentation URLs BEFORE generating code.

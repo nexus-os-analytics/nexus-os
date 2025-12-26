@@ -57,7 +57,7 @@ export function ProductCard({ product }: ProductCardProps) {
         };
       case 'LIQUIDATION':
         return {
-          color: 'green',
+          color: 'teal',
           icon: PackageIcon,
           badge: 'Liquidação',
         };

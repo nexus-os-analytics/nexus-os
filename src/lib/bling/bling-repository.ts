@@ -696,7 +696,7 @@ export function createBlingRepository({ integrationId }: BlingRepositoryOptions)
     let capitalStuck = 0;
     let ruptureCount = 0;
     let opportunityCount = 0;
-    const topActions = [];
+    const topActions: GetOverviewMetricsResponse['topActions'] = [];
 
     for (const product of products) {
       if (product.alert) {
@@ -708,13 +708,27 @@ export function createBlingRepository({ integrationId }: BlingRepositoryOptions)
           opportunityCount += 1;
         }
 
+        // Compute simple monetary impact for actions where applicable
+        let impactAmount: number | undefined;
+        let impactLabel: string | undefined;
+        const a = product.alert;
+
+        if (a.type === 'DEAD_STOCK' && typeof a.capitalStuck === 'number') {
+          impactAmount = a.capitalStuck;
+          impactLabel = 'Capital parado';
+        } else if ((a as unknown as { type: string }).type === 'LIQUIDATION' &&
+          typeof a.excessCapital === 'number') {
+          impactAmount = a.excessCapital;
+          impactLabel = 'Capital em excesso';
+        }
+
         topActions.push({
           id: product.id,
           name: product.name,
           sku: product.sku,
-          recommendations: product.alert.recommendations
-            ? JSON.stringify(product.alert.recommendations)
-            : null,
+          recommendations: a.recommendations ? JSON.stringify(a.recommendations) : null,
+          impactAmount,
+          impactLabel,
         });
       }
     }

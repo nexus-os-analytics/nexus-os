@@ -1,13 +1,18 @@
 'use client';
 import {
   Alert,
+  Badge,
   Box,
   Button,
+  Card,
   Container,
+  Divider,
+  Group,
   List,
   Loader,
   Paper,
   Progress,
+  SimpleGrid,
   Stack,
   Text,
   ThemeIcon,
@@ -29,6 +34,7 @@ export function BlingConnect() {
   const [state, setState] = useState<ConnectionState>('idle');
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  const [simStats, setSimStats] = useState({ products: 0, sales: 0 });
 
   // Verificar parâmetros de URL para erros/sucesso
   useEffect(() => {
@@ -82,10 +88,21 @@ export function BlingConnect() {
             setState('complete');
             return 100;
           }
-          return prev + 10;
+          return prev + 7;
         });
-      }, 200);
-      return () => clearInterval(interval);
+      }, 220);
+
+      const stats = setInterval(() => {
+        setSimStats((s) => ({
+          products: Math.min(s.products + Math.ceil(Math.random() * 12), 127),
+          sales: Math.min(s.sales + Math.ceil(Math.random() * 40), 847),
+        }));
+      }, 180);
+
+      return () => {
+        clearInterval(interval);
+        clearInterval(stats);
+      };
     }
 
     if (state === 'complete') {
@@ -171,30 +188,115 @@ export function BlingConnect() {
           )}
 
           {state === 'idle' && (
-            <Stack gap="md">
-              <Paper p="md" withBorder>
-                <Text size="sm" mb="xs" c="brand">
-                  O que você ganhará:
-                </Text>
-                <List size="sm" spacing="xs">
-                  <List.Item>
-                    🚨 Alertas de risco de ruptura de estoque (VVD simplificada)
-                  </List.Item>
-                  <List.Item>💰 Identificação de capital parado e dias sem vender</List.Item>
-                  <List.Item>📈 Oportunidades de vendas (produtos em alta)</List.Item>
-                  <List.Item>🤖 Gerador de campanhas com IA</List.Item>
-                </List>
-              </Paper>
-              <Paper
-                p="sm"
-                withBorder
-                style={{ backgroundColor: 'rgba(199, 164, 70, 0.1)', borderColor: '#C7A446' }}
-              >
-                <Text size="xs" c="brand">
-                  🔒 <strong>Conexão segura via OAuth 2.0</strong> - Não pedimos sua chave de API. A
-                  autenticação é feita diretamente com o Bling.
-                </Text>
-              </Paper>
+            <Stack gap="lg">
+              {/* Hero value props */}
+              <Card padding="lg" radius="md" withBorder shadow="sm">
+                <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="xl">
+                  <Stack gap={6}>
+                    <Text>
+                      <strong>🔴 Nunca mais perca vendas por estoque zerado</strong>
+                    </Text>
+                    <Text c="dimmed">→ Alertas 3 dias antes de zerar</Text>
+                    <Divider my="sm" />
+                    <Text>
+                      <strong>💰 Recupere até R$ 15k em capital parado</strong>
+                    </Text>
+                    <Text c="dimmed">→ Veja quanto está travado + preço ideal de liquidação</Text>
+                    <Divider my="sm" />
+                    <Text>
+                      <strong>🚀 Identifique produtos em explosão de vendas</strong>
+                    </Text>
+                    <Text c="dimmed">→ Aumente estoque antes de perder oportunidade</Text>
+                    <Divider my="sm" />
+                    <Text>
+                      <strong>⚡ Tudo em 30 segundos</strong> (não em 5 horas de planilha)
+                    </Text>
+                  </Stack>
+                  <Stack gap={8}>
+                    <Group gap={12} wrap="nowrap">
+                      <Badge color="teal" variant="light">
+                        ⏱️ Setup: 2 minutos
+                      </Badge>
+                      <Badge color="gray" variant="light">
+                        ✓ Sem cartão de crédito
+                      </Badge>
+                      <Badge color="gray" variant="light">
+                        ✓ Cancele quando quiser
+                      </Badge>
+                    </Group>
+                    <Paper p="md" radius="md" withBorder>
+                      <Text fw={700}>🔒 100% Seguro</Text>
+                      <List size="sm" spacing={4} mt={6}>
+                        <List.Item>Nunca pedimos sua senha</List.Item>
+                        <List.Item>Autorização oficial Bling</List.Item>
+                        <List.Item>Você pode revogar a qualquer momento</List.Item>
+                      </List>
+                    </Paper>
+                  </Stack>
+                </SimpleGrid>
+              </Card>
+
+              {/* First impact preview before connect */}
+              <Card padding="lg" radius="md" withBorder shadow="md">
+                <Title order={4} mb="md">
+                  👀 Veja o que você vai descobrir
+                </Title>
+                <SimpleGrid cols={{ base: 1, sm: 3 }} spacing="lg">
+                  <Card withBorder padding="md" radius="md">
+                    <Text fw={700} size="lg">
+                      💰 R$ 18.450
+                    </Text>
+                    <Text size="sm" c="dimmed">
+                      parados em 23 prods
+                    </Text>
+                  </Card>
+                  <Card withBorder padding="md" radius="md">
+                    <Text fw={700} size="lg">
+                      ⚠️ 3 produtos
+                    </Text>
+                    <Text size="sm" c="dimmed">
+                      em risco de ruptura
+                    </Text>
+                  </Card>
+                  <Card withBorder padding="md" radius="md">
+                    <Text fw={700} size="lg">
+                      🚀 2 oportunidades
+                    </Text>
+                    <Text size="sm" c="dimmed">
+                      de crescimento
+                    </Text>
+                  </Card>
+                </SimpleGrid>
+
+                <Divider my="lg" />
+
+                <Paper p="md" radius="md" withBorder>
+                  <Group justify="center" mb="sm">
+                    <Image src="/img/logo.png" alt="Nexus" width={120} height={40} />
+                  </Group>
+                  <Text ta="center" mb="sm">
+                    🔄 Analisando seu estoque...
+                  </Text>
+                  <Progress value={65} size="lg" radius="xl" animated />
+                  <Text size="xs" c="dimmed" ta="center" mt={4}>
+                    ████████████░░░░░░░ 65%
+                  </Text>
+                  <Stack gap={4} mt="sm">
+                    <Text size="sm">✓ 127 produtos encontrados</Text>
+                    <Text size="sm">✓ 847 vendas analisadas</Text>
+                    <Text size="sm">⏳ Calculando VVD...</Text>
+                  </Stack>
+                  <Paper p="sm" radius="sm" mt="md" withBorder>
+                    <Text size="sm" fw={700}>
+                      💡 Você sabia?
+                    </Text>
+                    <Text size="xs" c="dimmed">
+                      Lojistas perdem em média R$ 12k por ano em rupturas evitáveis.
+                    </Text>
+                  </Paper>
+                </Paper>
+              </Card>
+
               <Button onClick={handleConnect} fullWidth size="lg" color="green.9" loading={loading}>
                 Conectar com Bling
               </Button>
@@ -208,6 +310,25 @@ export function BlingConnect() {
               <Text size="sm" c="dimmed">
                 {Math.round(progress)}% completo
               </Text>
+              <SimpleGrid cols={{ base: 1, sm: 3 }} spacing="lg" style={{ width: '100%' }}>
+                <Card withBorder padding="md" radius="md">
+                  <Text size="sm">✓ {simStats.products} produtos encontrados</Text>
+                </Card>
+                <Card withBorder padding="md" radius="md">
+                  <Text size="sm">✓ {simStats.sales} vendas analisadas</Text>
+                </Card>
+                <Card withBorder padding="md" radius="md">
+                  <Text size="sm">⏳ Calculando VVD...</Text>
+                </Card>
+              </SimpleGrid>
+              <Paper p="sm" radius="sm" withBorder style={{ width: '100%' }}>
+                <Text size="sm" fw={700}>
+                  💡 Você sabia?
+                </Text>
+                <Text size="xs" c="dimmed">
+                  Lojistas perdem em média R$ 12k por ano em rupturas evitáveis.
+                </Text>
+              </Paper>
             </Stack>
           )}
 
