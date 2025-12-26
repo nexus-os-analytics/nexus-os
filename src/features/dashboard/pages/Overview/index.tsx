@@ -183,9 +183,10 @@ export function Overview() {
               </Title>
               <SimpleGrid cols={{ base: 1, sm: 3 }} mb="md" spacing="lg">
                 {data.topActions.map((action) => {
-                  const label = action.impactAmount && action.impactAmount > 0
-                    ? `${action.impactLabel ?? 'Impacto'}: R$ ${action.impactAmount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`
-                    : null;
+                  const label =
+                    action.impactAmount && action.impactAmount > 0
+                      ? `${action.impactLabel ?? 'Impacto'}: R$ ${action.impactAmount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`
+                      : null;
 
                   return (
                     <Card key={action.id} padding="xl" radius="md" withBorder shadow="md">
@@ -199,20 +200,28 @@ export function Overview() {
                           </Group>
                         </Text>
                         {label && (
-                          <Badge color="teal" variant="light">{label}</Badge>
+                          <Badge color="teal" variant="light">
+                            {label}
+                          </Badge>
                         )}
                       </Group>
                       <Stack gap="sm">
                         <Group gap={4}>
-                          <Text size="sm" fw={700}>SKU:</Text>
-                          <Text size="sm" c="dimmed">{action.sku}</Text>
+                          <Text size="sm" fw={700}>
+                            SKU:
+                          </Text>
+                          <Text size="sm" c="dimmed">
+                            {action.sku}
+                          </Text>
                         </Group>
                         <Divider />
                         <List type="ordered">
                           {action.recommendations &&
-                            (JSON.parse(action.recommendations) as string[]).map((recommendation, index) => (
-                              <List.Item key={index}>{recommendation}</List.Item>
-                            ))}
+                            (JSON.parse(action.recommendations) as string[]).map(
+                              (recommendation, index) => (
+                                <List.Item key={index}>{recommendation}</List.Item>
+                              )
+                            )}
                         </List>
                       </Stack>
                     </Card>
