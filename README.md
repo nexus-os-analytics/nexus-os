@@ -1,12 +1,12 @@
 # Nexus OS - Sistema Inteligente de Otimização de Inventário
 
-![Next.js](https://img.shields.io/badge/Next.js-14-black)
-![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue)
+![Next.js](https://img.shields.io/badge/Next.js-16-black)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.6-blue)
 ![Prisma](https://img.shields.io/badge/Prisma-ORM-brightgreen)
 
 ## 📋 Visão Geral do Produto
 
-**Nexus OS** é um sistema inteligente de otimização de inventário e suporte à decisão que conecta-se a ERPs (inicialmente Bling) para analisar desempenho de estoque, identificar riscos e oportunidades, e fornecer recomendações acionáveis que melhoram diretamente os resultados financeiros. O sistema transforma dados operacionais brutos em ações priorizadas, contextuais e financeiramente mensuráveis.
+**Nexus OS** é uma plataforma SaaS de otimização de inventário que conecta-se ao Bling ERP para analisar desempenho de estoque, identificar riscos e oportunidades e fornecer recomendações acionáveis com impacto financeiro mensurável. A solução transforma dados operacionais brutos em ações priorizadas, contextuais e alinhadas aos objetivos da operação.
 
 ### 🎯 Objetivos Principais
 
@@ -22,7 +22,7 @@
 
 ### Pré-requisitos
 
-- Node.js 22+
+- Node.js 20.9+
 - PostgreSQL 16+
 - Conta no Bling ERP (para integração)
 - Variáveis de ambiente configuradas
@@ -47,13 +47,19 @@ npx prisma db push
 
 # Execute em modo desenvolvimento
 pnpm dev
+
+### Recursos públicos
+
+- Homepage: https://nexusos.app/
+- Manual do usuário: https://docs.nexusos.app/manual
+- Vídeo demonstrativo: https://youtu.be/nexus-os-demo
 ```
 
 ## 🏗️ Arquitetura
 
 ### Stack Tecnológica
 
-- **Frontend**: Next.js 16 (App Router), React, Mantine UI
+- **Frontend**: Next.js 16 (App Router), React 19, Mantine UI
 - **Backend**: Next.js API Routes, Server Actions, Inngest (background jobs)
 - **Banco de Dados**: PostgreSQL com Prisma ORM
 - **Autenticação**: NextAuth.js
@@ -192,6 +198,13 @@ BLING_CLIENT_ID=""
 BLING_CLIENT_SECRET=""
 BLING_REDIRECT_URI=""
 
+# Recursos públicos Nexus OS
+NEXT_PUBLIC_APP_NAME="Nexus OS"
+NEXT_PUBLIC_APP_DESCRIPTION="Plataforma inteligente que conecta dados do Bling ERP para otimizar estoque, reduzir rupturas e destravar capital."
+NEXT_PUBLIC_APP_HOMEPAGE_URL="https://nexusos.app/"
+NEXT_PUBLIC_APP_MANUAL_URL="https://docs.nexusos.app/manual"
+NEXT_PUBLIC_APP_VIDEO_URL="https://youtu.be/nexus-os-demo"
+
 # Inngest
 INNGEST_EVENT_KEY=""
 INNGEST_SIGNING_KEY=""
@@ -245,7 +258,9 @@ Este projeto está licenciado sob a licença MIT - veja o arquivo [LICENSE](LICE
 
 ## 📞 Suporte
 
-- **Documentação**: [docs.nexusos.com](https://docs.nexusos.com)
+- **Manual do usuário**: [docs.nexusos.app/manual](https://docs.nexusos.app/manual)
+- **Vídeo demonstrativo**: [youtube.com/watch?v=nexus-os-demo](https://youtu.be/nexus-os-demo)
+- **Documentação técnica**: [docs.nexusos.com](https://docs.nexusos.com)
 - **Suporte Técnico**: support@nexusos.com
 - **Comunidade**: [Discord](https://discord.gg/nexusos)
 - **Status**: [status.nexusos.com](https://status.nexusos.com)
