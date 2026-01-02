@@ -7,20 +7,52 @@ const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
 
+async function tableExists(tableName: string) {
+  const { rows } = await pool.query<{ oid: string | null }>(
+    'SELECT to_regclass($1) as oid',
+    [`public.${tableName}`],
+  );
+  return Boolean(rows?.[0]?.oid);
+}
+
+async function safeDelete(actionName: string, fn: () => Promise<unknown>) {
+  try {
+    await fn();
+  } catch (e: unknown) {
+    const code = (e as { code?: string })?.code;
+    if (code === 'P2021') {
+      console.warn(`⚠️  Pulando exclusão de ${actionName}: tabela não existe.`);
+      return;
+    }
+    throw e;
+  }
+}
+
 async function main() {
   // Ordem de exclusão: das tabelas filhas para as pai
-  await prisma.securityIncident.deleteMany();
-  await prisma.auditLog.deleteMany();
-  await prisma.loginActivity.deleteMany();
-  await prisma.apiKey.deleteMany();
-  await prisma.session.deleteMany();
-  await prisma.account.deleteMany();
-  await prisma.verificationToken.deleteMany();
-  await prisma.dataRegistry.deleteMany();
-  await prisma.blingSyncJob.deleteMany();
+  await safeDelete('security_incidents', () => prisma.securityIncident.deleteMany());
+  await safeDelete('audit_logs', () => prisma.auditLog.deleteMany());
+  await safeDelete('login_activities', () => prisma.loginActivity.deleteMany());
+  await safeDelete('api_keys', () => prisma.apiKey.deleteMany());
+  await safeDelete('sessions', () => prisma.session.deleteMany());
+  await safeDelete('accounts', () => prisma.account.deleteMany());
+  await safeDelete('verification_tokens', () => prisma.verificationToken.deleteMany());
+  await safeDelete('data_registries', () => prisma.dataRegistry.deleteMany());
+  await safeDelete('bling_sync_jobs', () => prisma.blingSyncJob.deleteMany());
 
   // Agora pode excluir os usuários
-  await prisma.user.deleteMany();
+  await safeDelete('users', () => prisma.user.deleteMany());
+
+  // Verificação mínima para seguir com criação de dados obrigatórios
+  const hasUsers = await tableExists('users');
+  if (!hasUsers) {
+    console.error(
+      '❌ As tabelas obrigatórias não existem. Execute as migrações antes de rodar o seed:\n' +
+      '   - pnpm postinstall (aplica generate + migrate deploy)\n' +
+      '   - ou: npx prisma migrate deploy (prod) / npx prisma migrate dev (dev)\n',
+    );
+    return;
+  }
 
   const superAdmin = await prisma.user.create({
     data: {

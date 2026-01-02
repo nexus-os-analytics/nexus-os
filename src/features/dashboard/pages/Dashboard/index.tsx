@@ -35,11 +35,13 @@ export function Dashboard() {
 
       {/* Summary Cards */}
       <SimpleGrid cols={{ base: 1, sm: 3 }}>
-        <Card padding="lg" radius="md" withBorder shadow="sm">
+        <Card padding="lg" radius="md" withBorder shadow="md">
           <Group justify="space-between">
             <Box>
-              <Text size="sm">Alertas Críticos</Text>
-              <Title order={2} mt="xs">
+              <Text size="sm" fw={700}>
+                Alertas Críticos
+              </Text>
+              <Title order={2} mt="xs" fw={800}>
                 {criticalCount}
               </Title>
             </Box>
@@ -48,12 +50,14 @@ export function Dashboard() {
             </ThemeIcon>
           </Group>
         </Card>
-        <Card padding="lg" radius="md" withBorder shadow="sm">
+        <Card padding="lg" radius="md" withBorder shadow="md">
           <Group justify="space-between">
             <Box>
-              <Text size="sm">Total de Produtos</Text>
-              <Title order={2} mt="xs">
-                {data?.pages.length}
+              <Text size="sm" fw={700}>
+                Total de Produtos
+              </Text>
+              <Title order={2} mt="xs" fw={800}>
+                {data?.pages.flatMap((p) => p.data).length ?? 0}
               </Title>
             </Box>
             <ThemeIcon size={48} radius="md" color="brand" variant="light">
@@ -62,11 +66,13 @@ export function Dashboard() {
           </Group>
         </Card>
 
-        <Card padding="lg" radius="md" withBorder shadow="sm">
+        <Card padding="lg" radius="md" withBorder shadow="md">
           <Group justify="space-between">
             <Box>
-              <Text size="sm">Oportunidades</Text>
-              <Title order={2} mt="xs">
+              <Text size="sm" fw={700}>
+                Oportunidades
+              </Text>
+              <Title order={2} mt="xs" fw={800}>
                 {
                   data?.pages.flatMap((p) => p.data).filter((a) => a.alert?.type === 'OPPORTUNITY')
                     .length

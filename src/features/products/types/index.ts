@@ -30,5 +30,7 @@ export interface GetOverviewMetricsResponse {
     name: string;
     sku: string;
     recommendations: string | null;
+    impactAmount?: number; // Valor monetário associado (ex.: capital parado/excesso)
+    impactLabel?: string; // Texto curto explicando o impacto
   }>;
 }

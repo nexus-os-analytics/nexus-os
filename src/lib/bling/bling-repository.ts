@@ -149,53 +149,53 @@ export function createBlingRepository({ integrationId }: BlingRepositoryOptions)
         updatedAt: product.updatedAt,
         alert: product.alert
           ? {
-              id: product.alert.id,
-              blingProductId: product.alert.blingProductId,
-              type: product.alert.type,
-              risk: product.alert.risk,
-              vvdReal: product.alert.vvdReal,
-              vvd30: product.alert.vvd30,
-              vvd7: product.alert.vvd7,
-              daysRemaining: product.alert.daysRemaining,
-              reorderPoint: product.alert.reorderPoint,
-              growthTrend: product.alert.growthTrend,
-              capitalStuck: product.alert.capitalStuck,
-              daysSinceLastSale: product.alert.daysSinceLastSale,
-              suggestedPrice: product.alert.suggestedPrice,
-              estimatedDeadline: product.alert.estimatedDeadline,
-              recoverableAmount: product.alert.recoverableAmount,
-              daysOutOfStock: product.alert.daysOutOfStock,
-              estimatedLostSales: product.alert.estimatedLostSales,
-              estimatedLostAmount: product.alert.estimatedLostAmount,
-              idealStock: product.alert.idealStock,
-              excessUnits: product.alert.excessUnits,
-              excessPercentage: product.alert.excessPercentage,
-              excessCapital: product.alert.excessCapital,
-              message: product.alert.message,
-              recommendations: JSON.stringify(product.alert.recommendations),
-              createdAt: product.alert.createdAt,
-              updatedAt: product.alert.updatedAt,
-            }
+            id: product.alert.id,
+            blingProductId: product.alert.blingProductId,
+            type: product.alert.type,
+            risk: product.alert.risk,
+            vvdReal: product.alert.vvdReal,
+            vvd30: product.alert.vvd30,
+            vvd7: product.alert.vvd7,
+            daysRemaining: product.alert.daysRemaining,
+            reorderPoint: product.alert.reorderPoint,
+            growthTrend: product.alert.growthTrend,
+            capitalStuck: product.alert.capitalStuck,
+            daysSinceLastSale: product.alert.daysSinceLastSale,
+            suggestedPrice: product.alert.suggestedPrice,
+            estimatedDeadline: product.alert.estimatedDeadline,
+            recoverableAmount: product.alert.recoverableAmount,
+            daysOutOfStock: product.alert.daysOutOfStock,
+            estimatedLostSales: product.alert.estimatedLostSales,
+            estimatedLostAmount: product.alert.estimatedLostAmount,
+            idealStock: product.alert.idealStock,
+            excessUnits: product.alert.excessUnits,
+            excessPercentage: product.alert.excessPercentage,
+            excessCapital: product.alert.excessCapital,
+            message: product.alert.message,
+            recommendations: JSON.stringify(product.alert.recommendations),
+            createdAt: product.alert.createdAt,
+            updatedAt: product.alert.updatedAt,
+          }
           : null,
         settings: product.settings
           ? {
-              id: product.settings.id,
-              blingProductId: product.settings.blingProductId,
-              leadTimeDays: product.settings.leadTimeDays,
-              safetyDays: product.settings.safetyDays,
-              criticalDaysRemainingThreshold: product.settings.criticalDaysRemainingThreshold,
-              highDaysRemainingThreshold: product.settings.highDaysRemainingThreshold,
-              mediumDaysRemainingThreshold: product.settings.mediumDaysRemainingThreshold,
-              opportunityGrowthThresholdPct: product.settings.opportunityGrowthThresholdPct,
-              opportunityDemandVvd: product.settings.opportunityDemandVvd,
-              deadStockCapitalThreshold: product.settings.deadStockCapitalThreshold,
-              capitalOptimizationThreshold: product.settings.capitalOptimizationThreshold,
-              ruptureCapitalThreshold: product.settings.ruptureCapitalThreshold,
-              liquidationDiscount: product.settings.liquidationDiscount,
-              costFactor: product.settings.costFactor,
-              liquidationExcessCapitalThreshold: product.settings.liquidationExcessCapitalThreshold,
-              fineExcessCapitalMax: product.settings.fineExcessCapitalMax,
-            }
+            id: product.settings.id,
+            blingProductId: product.settings.blingProductId,
+            leadTimeDays: product.settings.leadTimeDays,
+            safetyDays: product.settings.safetyDays,
+            criticalDaysRemainingThreshold: product.settings.criticalDaysRemainingThreshold,
+            highDaysRemainingThreshold: product.settings.highDaysRemainingThreshold,
+            mediumDaysRemainingThreshold: product.settings.mediumDaysRemainingThreshold,
+            opportunityGrowthThresholdPct: product.settings.opportunityGrowthThresholdPct,
+            opportunityDemandVvd: product.settings.opportunityDemandVvd,
+            deadStockCapitalThreshold: product.settings.deadStockCapitalThreshold,
+            capitalOptimizationThreshold: product.settings.capitalOptimizationThreshold,
+            ruptureCapitalThreshold: product.settings.ruptureCapitalThreshold,
+            liquidationDiscount: product.settings.liquidationDiscount,
+            costFactor: product.settings.costFactor,
+            liquidationExcessCapitalThreshold: product.settings.liquidationExcessCapitalThreshold,
+            fineExcessCapitalMax: product.settings.fineExcessCapitalMax,
+          }
           : null,
       };
     } catch (error) {
@@ -639,33 +639,33 @@ export function createBlingRepository({ integrationId }: BlingRepositoryOptions)
         updatedAt: product.updatedAt,
         alert: product.alert
           ? {
-              id: product.alert.id,
-              blingProductId: product.alert.blingProductId,
-              type: product.alert.type,
-              risk: product.alert.risk,
-              vvdReal: product.alert.vvdReal,
-              vvd30: product.alert.vvd30,
-              vvd7: product.alert.vvd7,
-              daysRemaining: product.alert.daysRemaining,
-              reorderPoint: product.alert.reorderPoint,
-              growthTrend: product.alert.growthTrend,
-              capitalStuck: product.alert.capitalStuck,
-              daysSinceLastSale: product.alert.daysSinceLastSale,
-              suggestedPrice: product.alert.suggestedPrice,
-              estimatedDeadline: product.alert.estimatedDeadline,
-              recoverableAmount: product.alert.recoverableAmount,
-              daysOutOfStock: product.alert.daysOutOfStock,
-              estimatedLostSales: product.alert.estimatedLostSales,
-              estimatedLostAmount: product.alert.estimatedLostAmount,
-              idealStock: product.alert.idealStock,
-              excessUnits: product.alert.excessUnits,
-              excessPercentage: product.alert.excessPercentage,
-              excessCapital: product.alert.excessCapital,
-              message: product.alert.message,
-              recommendations: JSON.stringify(product.alert.recommendations),
-              createdAt: product.alert.createdAt,
-              updatedAt: product.alert.updatedAt,
-            }
+            id: product.alert.id,
+            blingProductId: product.alert.blingProductId,
+            type: product.alert.type,
+            risk: product.alert.risk,
+            vvdReal: product.alert.vvdReal,
+            vvd30: product.alert.vvd30,
+            vvd7: product.alert.vvd7,
+            daysRemaining: product.alert.daysRemaining,
+            reorderPoint: product.alert.reorderPoint,
+            growthTrend: product.alert.growthTrend,
+            capitalStuck: product.alert.capitalStuck,
+            daysSinceLastSale: product.alert.daysSinceLastSale,
+            suggestedPrice: product.alert.suggestedPrice,
+            estimatedDeadline: product.alert.estimatedDeadline,
+            recoverableAmount: product.alert.recoverableAmount,
+            daysOutOfStock: product.alert.daysOutOfStock,
+            estimatedLostSales: product.alert.estimatedLostSales,
+            estimatedLostAmount: product.alert.estimatedLostAmount,
+            idealStock: product.alert.idealStock,
+            excessUnits: product.alert.excessUnits,
+            excessPercentage: product.alert.excessPercentage,
+            excessCapital: product.alert.excessCapital,
+            message: product.alert.message,
+            recommendations: JSON.stringify(product.alert.recommendations),
+            createdAt: product.alert.createdAt,
+            updatedAt: product.alert.updatedAt,
+          }
           : null,
       })),
       nextCursor: hasNextPage ? data[data.length - 1].id : null,
@@ -696,7 +696,7 @@ export function createBlingRepository({ integrationId }: BlingRepositoryOptions)
     let capitalStuck = 0;
     let ruptureCount = 0;
     let opportunityCount = 0;
-    const topActions = [];
+    const topActions: GetOverviewMetricsResponse['topActions'] = [];
 
     for (const product of products) {
       if (product.alert) {
@@ -708,13 +708,27 @@ export function createBlingRepository({ integrationId }: BlingRepositoryOptions)
           opportunityCount += 1;
         }
 
+        // Compute simple monetary impact for actions where applicable
+        let impactAmount: number | undefined;
+        let impactLabel: string | undefined;
+        const a = product.alert;
+
+        if (a.type === 'DEAD_STOCK' && typeof a.capitalStuck === 'number') {
+          impactAmount = a.capitalStuck;
+          impactLabel = 'Capital parado';
+        } else if ((a as unknown as { type: string }).type === 'LIQUIDATION' &&
+          typeof a.excessCapital === 'number') {
+          impactAmount = a.excessCapital;
+          impactLabel = 'Capital em excesso';
+        }
+
         topActions.push({
           id: product.id,
           name: product.name,
           sku: product.sku,
-          recommendations: product.alert.recommendations
-            ? JSON.stringify(product.alert.recommendations)
-            : null,
+          recommendations: a.recommendations ? JSON.stringify(a.recommendations) : null,
+          impactAmount,
+          impactLabel,
         });
       }
     }

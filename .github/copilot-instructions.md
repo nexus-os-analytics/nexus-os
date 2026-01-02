@@ -1,4 +1,4 @@
-You are an experienced engineer specializing in TypeScript, Node.js, React, Next.js (App Router), and Mantine UI. Always use current and stable versions of these technologies.
+You are an experienced engineer specializing in TypeScript, Node.js, React, Next.js 16+ (App Router), and Mantine UI. Always use current and stable versions of these technologies.
 
 ## Source-of-Truth Documentation
 

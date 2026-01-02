@@ -1,5 +1,6 @@
 'use client';
 import {
+  Badge,
   Box,
   Button,
   Card,
@@ -67,10 +68,10 @@ export function Overview() {
               <Sparkles size={40} />
             </ThemeIcon>
             <Title order={1} mb="xs">
-              Análise Completa! 🎯
+              🎉 Análise Concluída!
             </Title>
             <Text size="lg" maw={600} mx="auto">
-              Analisamos seu estoque e encontramos oportunidades importantes para seu negócio.
+              <strong>📊 Encontramos em seu estoque:</strong>
             </Text>
           </Box>
 
@@ -132,13 +133,13 @@ export function Overview() {
                   </ThemeIcon>
                 </Group>
                 <Text size="sm" mb={4}>
-                  Capital Parado Detectado
+                  Capital Parado
                 </Text>
                 <Title order={2}>
                   R$ {data.capitalStuck.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                 </Title>
                 <Text size="xs" mt="xs">
-                  Produtos sem venda há mais de 30 dias
+                  Isso está custando juros e armazenamento
                 </Text>
               </Card>
 
@@ -149,11 +150,11 @@ export function Overview() {
                   </ThemeIcon>
                 </Group>
                 <Text size="sm" mb={4}>
-                  Produtos em Risco de Ruptura
+                  Produtos em Risco
                 </Text>
                 <Title order={2}>{data.ruptureCount}</Title>
                 <Text size="xs" mt="xs">
-                  Necessitam reposição urgente
+                  Podem zerar nos próximos dias
                 </Text>
               </Card>
 
@@ -164,11 +165,11 @@ export function Overview() {
                   </ThemeIcon>
                 </Group>
                 <Text size="sm" mb={4}>
-                  Oportunidades de Crescimento
+                  Oportunidades
                 </Text>
                 <Title order={2}>{data.opportunityCount}</Title>
                 <Text size="xs" mt="xs">
-                  Produtos com tendência de alta
+                  Produtos vendendo acima da média
                 </Text>
               </Card>
             </SimpleGrid>
@@ -181,37 +182,51 @@ export function Overview() {
                 Top 3 Ações Recomendadas
               </Title>
               <SimpleGrid cols={{ base: 1, sm: 3 }} mb="md" spacing="lg">
-                {data.topActions.map((action) => (
-                  <Card key={action.id} padding="xl" radius="md" withBorder shadow="md">
-                    <Text size="sm" fw={700} mb="md" component="div">
-                      <Group gap="xs">
-                        <ThemeIcon size={20} radius="md" color="brand" variant="light">
-                          <ArrowRight size={12} />
-                        </ThemeIcon>
-                        {action.name}
-                      </Group>
-                    </Text>
-                    <Stack gap="sm">
-                      <Group gap={4}>
-                        <Text size="sm" fw={700}>
-                          SKU:
+                {data.topActions.map((action) => {
+                  const label =
+                    action.impactAmount && action.impactAmount > 0
+                      ? `${action.impactLabel ?? 'Impacto'}: R$ ${action.impactAmount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`
+                      : null;
+
+                  return (
+                    <Card key={action.id} padding="xl" radius="md" withBorder shadow="md">
+                      <Group justify="space-between" mb="sm">
+                        <Text size="sm" fw={700} component="div">
+                          <Group gap="xs">
+                            <ThemeIcon size={20} radius="md" color="brand" variant="light">
+                              <ArrowRight size={12} />
+                            </ThemeIcon>
+                            {action.name}
+                          </Group>
                         </Text>
-                        <Text size="sm" c="dimmed">
-                          {action.sku}
-                        </Text>
+                        {label && (
+                          <Badge color="teal" variant="light">
+                            {label}
+                          </Badge>
+                        )}
                       </Group>
-                      <Divider />
-                      <List type="ordered">
-                        {action.recommendations &&
-                          (JSON.parse(action.recommendations) as string[]).map(
-                            (recommendation, index) => (
-                              <List.Item key={index}>{recommendation}</List.Item>
-                            )
-                          )}
-                      </List>
-                    </Stack>
-                  </Card>
-                ))}
+                      <Stack gap="sm">
+                        <Group gap={4}>
+                          <Text size="sm" fw={700}>
+                            SKU:
+                          </Text>
+                          <Text size="sm" c="dimmed">
+                            {action.sku}
+                          </Text>
+                        </Group>
+                        <Divider />
+                        <List type="ordered">
+                          {action.recommendations &&
+                            (JSON.parse(action.recommendations) as string[]).map(
+                              (recommendation, index) => (
+                                <List.Item key={index}>{recommendation}</List.Item>
+                              )
+                            )}
+                        </List>
+                      </Stack>
+                    </Card>
+                  );
+                })}
               </SimpleGrid>
             </Card>
           )}
