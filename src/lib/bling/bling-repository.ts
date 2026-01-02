@@ -573,11 +573,13 @@ export function createBlingRepository({ integrationId }: BlingRepositoryOptions)
         },
         create: {
           ...productMetrics,
-          blingProductId: String(blingProductId),
+          // Required relation: connect alert to existing BlingProduct by unique blingProductId
+          product: {
+            connect: { blingProductId: String(blingProductId) },
+          },
         },
         update: {
           ...productMetrics,
-          blingProductId: String(blingProductId),
         },
       });
     } catch (error) {
