@@ -722,25 +722,40 @@ export function calculateAllMetrics(
       settings?.capitalOptimizationThreshold ?? DEFAULT_CAPITAL_OPTIMIZATION_THRESHOLD,
   });
 
+  // Guards and integer casting for Prisma Int fields
+  const safeDaysRemaining = Number.isFinite(daysRemaining) ? Math.round(daysRemaining) : 0;
+  const safeEstimatedDeadline = Number.isFinite(estimatedDeadline) ? Math.round(estimatedDeadline) : 0;
+  const safeDaysOutOfStock = Number.isFinite(daysOutOfStock) ? Math.round(daysOutOfStock) : 0;
+  const safeEstimatedLostSales = Number.isFinite(estimatedLostSales)
+    ? Math.round(estimatedLostSales)
+    : 0;
+  const safeExcessUnits = Number.isFinite(excessUnits) ? Math.round(excessUnits) : 0;
+
   return {
-    vvdReal: Number.parseFloat(vvdReal.toFixed(2)),
-    vvd30: Number.parseFloat(vvd30.toFixed(2)),
-    vvd7: Number.parseFloat(vvd7.toFixed(2)),
-    daysRemaining: Number.parseFloat(daysRemaining.toFixed(1)),
+    vvdReal: Number.isFinite(vvdReal) ? Number.parseFloat(vvdReal.toFixed(2)) : 0,
+    vvd30: Number.isFinite(vvd30) ? Number.parseFloat(vvd30.toFixed(2)) : 0,
+    vvd7: Number.isFinite(vvd7) ? Number.parseFloat(vvd7.toFixed(2)) : 0,
+    daysRemaining: safeDaysRemaining,
     reorderPoint: Math.ceil(reorderPoint),
-    growthTrend: Number.parseFloat(growthTrend.toFixed(1)),
-    capitalStuck: Number.parseFloat(capitalStuck.toFixed(2)),
+    growthTrend: Number.isFinite(growthTrend) ? Number.parseFloat(growthTrend.toFixed(1)) : 0,
+    capitalStuck: Number.isFinite(capitalStuck) ? Number.parseFloat(capitalStuck.toFixed(2)) : 0,
     daysSinceLastSale,
-    suggestedPrice: Number.parseFloat(suggestedPrice.toFixed(2)),
-    estimatedDeadline: Number.parseFloat(estimatedDeadline.toFixed(0)),
-    recoverableAmount: Number.parseFloat(recoverableAmount.toFixed(2)),
-    daysOutOfStock,
-    estimatedLostSales: Number.parseFloat(estimatedLostSales.toFixed(1)),
-    estimatedLostAmount: Number.parseFloat(estimatedLostAmount.toFixed(2)),
-    idealStock: Number.parseFloat(idealStock.toFixed(2)),
-    excessUnits,
-    excessPercentage: Number.parseFloat(excessPercentage.toFixed(1)),
-    excessCapital: Number.parseFloat(excessCapital.toFixed(2)),
+    suggestedPrice: Number.isFinite(suggestedPrice) ? Number.parseFloat(suggestedPrice.toFixed(2)) : 0,
+    estimatedDeadline: safeEstimatedDeadline,
+    recoverableAmount: Number.isFinite(recoverableAmount)
+      ? Number.parseFloat(recoverableAmount.toFixed(2))
+      : 0,
+    daysOutOfStock: safeDaysOutOfStock,
+    estimatedLostSales: safeEstimatedLostSales,
+    estimatedLostAmount: Number.isFinite(estimatedLostAmount)
+      ? Number.parseFloat(estimatedLostAmount.toFixed(2))
+      : 0,
+    idealStock: Number.isFinite(idealStock) ? Number.parseFloat(idealStock.toFixed(2)) : 0,
+    excessUnits: safeExcessUnits,
+    excessPercentage: Number.isFinite(excessPercentage)
+      ? Number.parseFloat(excessPercentage.toFixed(1))
+      : 0,
+    excessCapital: Number.isFinite(excessCapital) ? Number.parseFloat(excessCapital.toFixed(2)) : 0,
     risk,
     type,
     message,

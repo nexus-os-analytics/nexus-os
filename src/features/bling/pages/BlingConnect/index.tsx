@@ -1,14 +1,10 @@
 'use client';
 import {
   Alert,
-  Badge,
   Box,
   Button,
   Card,
   Container,
-  Divider,
-  Group,
-  List,
   Loader,
   Paper,
   Progress,
@@ -30,7 +26,6 @@ export function BlingConnect() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { status, loading, connect } = useBlingIntegration();
-
   const [state, setState] = useState<ConnectionState>('idle');
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
@@ -191,112 +186,33 @@ export function BlingConnect() {
             <Stack gap="lg">
               {/* Hero value props */}
               <Card padding="lg" radius="md" withBorder shadow="sm">
-                <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="xl">
-                  <Stack gap={6}>
-                    <Text>
-                      <strong>🔴 Nunca mais perca vendas por estoque zerado</strong>
-                    </Text>
-                    <Text c="dimmed">→ Alertas 3 dias antes de zerar</Text>
-                    <Divider my="sm" />
-                    <Text>
-                      <strong>💰 Recupere até R$ 15k em capital parado</strong>
-                    </Text>
-                    <Text c="dimmed">→ Veja quanto está travado + preço ideal de liquidação</Text>
-                    <Divider my="sm" />
-                    <Text>
-                      <strong>🚀 Identifique produtos em explosão de vendas</strong>
-                    </Text>
-                    <Text c="dimmed">→ Aumente estoque antes de perder oportunidade</Text>
-                    <Divider my="sm" />
-                    <Text>
-                      <strong>⚡ Tudo em 30 segundos</strong> (não em 5 horas de planilha)
-                    </Text>
-                  </Stack>
-                  <Stack gap={8}>
-                    <Group gap={12} wrap="nowrap">
-                      <Badge color="teal" variant="light">
-                        ⏱️ Setup: 2 minutos
-                      </Badge>
-                      <Badge color="gray" variant="light">
-                        ✓ Sem cartão de crédito
-                      </Badge>
-                      <Badge color="gray" variant="light">
-                        ✓ Cancele quando quiser
-                      </Badge>
-                    </Group>
-                    <Paper p="md" radius="md" withBorder>
-                      <Text fw={700}>🔒 100% Seguro</Text>
-                      <List size="sm" spacing={4} mt={6}>
-                        <List.Item>Nunca pedimos sua senha</List.Item>
-                        <List.Item>Autorização oficial Bling</List.Item>
-                        <List.Item>Você pode revogar a qualquer momento</List.Item>
-                      </List>
-                    </Paper>
-                  </Stack>
-                </SimpleGrid>
-              </Card>
-
-              {/* First impact preview before connect */}
-              <Card padding="lg" radius="md" withBorder shadow="md">
-                <Title order={4} mb="md">
-                  👀 Veja o que você vai descobrir
-                </Title>
                 <SimpleGrid cols={{ base: 1, sm: 3 }} spacing="lg">
                   <Card withBorder padding="md" radius="md">
-                    <Text fw={700} size="lg">
-                      💰 R$ 18.450
+                    <Text fw={700} size="sm">
+                      🔴 Nunca mais perca vendas por estoque zerado
                     </Text>
                     <Text size="sm" c="dimmed">
-                      parados em 23 prods
+                      Receba alertas inteligentes de ruptura antes que aconteçam
                     </Text>
                   </Card>
                   <Card withBorder padding="md" radius="md">
-                    <Text fw={700} size="lg">
-                      ⚠️ 3 produtos
+                    <Text fw={700} size="sm">
+                      💰 Recupere até R$ 15k em capital parado
                     </Text>
                     <Text size="sm" c="dimmed">
-                      em risco de ruptura
+                      Veja quanto está travado + preço ideal de liquidação
                     </Text>
                   </Card>
                   <Card withBorder padding="md" radius="md">
-                    <Text fw={700} size="lg">
-                      🚀 2 oportunidades
+                    <Text fw={700} size="sm">
+                      🚀 Identifique produtos em explosão de vendas
                     </Text>
                     <Text size="sm" c="dimmed">
-                      de crescimento
+                      Aumente estoque antes de perder oportunidade
                     </Text>
                   </Card>
                 </SimpleGrid>
-
-                <Divider my="lg" />
-
-                <Paper p="md" radius="md" withBorder>
-                  <Group justify="center" mb="sm">
-                    <Image src="/img/logo.png" alt="Nexus" width={120} height={40} />
-                  </Group>
-                  <Text ta="center" mb="sm">
-                    🔄 Analisando seu estoque...
-                  </Text>
-                  <Progress value={65} size="lg" radius="xl" animated />
-                  <Text size="xs" c="dimmed" ta="center" mt={4}>
-                    ████████████░░░░░░░ 65%
-                  </Text>
-                  <Stack gap={4} mt="sm">
-                    <Text size="sm">✓ 127 produtos encontrados</Text>
-                    <Text size="sm">✓ 847 vendas analisadas</Text>
-                    <Text size="sm">⏳ Calculando VVD...</Text>
-                  </Stack>
-                  <Paper p="sm" radius="sm" mt="md" withBorder>
-                    <Text size="sm" fw={700}>
-                      💡 Você sabia?
-                    </Text>
-                    <Text size="xs" c="dimmed">
-                      Lojistas perdem em média R$ 12k por ano em rupturas evitáveis.
-                    </Text>
-                  </Paper>
-                </Paper>
               </Card>
-
               <Button onClick={handleConnect} fullWidth size="lg" color="green.9" loading={loading}>
                 Conectar com Bling
               </Button>
