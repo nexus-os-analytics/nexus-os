@@ -1,34 +1,35 @@
 'use client';
-import { Alert, Badge, Button, Card, Divider, Group, Loader, Stack, Table, Text, Title } from '@mantine/core';
+import { Alert, Badge, Button, Card, Code, Divider, Group, Loader, Stack, Table, Text, Title } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import { useRouter } from 'next/navigation';
 import { useBlingIntegration } from '@/hooks/useBlingIntegration';
-import { useState } from 'react';
+import { use, useState } from 'react';
+import { useAuth } from '@/features/auth/context/AuthContext';
 
-interface HomologationStep {
-  step: string;
-  method: string;
-  url?: string;
-  path?: string;
+interface MethodResult {
   status: number;
-  ok: boolean;
-  durationMs: number;
-  error?: unknown;
-  body?: unknown;
+  data: unknown;
+}
+
+interface HomologationSteps {
+  get?: MethodResult;
+  post?: MethodResult;
+  put?: MethodResult;
+  patch?: MethodResult;
+  delete?: MethodResult;
 }
 
 interface HomologationResult {
   success: boolean;
-  startedAt?: string;
-  finishedAt?: string;
-  steps: HomologationStep[];
+  steps: HomologationSteps;
 }
 
 export default function BlingIntegrationForm() {
+  const [result, setResult] = useState<HomologationResult | null>(null);
+  const [isRunning, setIsRunning] = useState(false);
+  const { user } = useAuth();
   const { status, loading, disconnect, refresh } = useBlingIntegration();
   const router = useRouter();
-  const [isRunning, setIsRunning] = useState(false);
-  const [result, setResult] = useState<HomologationResult | null>(null);
 
   const handleDisconnect = async () => {
     await disconnect();
@@ -56,7 +57,7 @@ export default function BlingIntegrationForm() {
         credentials: 'same-origin',
       });
 
-      const json = (await res.json()) as HomologationResult | { success?: boolean; steps?: HomologationStep[] };
+      const json = (await res.json()) as HomologationResult | { success?: boolean; steps?: HomologationSteps };
       if (!res.ok || !('success' in json) || json.success !== true) {
         notifications.show({
           title: 'Homologação falhou',
@@ -110,64 +111,72 @@ export default function BlingIntegrationForm() {
             Conectar Bling
           </Button>
         )}
-
         <Divider my="md" />
-        <Group justify="space-between" align="center">
-          <Title order={5}>Teste de Homologação</Title>
-          <Button onClick={handleRunHomologation} disabled={!status?.connected || isRunning} loading={isRunning}>
-            Executar homologação
-          </Button>
-        </Group>
 
-        {isRunning && (
-          <Alert color="blue" variant="light">
-            <Group gap="xs" align="center">
-              <Loader size="sm" />
-              <Text>Executando homologação...</Text>
-            </Group>
-          </Alert>
-        )}
-
-        {result && (
-          <Stack gap="sm">
-            <Group>
-              <Badge color={result.success ? 'green' : 'red'} variant="filled">
-                {result.success ? 'Sucesso' : 'Falha'}
-              </Badge>
-              {result.startedAt && <Text size="xs">Início: {new Date(result.startedAt).toLocaleString()}</Text>}
-              {result.finishedAt && <Text size="xs">Fim: {new Date(result.finishedAt).toLocaleString()}</Text>}
+        {user?.role === 'SUPER_ADMIN' && status?.connected && (
+          <>
+            <Group justify="space-between" align="center">
+              <Stack gap={0}>
+                <Title order={5}>Teste de Homologação</Title>
+                <Text size="sm" color="dimmed">
+                  Execute o teste de homologação necessário para enviar o Nexus OS para a revisão do Bling.
+                </Text>
+              </Stack>
+              <Button onClick={handleRunHomologation} disabled={!status?.connected || isRunning} loading={isRunning}>
+                Executar homologação
+              </Button>
             </Group>
 
-            <Table withTableBorder withColumnBorders highlightOnHover>
-              <Table.Thead>
-                <Table.Tr>
-                  <Table.Th>Etapa</Table.Th>
-                  <Table.Th>Método</Table.Th>
-                  <Table.Th>Status</Table.Th>
-                  <Table.Th>Duração (ms)</Table.Th>
-                </Table.Tr>
-              </Table.Thead>
-              <Table.Tbody>
-                {result.steps?.map((s, idx) => (
-                  <Table.Tr key={`${s.step}-${idx}`}>
-                    <Table.Td>
-                      <Stack gap={2}>
-                        <Text size="sm" fw={500}>{s.step}</Text>
-                        {(s.path || s.url) && (
-                          <Text size="xs" c="dimmed">{s.path ?? s.url}</Text>
-                        )}
-                      </Stack>
-                    </Table.Td>
-                    <Table.Td>{s.method}</Table.Td>
-                    <Table.Td>
-                      <Badge color={s.ok ? 'green' : 'red'} variant="light">{s.status}</Badge>
-                    </Table.Td>
-                    <Table.Td>{s.durationMs}</Table.Td>
-                  </Table.Tr>
-                ))}
-              </Table.Tbody>
-            </Table>
-          </Stack>
+            {isRunning && (
+              <Alert color="blue" variant="light">
+                <Group gap="xs" align="center">
+                  <Loader size="sm" />
+                  <Text>Executando homologação...</Text>
+                </Group>
+              </Alert>
+            )}
+
+            {result && (
+              <Stack gap="sm">
+                <Group>
+                  <Badge color={result.success ? 'green' : 'red'} variant="filled">
+                    {result.success ? 'Sucesso' : 'Falha'}
+                  </Badge>
+                </Group>
+
+                <Table withTableBorder withColumnBorders highlightOnHover>
+                  <Table.Thead>
+                    <Table.Tr>
+                      <Table.Th>Método</Table.Th>
+                      <Table.Th>Status</Table.Th>
+                      <Table.Th>Dados</Table.Th>
+                    </Table.Tr>
+                  </Table.Thead>
+                  <Table.Tbody>
+                    {(['get', 'post', 'put', 'patch', 'delete'] as const)
+                      .filter((m) => result.steps?.[m] !== undefined)
+                      .map((m) => {
+                        const r = result.steps[m]!;
+                        const ok = r.status >= 200 && r.status < 300;
+                        return (
+                          <Table.Tr key={m}>
+                            <Table.Td>
+                              <Text size="sm" fw={500} tt="uppercase">{m}</Text>
+                            </Table.Td>
+                            <Table.Td>
+                              <Badge color={ok ? 'green' : 'red'} variant="light">{r.status}</Badge>
+                            </Table.Td>
+                            <Table.Td>
+                              <Code block>{JSON.stringify(r.data, null, 2)}</Code>
+                            </Table.Td>
+                          </Table.Tr>
+                        );
+                      })}
+                  </Table.Tbody>
+                </Table>
+              </Stack>
+            )}
+          </>
         )}
       </Stack>
     </Card>

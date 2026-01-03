@@ -21,12 +21,12 @@ export function createBlingClient({ accessToken }: BlingClientOptions) {
   const BASE =
     process.env.BLING_API_BASE_URL?.replace(/\/$/, '') ?? 'https://api.bling.com.br/Api/v3';
 
-  const instance: AxiosInstance = axios.create({
+  const blingClient: AxiosInstance = axios.create({
     baseURL: BASE,
     timeout: 30000,
   });
 
-  instance.interceptors.request.use((config) => {
+  blingClient.interceptors.request.use((config) => {
     config.headers = config.headers ?? ({} as AxiosRequestHeaders);
     config.headers.Authorization = `Bearer ${accessToken}`;
     return config;
@@ -39,7 +39,7 @@ export function createBlingClient({ accessToken }: BlingClientOptions) {
    */
   async function getProducts(page: number = 1): Promise<BlingProductType[]> {
     return rateLimited(async () => {
-      const res = await instance.get(`/produtos?pagina=${page}&limite=100&criterio=2&tipo=P`);
+      const res = await blingClient.get(`/produtos?pagina=${page}&limite=100&criterio=2&tipo=P`);
       const { data } = res.data;
       return adaptProductsResponse(data);
     });
@@ -52,7 +52,7 @@ export function createBlingClient({ accessToken }: BlingClientOptions) {
    */
   async function getCategories(page: number = 1): Promise<BlingCategoryType[]> {
     return rateLimited(async () => {
-      const res = await instance.get(`/categorias/produtos?pagina=${page}&limite=100`);
+      const res = await blingClient.get(`/categorias/produtos?pagina=${page}&limite=100`);
       const { data } = res.data;
       return adaptCategoryResponse(data);
     });
@@ -69,7 +69,7 @@ export function createBlingClient({ accessToken }: BlingClientOptions) {
     dateEnd: string
   ): Promise<Array<{ id: number }>> {
     return rateLimited(async () => {
-      const res = await instance.get('/pedidos/vendas', {
+      const res = await blingClient.get('/pedidos/vendas', {
         params: { dataInicial: dateStart, dataFinal: dateEnd },
       });
       const { data } = res.data;
@@ -84,7 +84,7 @@ export function createBlingClient({ accessToken }: BlingClientOptions) {
    */
   async function getSalesHistory(saleId: string): Promise<BlingSalesHistoryType[] | null> {
     return rateLimited(async () => {
-      const res = await instance.get(`/pedidos/vendas/${encodeURIComponent(saleId)}`);
+      const res = await blingClient.get(`/pedidos/vendas/${encodeURIComponent(saleId)}`);
       const { data } = res.data;
 
       return adaptSalesHistoryResponse(data);
@@ -100,7 +100,7 @@ export function createBlingClient({ accessToken }: BlingClientOptions) {
     return rateLimited(async () => {
       const idsQuery = productIds.map((id) => `idsProdutos[]=${encodeURIComponent(id)}`).join('&');
       const queryString = `${idsQuery}&filtroSaldoEstoque=1`;
-      const res = await instance.get(`/estoques/saldos?${queryString}`);
+      const res = await blingClient.get(`/estoques/saldos?${queryString}`);
       const { data } = res.data;
 
       return adaptStockBalanceResponse(data);
@@ -108,6 +108,7 @@ export function createBlingClient({ accessToken }: BlingClientOptions) {
   }
 
   return {
+    blingClient,
     getProducts,
     getCategories,
     getSalesInRange,
