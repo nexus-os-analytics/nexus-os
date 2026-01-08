@@ -1,45 +1,62 @@
-import { ActionIcon, Anchor, Container, Group, Text } from '@mantine/core';
-import { IconBrandGithub, IconBrandLinkedin } from '@tabler/icons-react';
+import { Anchor, Container, Text } from '@mantine/core';
+import Link from 'next/link';
 import { APP_DESCRIPTION } from '@/lib/constants';
 import { Logo } from '../Logo';
 import classes from './PublicFooter.module.css';
 
 const data = [
   {
-    title: 'Sobre',
+    title: 'Produto',
     links: [
-      { label: 'Portifólio', link: 'https://foliveira.dev.br/' },
-      {
-        label: 'LinkedIn',
-        link: 'https://www.linkedin.com/in/felipe-de-oliveira-souza-a558a814b/',
-      },
-      { label: 'Github', link: 'https://github.com/FelipeOliveiraDvP' },
+      { label: 'Funcionalidades', link: '/#funcionalidades' },
+      { label: 'Como Funciona', link: '/#como-funciona' },
+      { label: 'Preços', link: '/precos' },
     ],
   },
   {
-    title: 'Serviços',
+    title: 'Recursos',
     links: [
-      { label: 'Desenvolvimento Web', link: 'https://foliveira.dev.br/#servicos' },
-      { label: 'Automações', link: 'https://foliveira.dev.br/n8n.html' },
-      { label: 'Projetos', link: 'https://foliveira.dev.br/projetos.html' },
-      { label: 'Pacotes', link: 'https://foliveira.dev.br/pacotes.html' },
+      { label: 'Manual de Integração', link: '/manual' },
+      { label: 'Central de Ajuda', link: 'mailto:contato@nexusos.com.br' },
+    ],
+  },
+  {
+    title: 'Empresa',
+    links: [
+      { label: 'Sobre', link: '/' },
+      { label: 'Contato', link: 'mailto:contato@nexusos.com.br' },
+    ],
+  },
+  {
+    title: 'Legal',
+    links: [
+      { label: 'Termos de Uso', link: '/termos-de-uso' },
+      { label: 'Política de Privacidade', link: '/politica-de-privacidade' },
+    ],
+  },
+  {
+    title: 'Acesso',
+    links: [
+      { label: 'Entrar', link: '/login' },
+      { label: 'Cadastrar', link: '/cadastre-se' },
     ],
   },
 ];
 
 export function PublicFooter() {
   const groups = data.map((group) => {
-    const links = group.links.map((link, index) => (
-      <Text<'a'>
-        key={index}
-        className={classes.link}
-        component="a"
-        href={link.link}
-        onClick={(event) => event.preventDefault()}
-      >
-        {link.label}
-      </Text>
-    ));
+    const links = group.links.map((link, index) => {
+      const isInternal = link.link.startsWith('/');
+      return isInternal ? (
+        <Link key={index} href={link.link} className={classes.link}>
+          {link.label}
+        </Link>
+      ) : (
+        <Text<'a'> key={index} className={classes.link} component="a" href={link.link}>
+          {link.label}
+        </Text>
+      );
+    });
 
     return (
       <div className={classes.wrapper} key={group.title}>
@@ -62,37 +79,10 @@ export function PublicFooter() {
       </Container>
       <Container className={classes.afterFooter}>
         <Text c="dimmed" size="sm">
-          © {new Date().getFullYear()}{' '}
-          <Anchor href="https://foliveira.dev.br/" target="_blank" referrerPolicy="no-referrer">
-            foliveira.dev.br
-          </Anchor>{' '}
-          Todos os direitos reservados.
+          © {new Date().getFullYear()} Nexus OS. Todos os direitos reservados. ·{' '}
+          <Anchor href="/manual">Manual</Anchor> · <Anchor href="/termos-de-uso">Termos</Anchor> ·{' '}
+          <Anchor href="/politica-de-privacidade">Privacidade</Anchor>
         </Text>
-
-        <Group gap={0} className={classes.social} justify="flex-end" wrap="nowrap">
-          <ActionIcon
-            component="a"
-            href="https://github.com/FelipeOliveiraDvP"
-            target="_blank"
-            rel="noopener noreferrer"
-            size="lg"
-            color="gray"
-            variant="subtle"
-          >
-            <IconBrandGithub size={18} stroke={1.5} />
-          </ActionIcon>
-          <ActionIcon
-            component="a"
-            href="https://www.linkedin.com/in/felipe-de-oliveira-souza-a558a814b/"
-            target="_blank"
-            rel="noopener noreferrer"
-            size="lg"
-            color="gray"
-            variant="subtle"
-          >
-            <IconBrandLinkedin size={18} stroke={1.5} />
-          </ActionIcon>
-        </Group>
       </Container>
     </div>
   );

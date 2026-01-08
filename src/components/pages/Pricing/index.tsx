@@ -8,7 +8,6 @@ import {
   Divider,
   Group,
   List,
-  ListItem,
   SegmentedControl,
   SimpleGrid,
   Stack,
@@ -126,20 +125,15 @@ export function Pricing() {
 
             <List spacing="xs" size="sm">
               {t.features.map((f) => (
-                <ListItem key={f}>{f}</ListItem>
+                <List.Item key={f}>{f}</List.Item>
               ))}
             </List>
 
-            <Button
-              component={Link}
-              href="/auth/cadastre-se"
-              fullWidth
-              mt="md"
-              size="md"
-              variant={t.recommended ? 'filled' : 'light'}
-            >
-              Começar com {t.name}
-            </Button>
+            <Link href="/auth/cadastre-se">
+              <Button fullWidth mt="md" size="md" variant={t.recommended ? 'filled' : 'light'}>
+                Começar com {t.name}
+              </Button>
+            </Link>
           </Card>
         ))}
       </SimpleGrid>
@@ -154,9 +148,11 @@ export function Pricing() {
           <Text size="sm" c="dimmed">
             Precisa de ajuda para escolher? Fale com nosso time e encontre o plano ideal.
           </Text>
-          <Button component={Link} href="/public/contato" mt="md" variant="subtle">
-            Falar com vendas
-          </Button>
+          <Link href="/public/contato">
+            <Button mt="md" variant="subtle">
+              Falar com vendas
+            </Button>
+          </Link>
         </Card.Section>
       </Card>
     </Container>

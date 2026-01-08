@@ -8,7 +8,7 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
   const pinned = useHeadroom({ fixedAt: 120 });
 
   return (
-    <AppShell header={{ height: 80, collapsed: !pinned, offset: false }} padding="md">
+    <AppShell header={{ height: 100, collapsed: !pinned, offset: false }} padding="md">
       <AppShell.Header p="md">
         <PublicHeader />
       </AppShell.Header>
