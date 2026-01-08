@@ -13,14 +13,20 @@ export function PublicHeader() {
         <Logo />
 
         <Group h="100%" gap={0} visibleFrom="sm">
-          <Link href="#funcionalidades" className={classes.link}>
+          <Link href="/#funcionalidades" className={classes.link}>
             Funcionalidades
+          </Link>
+          <Link href="/#como-funciona" className={classes.link}>
+            Como Funciona
+          </Link>
+          <Link href="/manual" className={classes.link}>
+            Manual
           </Link>
           <Link href="/precos" className={classes.link}>
             Preços
           </Link>
-          <Link href="#como-funciona" className={classes.link}>
-            Como Funciona
+          <Link href="mailto:contato@nexusos.com.br" className={classes.link}>
+            Contato
           </Link>
         </Group>
 
@@ -52,14 +58,20 @@ export function PublicHeader() {
         <ScrollArea h="calc(100vh - 80px)" mx="-md">
           <Divider my="sm" />
 
-          <Link href="#funcionalidades" className={classes.link} onClick={closeDrawer}>
+          <Link href="/#funcionalidades" className={classes.link} onClick={closeDrawer}>
             Funcionalidades
           </Link>
           <Link href="/precos" className={classes.link} onClick={closeDrawer}>
             Preços
           </Link>
-          <Link href="#como-funciona" className={classes.link} onClick={closeDrawer}>
+          <Link href="/#como-funciona" className={classes.link} onClick={closeDrawer}>
             Como Funciona
+          </Link>
+          <Link href="/manual" className={classes.link} onClick={closeDrawer}>
+            Manual
+          </Link>
+          <Link href="mailto:contato@nexusos.com.br" className={classes.link} onClick={closeDrawer}>
+            Contato
           </Link>
 
           <Divider my="sm" />
