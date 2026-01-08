@@ -3,7 +3,7 @@ import { AppShell, Group, SimpleGrid, Skeleton, Stack } from '@mantine/core';
 
 export function PublicLayoutSkeleton() {
   return (
-    <AppShell header={{ height: 80, collapsed: false }} padding="md">
+    <AppShell header={{ height: 100, collapsed: false }} padding="md">
       <AppShell.Header p="md">
         <Group justify="space-between" h="100%">
           <Skeleton height={30} width={100} radius="md" />

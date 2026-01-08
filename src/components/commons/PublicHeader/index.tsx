@@ -13,22 +13,28 @@ export function PublicHeader() {
         <Logo />
 
         <Group h="100%" gap={0} visibleFrom="sm">
-          <Link href="/" className={classes.link}>
-            Home
+          <Link href="#funcionalidades" className={classes.link}>
+            Funcionalidades
           </Link>
-
-          <Link href="/privacy" className={classes.link}>
-            Política de Privacidade
+          <Link href="/precos" className={classes.link}>
+            Preços
+          </Link>
+          <Link href="#como-funciona" className={classes.link}>
+            Como Funciona
           </Link>
         </Group>
 
         <Group visibleFrom="sm">
-          <Button component={Link} href="/login" variant="default">
-            Entrar
-          </Button>
-          <Button component={Link} href="/cadastre-se" variant="outline">
-            Criar Conta
-          </Button>
+          <Link href="/login">
+            <Button variant="outline" color="brand">
+              Entrar
+            </Button>
+          </Link>
+          <Link href="/cadastre-se">
+            <Button variant="gradient" gradient={{ from: 'brand.6', to: 'brand.8', deg: 135 }}>
+              Começar Grátis
+            </Button>
+          </Link>
         </Group>
 
         <Burger opened={drawerOpened} onClick={toggleDrawer} hiddenFrom="sm" />
@@ -43,25 +49,32 @@ export function PublicHeader() {
         hiddenFrom="sm"
         zIndex={1000000}
       >
-        <ScrollArea h="calc(100vh - 80px" mx="-md">
+        <ScrollArea h="calc(100vh - 80px)" mx="-md">
           <Divider my="sm" />
 
-          <Link href="/" className={classes.link} onClick={closeDrawer}>
-            Home
+          <Link href="#funcionalidades" className={classes.link} onClick={closeDrawer}>
+            Funcionalidades
           </Link>
-          <Link href="/privacy" className={classes.link} onClick={closeDrawer}>
-            Política de Privacidade
+          <Link href="/precos" className={classes.link} onClick={closeDrawer}>
+            Preços
+          </Link>
+          <Link href="#como-funciona" className={classes.link} onClick={closeDrawer}>
+            Como Funciona
           </Link>
 
           <Divider my="sm" />
 
           <Group justify="center" grow pb="xl" px="md">
-            <Button component={Link} href="/login" variant="default">
-              Entrar
-            </Button>
-            <Button component={Link} href="/cadastre-se" variant="outline">
-              Criar Conta
-            </Button>
+            <Link href="/login">
+              <Button variant="outline" color="brand">
+                Entrar
+              </Button>
+            </Link>
+            <Link href="/cadastre-se">
+              <Button variant="gradient" gradient={{ from: 'brand.6', to: 'brand.8', deg: 135 }}>
+                Começar Grátis
+              </Button>
+            </Link>
           </Group>
         </ScrollArea>
       </Drawer>

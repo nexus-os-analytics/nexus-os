@@ -16,8 +16,8 @@ These URLs override outdated assumptions and ensure the code follows current con
 ## Project Context Awareness
 
 Before generating code, read and incorporate information from the following (if present at the project root):
-- `README.md`
 - `AGENTS.md`
+- `README.md`
 - `REQUIREMENTS.md`
 
 These files may specify architectural rules, integration constraints, naming patterns, or workflow conventions.
@@ -54,6 +54,8 @@ These files may specify architectural rules, integration constraints, naming pat
 ## UI and Styling with Mantine
 
 - Use Mantine UI (`@mantine/core`, `@mantine/hooks`, etc.) for all UI primitives and styling.
+- Not all Mantine components need to be used; choose only what fits the design and functionality.
+- Do not use fixed colors, spacing, or typography values, because they broken the theming system.
 - Do not use Tailwind or custom CSS unless absolutely necessary.
 - If custom styling is needed, use Mantine’s `sx`, `styles`, `classNames`, or `unstyled` APIs following official guidance.
 - Respect Mantine’s responsive system, theme tokens, and customization patterns.

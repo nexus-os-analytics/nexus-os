@@ -99,8 +99,8 @@ All agents must follow this sequence before generating code:
 
 ### 6.3 Mantine UI Rules
 - Mantine is the **only** UI and styling system.
-- Avoid Tailwind and raw CSS unless absolutely necessary.
-- Use Mantine theme tokens, props, `sx`, `styles`, etc.
+- Do not use Tailwind and raw CSS unless absolutely necessary.
+- Always use Mantine theme tokens, props, `sx`, `styles`, etc.
 - Forms must use Mantine + React Hook Form + Zod.
 - Any new component must comply with Mantine official patterns.
 

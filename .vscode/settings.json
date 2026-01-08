@@ -50,7 +50,7 @@
   },
   "cSpell.language": "en,pt,pt-BR",
   "prisma-smart-formatter.typescript.defaultFormatter": "vscode.typescript-language-features",
-  "prisma-smart-formatter.typescriptreact.defaultFormatter": "biomejs.biome",
+  "prisma-smart-formatter.typescriptreact.defaultFormatter": "vscode.typescript-language-features",
   "prisma-smart-formatter.prisma.defaultFormatter": "Prisma.prisma",
   "github.copilot.chat.codeGeneration.useInstructionFiles": true,
   "github.copilot.enable": {
