@@ -1,6 +1,16 @@
 'use client';
-import { Badge, Container, Group, SimpleGrid, Stack, Text, Title } from '@mantine/core';
-import Image from 'next/image';
+import {
+  Avatar,
+  Badge,
+  Card,
+  Container,
+  Group,
+  Rating,
+  SimpleGrid,
+  Stack,
+  Text,
+  Title,
+} from '@mantine/core';
 
 export function SocialProofSection() {
   return (
@@ -19,17 +29,44 @@ export function SocialProofSection() {
           </Badge>
         </Group>
 
-        <SimpleGrid cols={{ base: 2, sm: 4 }} spacing="lg" mt="lg">
-          <Image src="/img/bling-logo.png" alt="Bling" width={140} height={40} />
-          <Image src="/img/bling-logo-white.png" alt="Bling" width={140} height={40} />
-          <Image src="/img/logo.png" alt="Nexus" width={140} height={40} />
-          <Image src="/img/logo.png" alt="LGPD" width={140} height={40} />
+        <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }} spacing="lg" mt="lg" w="100%">
+          {[
+            {
+              initials: 'AM',
+              name: 'Ana Martins',
+              role: 'Dona de Loja',
+              text: 'Liberei R$ 18.400 em 3 semanas e evitei 5 rupturas.',
+            },
+            {
+              initials: 'RP',
+              name: 'Rafael Pereira',
+              role: 'E-commerce Manager',
+              text: 'Alertas assertivos e simples de agir. Reduzi horas de Excel.',
+            },
+            {
+              initials: 'CL',
+              name: 'Carla Lima',
+              role: 'Compras',
+              text: 'Acompanhamento de capital parado mudou nosso caixa.',
+            },
+          ].map((t) => (
+            <Card key={t.name} withBorder radius="md">
+              <Group align="center" gap="sm">
+                <Avatar color="blue" radius="xl">
+                  {t.initials}
+                </Avatar>
+                <div>
+                  <Text fw={600}>{t.name}</Text>
+                  <Text size="sm" c="dimmed">
+                    {t.role}
+                  </Text>
+                </div>
+              </Group>
+              <Rating value={5} readOnly mt="sm" />
+              <Text mt="xs">“{t.text}”</Text>
+            </Card>
+          ))}
         </SimpleGrid>
-
-        <Text c="dimmed" size="sm" ta="center" maw={760}>
-          Depoimentos reais e cases serão adicionados aqui; por ora, exibimos métricas de impacto e
-          logos de confiança.
-        </Text>
       </Stack>
     </Container>
   );

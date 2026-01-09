@@ -1,5 +1,16 @@
 'use client';
-import { Card, Container, Grid, List, Stack, Text, Title } from '@mantine/core';
+import {
+  AspectRatio,
+  Card,
+  Center,
+  Container,
+  Grid,
+  List,
+  Stack,
+  Text,
+  Title,
+} from '@mantine/core';
+import { IconPlayerPlayFilled } from '@tabler/icons-react';
 
 const steps = [
   {
@@ -53,9 +64,21 @@ export function HowItWorksSection() {
         <Card withBorder radius="md" mt="md" maw={900}>
           <Title order={5}>Demonstração rápida (2 min)</Title>
           <Text c="dimmed" size="sm" mt="xs">
-            Insira aqui um vídeo de demonstração quando disponível; por enquanto, usamos este espaço
-            para descrever o fluxo.
+            Placeholder do vídeo: substitua por um vídeo real quando disponível.
           </Text>
+          <AspectRatio
+            ratio={16 / 9}
+            mt="sm"
+            style={{
+              border: '1px dashed var(--mantine-color-gray-4)',
+              borderRadius: 12,
+              overflow: 'hidden',
+            }}
+          >
+            <Center>
+              <IconPlayerPlayFilled size={48} color="var(--mantine-color-gray-6)" />
+            </Center>
+          </AspectRatio>
           <List size="sm" mt="sm">
             <List.Item>Conecte com OAuth ao Bling</List.Item>
             <List.Item>Sincronize produtos e estoques</List.Item>
