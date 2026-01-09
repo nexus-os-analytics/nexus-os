@@ -1,99 +1,60 @@
 'use client';
-import { Badge, Button, Container, Group, Stack, Text, TextInput, Title } from '@mantine/core';
-import { IconCheck } from '@tabler/icons-react';
+import {
+  Button,
+  Center,
+  Container,
+  Grid,
+  Image as MantineImage,
+  Stack,
+  Text,
+  Title,
+} from '@mantine/core';
 import Image from 'next/image';
 import Link from 'next/link';
-import { useMemo, useState } from 'react';
 
 export function HeroSection() {
-  const [email, setEmail] = useState('');
-  const signupHref = useMemo(() => {
-    const base = '/cadastre-se';
-    if (!email) return base;
-    const params = new URLSearchParams({ email });
-    return `${base}?${params.toString()}`;
-  }, [email]);
-
   return (
-    <Container id="hero" size="lg" pt="xl" pb="lg">
-      <Stack align="center" gap="lg">
-        <Title order={1} ta="center" maw={900}>
-          Pare de perder{' '}
-          <Text span c="brand.7" inherit>
-            Vendas e Dinheiro
-          </Text>{' '}
-          no seu estoque.
-        </Title>
-        <Text ta="center" c="dimmed" maw={760}>
-          Nexus analisa automaticamente o Bling e alerta antes dos problemas.
-        </Text>
-
-        <Group wrap="wrap" justify="center">
-          <TextInput
-            size="md"
-            placeholder="seu@email.com"
-            value={email}
-            onChange={(e) => setEmail(e.currentTarget.value)}
-            leftSection="@"
-          />
-          <Link href={signupHref}>
+    <Container id="hero" size="lg" pt="xl">
+      <Grid>
+        <Grid.Col span={{ base: 12, md: 6 }}>
+          <Stack gap="lg">
+            <Title order={1} maw={900}>
+              Pare de perder{' '}
+              <Text span c="brand.7" inherit>
+                Vendas e Dinheiro
+              </Text>{' '}
+              no seu estoque.
+            </Title>
+            <Text c="dimmed" maw={760}>
+              O Nexus OS conecta ao Bling, analisa seu estoque em tempo real e te alerta antes dos
+              problemas para você agir com confiança.
+            </Text>
             <Button
-              size="md"
+              component={Link}
+              href="/cadastre-se"
+              size="xl"
               variant="gradient"
               gradient={{ from: 'brand.6', to: 'brand.8', deg: 135 }}
             >
               Começar Gratuitamente
             </Button>
-          </Link>
-        </Group>
-
-        <Group gap="sm" justify="center">
-          <Badge leftSection={<IconCheck size={14} />} variant="light" color="gray">
-            Sem cartão de crédito
-          </Badge>
-          <Badge leftSection={<IconCheck size={14} />} variant="light" color="gray">
-            Cancele quando quiser
-          </Badge>
-          <Badge leftSection={<IconCheck size={14} />} variant="light" color="gray">
-            Integração oficial Bling
-          </Badge>
-        </Group>
-
-        <Stack align="center" mt="lg">
-          <div style={{ position: 'relative', maxWidth: 980, width: '100%' }}>
-            <Image
-              src="/img/product_placeholder.webp"
-              alt="Dashboard Nexus OS"
-              width={980}
-              height={560}
+          </Stack>
+        </Grid.Col>
+        <Grid.Col span={{ base: 12, md: 6 }}>
+          <Center>
+            <MantineImage
+              component={Image}
+              src="/img/hero-image.png"
               priority
-              style={{ borderRadius: 12, border: '1px solid var(--mantine-color-gray-3)' }}
+              pos="relative"
+              height={500}
+              width={550}
+              alt="Comece agora com o Nexus OS"
+              style={{ objectFit: 'contain' }}
             />
-
-            {/* Callouts */}
-            <Badge style={{ position: 'absolute', top: 16, left: 16 }} color="red" variant="filled">
-              R$ 11.700 parados há 95 dias
-            </Badge>
-            <Badge
-              style={{ position: 'absolute', bottom: 16, left: 16 }}
-              color="yellow"
-              variant="filled"
-            >
-              3 produtos em risco de ruptura
-            </Badge>
-            <Badge
-              style={{ position: 'absolute', bottom: 16, right: 16 }}
-              color="green"
-              variant="filled"
-            >
-              +150% vendas — produto em alta
-            </Badge>
-          </div>
-          <Text c="dimmed" size="sm">
-            O Nexus enxerga o que o Bling não mostra.
-          </Text>
-        </Stack>
-      </Stack>
+          </Center>
+        </Grid.Col>
+      </Grid>
     </Container>
   );
 }
