@@ -1,5 +1,5 @@
 'use client';
-import { Button, Card, Container, Group, Stack, Text, Title } from '@mantine/core';
+import { Badge, Button, Card, Container, Group, Stack, Text, Title } from '@mantine/core';
 import Link from 'next/link';
 
 export function FinalCTASection() {
@@ -26,8 +26,20 @@ export function FinalCTASection() {
               Ver Demonstração
             </Button>
           </Group>
+          <Group gap="sm" mt="xs" justify="center">
+            <Badge variant="light" color="yellow">
+              14 dias grátis
+            </Badge>
+            <Badge variant="light" color="green">
+              Sem cartão
+            </Badge>
+            <Badge variant="light" color="blue">
+              Cancele quando quiser
+            </Badge>
+          </Group>
           <Text c="dimmed" size="sm" mt="sm">
-            🛡️ Se você não economizar R$ 500 no primeiro mês, devolvemos 100% do seu dinheiro.
+            🛡️ Garantia: se você não economizar R$ 500 no primeiro mês, devolvemos 100% do seu
+            dinheiro.
           </Text>
         </Stack>
       </Card>

@@ -1,13 +1,62 @@
 'use client';
-import { Badge, Button, Card, Container, SimpleGrid, Stack, Text, Title } from '@mantine/core';
+import {
+  Badge,
+  Button,
+  Card,
+  Container,
+  Group,
+  SimpleGrid,
+  Stack,
+  Text,
+  ThemeIcon,
+  Title,
+} from '@mantine/core';
+import {
+  IconAlertTriangle,
+  IconCash,
+  IconChartBar,
+  IconEyeClosed,
+  IconFileSpreadsheet,
+  IconRotateClockwise,
+} from '@tabler/icons-react';
 
-const problems = [
-  { title: 'Produtos acabam sem aviso', value: '–R$ 2.800/mês' },
-  { title: 'Dinheiro parado', value: 'R$ 15k travados' },
-  { title: 'Reposição errada', value: '35% de erro' },
-  { title: 'Horas perdidas no Excel', value: '15h/semana' },
-  { title: 'Descobre oportunidades tarde', value: 'Perda de momentum' },
-  { title: 'Decisões no escuro', value: 'Sem previsibilidade' },
+const problems: { title: string; value: string; desc: string; icon: React.ReactNode }[] = [
+  {
+    title: 'Produtos acabam sem aviso',
+    value: '– R$ 2.800/mês',
+    desc: 'Ruptura por falta de previsão e lead time ignorado.',
+    icon: <IconAlertTriangle size={18} />,
+  },
+  {
+    title: 'Dinheiro parado',
+    value: 'R$ 15.000 travados',
+    desc: 'Estoque envelhecido consumindo caixa e espaço.',
+    icon: <IconCash size={18} />,
+  },
+  {
+    title: 'Reposição errada',
+    value: '35% de erro',
+    desc: 'Compra sem prioridade por margem e giro.',
+    icon: <IconRotateClockwise size={18} />,
+  },
+  {
+    title: 'Horas perdidas no Excel',
+    value: '15h/semana',
+    desc: 'Planilhas manuais, dados desatualizados e erros humanos.',
+    icon: <IconFileSpreadsheet size={18} />,
+  },
+  {
+    title: 'Descobre oportunidades tarde',
+    value: 'Perda de momentum',
+    desc: 'Itens em alta sem ação rápida para aproveitar demanda.',
+    icon: <IconChartBar size={18} />,
+  },
+  {
+    title: 'Decisões no escuro',
+    value: 'Sem previsibilidade',
+    desc: 'Falta de alertas e recomendações acionáveis.',
+    icon: <IconEyeClosed size={18} />,
+  },
 ];
 
 export function ProblemSection() {
@@ -27,8 +76,18 @@ export function ProblemSection() {
         <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }} spacing="md" mt="md" w="100%">
           {problems.map((p) => (
             <Card key={p.title} withBorder radius="md">
-              <Title order={4}>{p.title}</Title>
-              <Text c="dimmed" mt="xs">
+              <Group gap="sm">
+                <ThemeIcon variant="light" color="red" size={36} radius="md">
+                  {p.icon}
+                </ThemeIcon>
+                <div>
+                  <Title order={4}>{p.title}</Title>
+                  <Text c="dimmed" size="sm">
+                    {p.desc}
+                  </Text>
+                </div>
+              </Group>
+              <Text fw={600} mt="sm">
                 {p.value}
               </Text>
             </Card>
