@@ -18,14 +18,25 @@ jobs:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_KEY }}
-          # Optional: set port via secret; if unset, action defaults to 22
-          port: ${{ secrets.SSH_PORT }}
-          source: "./"
-          target: "/opt/nexus-os"
+          port: ${{ secrets.SSH_PORT || 22 }}
+          source: |
+            prisma
+            public
+            src
+            .dockerignore
+            .env.example
+            docker-compose.yml
+            Dockerfile
+            next.config.ts
+            package.json
+            pnpm-lock.yaml
+            postcss.config.js
+            prisma.config.ts
+            tsconfig.json
+            README.md
+          target: /opt/nexus-os
           rm: true
-          strip_components: 0
           overwrite: true
-          proxy_port: 0
           timeout: 120s
 
       - name: Configure and deploy via SSH
@@ -63,41 +74,35 @@ jobs:
             mkdir -p "$WORKDIR"
             cd "$WORKDIR"
 
-            echo "Criando arquivo .env para o docker-compose"
-            # Validate required secrets
-            for var in DOMAIN LETSENCRYPT_EMAIL POSTGRES_USER POSTGRES_PASSWORD POSTGRES_DB NEXTAUTH_SECRET; do
-              if [ -z "${!var}" ]; then
-                echo "[ERROR] Missing required secret: $var" >&2
-                exit 1
-              fi
-            done
+            echo "Gerando arquivo .env com variáveis de ambiente"
+            echo "DOMAIN=${{ secrets.DOMAIN }}" > .env
+            echo "LETSENCRYPT_EMAIL=${{ secrets.LETSENCRYPT_EMAIL }}" >> .env
+            echo "POSTGRES_USER=${{ secrets.POSTGRES_USER }}" >> .env
+            echo "POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}" >> .env
+            echo "POSTGRES_DB=${{ secrets.POSTGRES_DB }}" >> .env
+            echo "NEXTAUTH_SECRET=${{ secrets.NEXTAUTH_SECRET }}" >> .env
+            echo "NEXTAUTH_URL=https://${{ secrets.DOMAIN }}" >> .env
+            echo "NEXT_TELEMETRY_DISABLED=1" >> .env
+            echo "DATABASE_URL=postgresql://${{ secrets.POSTGRES_USER }}:${{ secrets.POSTGRES_PASSWORD }}@nexus_db:5432/${{ secrets.POSTGRES_DB }}?schema=public" >> .env
+            echo "GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}" >> .env
+            echo "GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}" >> .env
+            echo "BLING_CLIENT_ID=${{ secrets.BLING_CLIENT_ID }}" >> .env
+            echo "BLING_CLIENT_SECRET=${{ secrets.BLING_CLIENT_SECRET }}" >> .env
+            echo "BLING_INVITE_LINK=${{ secrets.BLING_INVITE_LINK }}" >> .env
+            echo "INNGEST_SIGNING_KEY=${{ secrets.INNGEST_SIGNING_KEY }}" >> .env
+            echo "INNGEST_EVENT_KEY=${{ secrets.INNGEST_EVENT_KEY }}" >> .env
+            echo "BREVO_API_KEY=${{ secrets.BREVO_API_KEY }}" >> .env
+            echo "BREVO_SENDER_NAME=${{ secrets.BREVO_SENDER_NAME }}" >> .env
+            echo "BREVO_SENDER_EMAIL=${{ secrets.BREVO_SENDER_EMAIL }}" >> .env
 
-            : > .env
-            printf "DOMAIN=%s\n" "$DOMAIN" >> .env
-            printf "LETSENCRYPT_EMAIL=%s\n" "$LETSENCRYPT_EMAIL" >> .env
-            printf "POSTGRES_USER=%s\n" "$POSTGRES_USER" >> .env
-            printf "POSTGRES_PASSWORD=%s\n" "$POSTGRES_PASSWORD" >> .env
-            printf "POSTGRES_DB=%s\n" "$POSTGRES_DB" >> .env
-            printf "NEXTAUTH_SECRET=%s\n" "$NEXTAUTH_SECRET" >> .env
-            printf "NEXTAUTH_URL=https://%s\n" "$DOMAIN" >> .env
-            printf "NEXT_TELEMETRY_DISABLED=1\n" >> .env
-            printf "DATABASE_URL=postgresql://%s:%s@nexus_db:5432/%s?schema=public\n" "$POSTGRES_USER" "$POSTGRES_PASSWORD" "$POSTGRES_DB" >> .env
-            printf "GOOGLE_CLIENT_ID=%s\n" "$GOOGLE_CLIENT_ID" >> .env
-            printf "GOOGLE_CLIENT_SECRET=%s\n" "$GOOGLE_CLIENT_SECRET" >> .env
-            printf "BLING_CLIENT_ID=%s\n" "$BLING_CLIENT_ID" >> .env
-            printf "BLING_CLIENT_SECRET=%s\n" "$BLING_CLIENT_SECRET" >> .env
-            printf "BLING_INVITE_LINK=%s\n" "$BLING_INVITE_LINK" >> .env
-            printf "INNGEST_SIGNING_KEY=%s\n" "$INNGEST_SIGNING_KEY" >> .env
-            printf "INNGEST_EVENT_KEY=%s\n" "$INNGEST_EVENT_KEY" >> .env
-            printf "BREVO_API_KEY=%s\n" "$BREVO_API_KEY" >> .env
-            printf "BREVO_SENDER_NAME=%s\n" "$BREVO_SENDER_NAME" >> .env
-            printf "BREVO_SENDER_EMAIL=%s\n" "$BREVO_SENDER_EMAIL" >> .env
+            echo "Verificando .env gerado:"
+            cat .env
 
-            echo "Parando serviços existentes"
-            docker compose down
+            echo "Parando containers antigos"
+            docker compose down || true
 
-            echo "Subindo serviços com Docker Compose"
+            echo "Subindo novos serviços"
             docker compose up -d --build
 
-            echo "Mostrando status dos serviços"
+            echo "Status final dos containers"
             docker compose ps
