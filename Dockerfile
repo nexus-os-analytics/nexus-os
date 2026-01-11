@@ -17,6 +17,11 @@ ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 RUN corepack enable && corepack prepare pnpm@10.27.0 --activate
 
+# Ensure Prisma has a DATABASE_URL available during build (used by prisma.config.ts)
+# This is a placeholder; runtime value is provided by docker-compose.
+ARG DATABASE_URL=postgresql://user:password@localhost:5432/db
+ENV DATABASE_URL=$DATABASE_URL
+
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 

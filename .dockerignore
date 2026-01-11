@@ -1,0 +1,47 @@
+# VCS
+.git
+.gitignore
+.github/
+
+# Editor configs
+.vscode/
+.idea/
+
+# Environment files (runtime provided via docker compose)
+.env
+.env.*
+!.env.example
+
+# Node/Next.js build outputs
+node_modules/
+.next/
+out/
+dist/
+build/
+.cache/
+.turbo/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+logs/
+*.log
+
+# Tests and coverage
+coverage/
+playwright-report/
+test-results/
+cypress/
+e2e/
+__tests__/
+.storybook/
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+# Local/dev-only Docker files
+Dockerfile.local
+docker-compose.dev.yml
