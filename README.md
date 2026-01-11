@@ -211,17 +211,57 @@ INNGEST_SIGNING_KEY=""
 ```
 
 ### Scripts de Deploy
+ 
+### Deploy em VPS (Docker Compose + Traefik)
 
+Este projeto fornece um `docker-compose.yml` pronto para produção com Traefik (HTTPS automático via Let's Encrypt), Postgres e o app Next.js (modo standalone).
+
+#### Pré-requisitos na VPS
+- Docker + Docker Compose Plugin instalados
+- DNS do seu `DOMAIN` apontando para o IP da VPS
+- Porta 80 e 443 liberadas no firewall
+
+#### Passos
+1. Configure as variáveis no arquivo `.env` conforme modelo em [.env.example](.env.example). Para produção, use:
+   - `DOMAIN`, `LETSENCRYPT_EMAIL`
+   - `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB`
+   - `DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@nexus_db:5432/${POSTGRES_DB}?schema=public`
+   - `NEXTAUTH_SECRET` (forte) e `NEXTAUTH_URL=https://${DOMAIN}`
+
+2. Suba os serviços com Docker Compose:
 ```bash
-# Build de produção
-npm run build
-
-# Executar migrações
-npx prisma migrate deploy
-
-# Iniciar produção
-npm start
+docker compose up -d --build
 ```
+
+3. Verifique logs (útil para primeira subida):
+```bash
+docker logs -f traefik
+docker logs -f nexus_migrate
+docker logs -f nexus_app
+```
+
+O serviço `migrate` garante que migrações e seed sejam aplicados antes do app iniciar.
+
+### CI/CD: Deploy automático via GitHub Actions
+
+Há uma workflow pronta em [.github/workflows/deploy.yml](.github/workflows/deploy.yml) que:
+- Faz upload do projeto para a VPS via SSH
+- Gera o arquivo `.env` remoto a partir de Secrets do GitHub
+- Executa `docker compose up -d --build`
+
+#### Secrets exigidos no repositório
+- `SSH_HOST`, `SSH_USER`, `SSH_KEY` (chave privada), `SSH_PORT` (opcional)
+- `DOMAIN`, `LETSENCRYPT_EMAIL`
+- `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB`
+- `NEXTAUTH_SECRET`
+- Integrações opcionais: `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `BLING_CLIENT_ID`, `BLING_CLIENT_SECRET`, `INNGEST_SIGNING_KEY`, `INNGEST_EVENT_KEY`, `BREVO_API_KEY`, `BREVO_SENDER_NAME`, `BREVO_SENDER_EMAIL`
+
+#### Disparo
+- `push` na branch `main` ou manual via "Run workflow".
+
+#### Observações
+- A primeira emissão de certificado pode levar alguns minutos.
+- Para atualizar a aplicação, basta novo commit na `main` (ou rodar manualmente a workflow).
 
 ## 📈 Métricas de Sucesso
 
