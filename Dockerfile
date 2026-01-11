@@ -49,4 +49,4 @@ USER 1001
 EXPOSE 3000
 
 # Next.js standalone server entry
-CMD ["node", "server.js"]
+ENTRYPOINT ["sh", "-c", "HOST=0.0.0.0 PORT=3000 node server.js"]
