@@ -60,7 +60,7 @@ jobs:
             cd "$WORKDIR"
 
             echo "Criando arquivo .env para o docker-compose"
-            cat > .env << 'EOF'
+            cat > .env << EOF
             DOMAIN=${DOMAIN}
             LETSENCRYPT_EMAIL=${LETSENCRYPT_EMAIL}
             POSTGRES_USER=${POSTGRES_USER}
