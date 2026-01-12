@@ -1,7 +1,6 @@
 'use client';
 import {
   Accordion,
-  Badge,
   Button,
   Card,
   Container,
@@ -27,46 +26,49 @@ export function PricingSection() {
         <Card withBorder>
           <Title order={3}>Free</Title>
           <Text c="dimmed" mt="xs">
-            R$ 0/mês — até 50 produtos, alertas básicos, sincronização diária
+            R$ 0/mês — até 30 produtos, integrações Bling e Shopee, alertas no Dashboard
           </Text>
           <List size="sm" mt="sm">
-            <List.Item>Alertas de ruptura básicos</List.Item>
-            <List.Item>Capital parado (limitado)</List.Item>
-            <List.Item>Conexão oficial Bling</List.Item>
+            <List.Item>Máximo de produtos: 30</List.Item>
+            <List.Item>Somente integração com Bling</List.Item>
+            <List.Item>Somente integração com Shopee</List.Item>
+            <List.Item>Alertas básicas pelo Dashboard</List.Item>
           </List>
-          <Link href="/cadastre-se">
-            <Button mt="md" color="brand">
+          <Group mt="md">
+            <Button component={Link} href="/cadastre-se?plan=free" color="brand">
               Começar Grátis
             </Button>
-          </Link>
+          </Group>
         </Card>
         <Card withBorder>
           <Group justify="space-between" align="center">
             <Title order={3}>PRO</Title>
             <Group gap="xs">
-              <Badge variant="light" color="yellow">
-                14 dias grátis
-              </Badge>
               <Text fw={600} c="brand.7">
-                R$ 79,90/mês
+                R$ 97,00/mês
               </Text>
             </Group>
           </Group>
           <Text c="dimmed" mt="xs">
-            Produtos ilimitados, relatórios PDF, e-mails automáticos, suporte prioritário
+            Produtos ilimitados, múltiplos ERPs e Marketplaces, alertas avançadas e relatórios
           </Text>
           <List size="sm" mt="sm">
-            <List.Item>Alertas inteligentes por e-mail</List.Item>
-            <List.Item>Recomendações de compra e liquidação</List.Item>
-            <List.Item>Relatórios exportáveis e históricos</List.Item>
+            <List.Item>Máximo de produtos: Ilimitado</List.Item>
+            <List.Item>Integração com Múltiplos ERPs (Bling, Tiny, etc)</List.Item>
+            <List.Item>
+              Integração com Múltiplos Marketplaces (Shopee, Mercado Livre, etc)
+            </List.Item>
+            <List.Item>Alertas avançadas por Dashboard e E-mail</List.Item>
+            <List.Item>Recomendações de compra e liquidação de estoque</List.Item>
+            <List.Item>Relatórios personalizados</List.Item>
           </List>
           <Group mt="md">
-            <Link href="/precos">
-              <Button variant="light">Ver detalhes</Button>
-            </Link>
-            <Link href="/cadastre-se">
-              <Button color="brand">Experimentar PRO</Button>
-            </Link>
+            <Button component={Link} href="/precos" color="brand" variant="outline">
+              Ver detalhes
+            </Button>
+            <Button component={Link} href="/cadastre-se?plan=pro" color="brand">
+              Experimentar PRO
+            </Button>
           </Group>
         </Card>
       </SimpleGrid>
@@ -76,13 +78,6 @@ export function PricingSection() {
           <Accordion.Control>O plano Free é realmente gratuito?</Accordion.Control>
           <Accordion.Panel>
             Sim. O plano Free não exige cartão e pode ser usado indefinidamente com limites.
-          </Accordion.Panel>
-        </Accordion.Item>
-        <Accordion.Item value="dias-gratis">
-          <Accordion.Control>Como funcionam os 14 dias grátis do PRO?</Accordion.Control>
-          <Accordion.Panel>
-            Você testa todas as funcionalidades do PRO por 14 dias sem cobrança. Cancele a qualquer
-            momento.
           </Accordion.Panel>
         </Accordion.Item>
         <Accordion.Item value="cancelamento">
