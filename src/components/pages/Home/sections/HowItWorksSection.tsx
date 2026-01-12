@@ -1,21 +1,11 @@
 'use client';
-import {
-  AspectRatio,
-  Card,
-  Center,
-  Container,
-  Grid,
-  List,
-  Stack,
-  Text,
-  Title,
-} from '@mantine/core';
-import { IconPlayerPlayFilled } from '@tabler/icons-react';
+import { AspectRatio, Card, Container, Grid, Stack, Text, Title } from '@mantine/core';
+import { APP_VIDEO_URL } from '@/lib/constants';
 
 const steps = [
   {
     emoji: '🔗',
-    title: 'Conecte seu Bling',
+    title: 'Conecte com o Bling',
     desc: 'Em poucos cliques, sem senha, sem complicação.',
   },
   {
@@ -36,6 +26,20 @@ const steps = [
 ];
 
 export function HowItWorksSection() {
+  /* biome-ignore lint/style/noMagicNumbers: Aspect ratio constant for YouTube embeds */
+  const YOUTUBE_ASPECT_RATIO = 16 / 9;
+  const toYouTubeEmbed = (url: string | undefined): string => {
+    if (!url) return 'https://www.youtube.com/embed/M7lc1UVf-VE';
+    const watchMatch = /[?&]v=([^&]+)/.exec(url);
+    if (watchMatch?.[1]) return `https://www.youtube.com/embed/${watchMatch[1]}`;
+    const shortMatch = /youtu\.be\/([^?&/]+)/.exec(url);
+    if (shortMatch?.[1]) return `https://www.youtube.com/embed/${shortMatch[1]}`;
+    const embedMatch = /youtube\.com\/embed\/([^?&/]+)/.exec(url);
+    if (embedMatch?.[1]) return `https://www.youtube.com/embed/${embedMatch[1]}`;
+    return 'https://www.youtube.com/embed/M7lc1UVf-VE';
+  };
+
+  const embedSrc = toYouTubeEmbed(APP_VIDEO_URL);
   return (
     <Container id="como-funciona" size="lg" py="xl">
       <Stack gap="sm" align="center">
@@ -47,8 +51,8 @@ export function HowItWorksSection() {
         </Text>
 
         <Grid mt="md" gutter="md">
-          {steps.map((s, i) => (
-            <Grid.Col key={`works-section-step-${i}`} span={{ base: 12, sm: 6 }}>
+          {steps.map((s) => (
+            <Grid.Col key={`works-section-step-${s.title}`} span={{ base: 12, sm: 6 }}>
               <Card withBorder radius="md">
                 <Title order={4}>
                   {s.emoji} {s.title}
@@ -64,26 +68,22 @@ export function HowItWorksSection() {
         <Card withBorder radius="md" mt="md" maw={900}>
           <Title order={5}>Demonstração rápida (2 min)</Title>
           <Text c="dimmed" size="sm" mt="xs">
-            Placeholder do vídeo: substitua por um vídeo real quando disponível.
+            Vídeo placeholder do YouTube — substitua pela demonstração oficial quando disponível.
           </Text>
-          <AspectRatio
-            ratio={16 / 9}
-            mt="sm"
-            style={{
-              border: '1px dashed var(--mantine-color-gray-4)',
-              borderRadius: 12,
-              overflow: 'hidden',
-            }}
-          >
-            <Center>
-              <IconPlayerPlayFilled size={48} color="var(--mantine-color-gray-6)" />
-            </Center>
+          <AspectRatio ratio={YOUTUBE_ASPECT_RATIO} mt="sm">
+            <iframe
+              src={`${embedSrc}?rel=0`}
+              title="Demonstração do Nexus OS"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              allowFullScreen
+              style={{
+                width: '100%',
+                height: '100%',
+                border: 0,
+                borderRadius: 'var(--mantine-radius-md)',
+              }}
+            />
           </AspectRatio>
-          <List size="sm" mt="sm">
-            <List.Item>Conecte com OAuth ao Bling</List.Item>
-            <List.Item>Sincronize produtos e estoques</List.Item>
-            <List.Item>Receba alertas e recomendações</List.Item>
-          </List>
         </Card>
       </Stack>
     </Container>
