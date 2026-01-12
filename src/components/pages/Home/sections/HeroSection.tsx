@@ -1,15 +1,15 @@
 'use client';
 import {
+  AspectRatio,
   Button,
   Center,
   Container,
   Grid,
-  Image as MantineImage,
+  Image,
   Stack,
   Text,
   Title,
 } from '@mantine/core';
-import Image from 'next/image';
 import Link from 'next/link';
 
 export function HeroSection() {
@@ -42,16 +42,15 @@ export function HeroSection() {
         </Grid.Col>
         <Grid.Col span={{ base: 12, md: 6 }}>
           <Center>
-            <MantineImage
-              component={Image}
-              src="/img/hero-image.png"
-              priority
-              pos="relative"
-              height={500}
-              width={550}
-              alt="Comece agora com o Nexus OS"
-              style={{ objectFit: 'contain' }}
-            />
+            {/* biome-ignore lint/style/noMagicNumbers: Aspect ratio for hero visual */}
+            <AspectRatio ratio={16 / 9} w="100%">
+              <Image
+                src="https://placehold.co/800x500/png?text=Nexus%20OS"
+                alt="Visual de demonstração do Nexus OS"
+                radius="md"
+                style={{ objectFit: 'contain', width: '100%', height: '100%' }}
+              />
+            </AspectRatio>
           </Center>
         </Grid.Col>
       </Grid>
