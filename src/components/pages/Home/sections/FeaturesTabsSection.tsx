@@ -15,7 +15,7 @@ import Link from 'next/link';
 export function FeaturesTabsSection() {
   return (
     <Container id="funcionalidades" size="lg" py="xl">
-      <Stack gap="sm" align="center">
+      <Stack gap="lg" align="center">
         <Title ta="center">Funcionalidades</Title>
         <Text ta="center" c="dimmed" maw={760}>
           Inteligência prática — Nexus não só mostra dados, ele te diz o que fazer.
@@ -42,11 +42,6 @@ export function FeaturesTabsSection() {
                   <List.Item>Alertas por e-mail</List.Item>
                 </List>
                 <Text fw={500}>Exemplo: 3 itens críticos — R$ 2.800 em risco</Text>
-                <Link href="/cadastre-se">
-                  <Button variant="filled" color="brand">
-                    Começar Grátis
-                  </Button>
-                </Link>
               </Stack>
               <MantineImage src="/img/product_placeholder.webp" alt="Ruptura" radius="md" w={420} />
             </Group>
@@ -65,11 +60,6 @@ export function FeaturesTabsSection() {
                   <List.Item>Relatórios exportáveis</List.Item>
                 </List>
                 <Text fw={500}>Exemplo: R$ 11.700 parados — 12 SKUs</Text>
-                <Link href="/cadastre-se">
-                  <Button variant="filled" color="brand">
-                    Começar Grátis
-                  </Button>
-                </Link>
               </Stack>
               <MantineImage
                 src="/img/product_placeholder.webp"
@@ -93,11 +83,6 @@ export function FeaturesTabsSection() {
                   <List.Item>Gatilhos para campanhas</List.Item>
                 </List>
                 <Text fw={500}>Exemplo: +150% em 7 dias — abasteça já</Text>
-                <Link href="/cadastre-se">
-                  <Button variant="filled" color="brand">
-                    Começar Grátis
-                  </Button>
-                </Link>
               </Stack>
               <MantineImage
                 src="/img/product_placeholder.webp"
@@ -108,6 +93,9 @@ export function FeaturesTabsSection() {
             </Group>
           </Tabs.Panel>
         </Tabs>
+        <Button component={Link} href="/precos" variant="filled" color="brand" size="xl">
+          Começar Grátis
+        </Button>
       </Stack>
     </Container>
   );
