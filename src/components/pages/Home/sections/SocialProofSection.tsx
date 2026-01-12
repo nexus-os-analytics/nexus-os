@@ -1,7 +1,6 @@
 'use client';
 import {
   Avatar,
-  Badge,
   Card,
   Container,
   Group,
@@ -17,17 +16,6 @@ export function SocialProofSection() {
     <Container id="prova-social" size="lg" py="xl">
       <Stack gap="sm" align="center">
         <Title ta="center">Lojistas que já usam o Nexus OS</Title>
-        <Group gap="xl" mt="sm" wrap="wrap" justify="center">
-          <Badge size="lg" variant="light" color="green">
-            R$ 2.1M+ capital liberado
-          </Badge>
-          <Badge size="lg" variant="light" color="blue">
-            847 lojistas ativos
-          </Badge>
-          <Badge size="lg" variant="light" color="yellow">
-            4.9/5 de avaliação
-          </Badge>
-        </Group>
 
         <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }} spacing="lg" mt="lg" w="100%">
           {[
@@ -35,19 +23,19 @@ export function SocialProofSection() {
               initials: 'AM',
               name: 'Ana Martins',
               role: 'Dona de Loja',
-              text: 'Liberei R$ 18.400 em 3 semanas e evitei 5 rupturas.',
+              text: 'Consegui liberar R$ 18.400 em só três semanas e ainda evitei cinco faltas de produto!',
             },
             {
               initials: 'RP',
               name: 'Rafael Pereira',
-              role: 'E-commerce Manager',
-              text: 'Alertas assertivos e simples de agir. Reduzi horas de Excel.',
+              role: 'Gerente de E-commerce',
+              text: 'Os alertas são superdiretos e fáceis de resolver. Ganhei horas que eu perdia no Excel.',
             },
             {
               initials: 'CL',
               name: 'Carla Lima',
               role: 'Compras',
-              text: 'Acompanhamento de capital parado mudou nosso caixa.',
+              text: 'O controle do capital parado mudou totalmente o nosso fluxo de caixa.',
             },
           ].map((t) => (
             <Card key={t.name} withBorder radius="md">
