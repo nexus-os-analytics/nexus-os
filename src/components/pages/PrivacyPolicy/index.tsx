@@ -149,9 +149,9 @@ export default function PrivacyPolicy() {
       </List>
 
       <Text mt="sm">
-        Basta enviar sua solicitação conforme descrito na seção{' '}
-        <Anchor href="#contato" fw={500}>
-          📬 Contato e DPO
+        Basta enviar sua solicitação para o e-mail{' '}
+        <Anchor href="mailto:contato@nexusos.com.br" fw={500}>
+          contato@nexusos.com.br
         </Anchor>
         .
       </Text>
@@ -162,9 +162,7 @@ export default function PrivacyPolicy() {
 
       {cookiesTable}
 
-      <Text mt="sm">
-        Você pode gerenciar os cookies diretamente no seu navegador ou pelo banner de consentimento.
-      </Text>
+      <Text mt="sm">Você pode gerenciar os cookies diretamente no seu navegador.</Text>
 
       <Divider my="xl" label="5. Termos de Uso" />
 
@@ -213,27 +211,7 @@ export default function PrivacyPolicy() {
         por lei. Após o término, são anonimizados ou excluídos de forma segura.
       </Text>
 
-      <Divider my="xl" label="8. Contato e DPO" id="contato" />
-
-      <Text>Em caso de dúvidas, entre em contato com nosso Encarregado de Proteção de Dados:</Text>
-
-      <List withPadding>
-        <List.Item>
-          <strong>Nome:</strong> Encarregado de Dados
-        </List.Item>
-        <List.Item>
-          <strong>E-mail:</strong>{' '}
-          <Anchor href="mailto:dpo@seudominio.com.br">dpo@seudominio.com.br</Anchor>
-        </List.Item>
-        <List.Item>
-          <strong>Endereço:</strong> [Informe o endereço físico ou CNPJ da empresa]
-        </List.Item>
-        <List.Item>
-          <strong>Assunto:</strong> LGPD / Privacidade
-        </List.Item>
-      </List>
-
-      <Divider my="xl" label="9. Disposições legais" />
+      <Divider my="xl" label="8. Disposições legais" />
 
       <List withPadding>
         <List.Item>
@@ -245,7 +223,7 @@ export default function PrivacyPolicy() {
         <List.Item>Atualizações relevantes serão comunicadas por e-mail ou notificação.</List.Item>
       </List>
 
-      <Divider my="xl" label="10. Versão e histórico" />
+      <Divider my="xl" label="9. Versão e histórico" />
 
       <Table withTableBorder striped>
         <Table.Thead>
