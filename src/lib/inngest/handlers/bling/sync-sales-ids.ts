@@ -47,6 +47,22 @@ export const syncSalesIds = inngest.createFunction(
       },
     });
 
+    // Fallback: if there are no batches to process, mark job as done and emit generate-alerts
+    if (totalBatches === 0) {
+      logger.info(
+        `[bling/sync:sales-ids] no sales batches; emitting bling/generate-alerts for integration ${integrationId} user ${userId}`
+      );
+      await prisma.blingSyncJob.update({
+        where: { id: job.id },
+        data: { status: BlingJobStatus.DONE, finishedAt: new Date(), processedBatches: 0 },
+      });
+      await step.sendEvent('bling/generate-alerts', {
+        name: 'bling/generate-alerts',
+        data: { userId, integrationId, jobId: job.id },
+      });
+      return;
+    }
+
     // Emit N batch events (fan-out)
     for (let i = 0; i < totalBatches; i++) {
       const batch = ids.slice(i * batchSize, (i + 1) * batchSize);
