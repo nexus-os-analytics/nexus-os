@@ -1,7 +1,7 @@
 import { Burger, Button, Divider, Drawer, Group, ScrollArea } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import Link from 'next/link';
-import { Logo } from '../Logo';
+import { Logo } from '../../../commons/Logo';
 import classes from './PublicHeader.module.css';
 
 export function PublicHeader() {
@@ -13,20 +13,11 @@ export function PublicHeader() {
         <Logo />
 
         <Group h="100%" gap={0} visibleFrom="sm">
-          <Link href="/#funcionalidades" className={classes.link}>
-            Funcionalidades
-          </Link>
-          <Link href="/#como-funciona" className={classes.link}>
-            Como Funciona
-          </Link>
-          <Link href="/manual" className={classes.link}>
-            Manual
-          </Link>
           <Link href="/precos" className={classes.link}>
             Preços
           </Link>
-          <Link href="mailto:contato@nexusos.com.br" className={classes.link}>
-            Contato
+          <Link href="/manual" className={classes.link}>
+            Documentação
           </Link>
         </Group>
 
@@ -38,7 +29,7 @@ export function PublicHeader() {
           </Link>
           <Link href="/cadastre-se">
             <Button variant="gradient" gradient={{ from: 'brand.6', to: 'brand.8', deg: 135 }}>
-              Começar Grátis
+              Criar Conta
             </Button>
           </Link>
         </Group>
@@ -58,20 +49,11 @@ export function PublicHeader() {
         <ScrollArea h="calc(100vh - 80px)" mx="-md">
           <Divider my="sm" />
 
-          <Link href="/#funcionalidades" className={classes.link} onClick={closeDrawer}>
-            Funcionalidades
-          </Link>
           <Link href="/precos" className={classes.link} onClick={closeDrawer}>
             Preços
           </Link>
-          <Link href="/#como-funciona" className={classes.link} onClick={closeDrawer}>
-            Como Funciona
-          </Link>
           <Link href="/manual" className={classes.link} onClick={closeDrawer}>
-            Manual
-          </Link>
-          <Link href="mailto:contato@nexusos.com.br" className={classes.link} onClick={closeDrawer}>
-            Contato
+            Documentação
           </Link>
 
           <Divider my="sm" />
@@ -84,7 +66,7 @@ export function PublicHeader() {
             </Link>
             <Link href="/cadastre-se">
               <Button variant="gradient" gradient={{ from: 'brand.6', to: 'brand.8', deg: 135 }}>
-                Começar Grátis
+                Criar Conta
               </Button>
             </Link>
           </Group>

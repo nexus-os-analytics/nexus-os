@@ -7,7 +7,7 @@
     "dev": "next dev --turbopack",
     "prebuild": "next typegen",
     "build": "next build",
-    "start": "next start",
+    "start": "next start -H 0.0.0.0 -p 3000",
     "lint": "biome check --fix ./src",
     "format": "biome format --write ./src",
     "prepare": "husky",

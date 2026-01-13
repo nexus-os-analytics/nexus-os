@@ -1,8 +1,8 @@
 'use client';
 import { AppShell } from '@mantine/core';
 import { useHeadroom } from '@mantine/hooks';
-import { PublicFooter } from '@/components/commons/PublicFooter';
-import { PublicHeader } from '@/components/commons/PublicHeader';
+import { PublicFooter } from '@/components/layout/PublicLayout/PublicFooter';
+import { PublicHeader } from '@/components/layout/PublicLayout/PublicHeader';
 
 export function PublicLayout({ children }: { children: React.ReactNode }) {
   const pinned = useHeadroom({ fixedAt: 120 });

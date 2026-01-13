@@ -53,7 +53,7 @@ export function ProductCard({ product }: ProductCardProps) {
         return {
           color: 'blue',
           icon: Info,
-          badge: 'Multa',
+          badge: 'Observar',
         };
       case 'LIQUIDATION':
         return {

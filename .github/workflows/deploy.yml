@@ -50,7 +50,10 @@ jobs:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_KEY }}
-          port: ${{ secrets.SSH_PORT || 22 }}
+          # Optional: set port via secret; if unset, action defaults to 22
+          port: ${{ secrets.SSH_PORT }}
+          # Forward envs to remote for expansion in script
+          envs: DOMAIN,LETSENCRYPT_EMAIL,POSTGRES_USER,POSTGRES_PASSWORD,POSTGRES_DB,NEXTAUTH_SECRET,GOOGLE_CLIENT_ID,GOOGLE_CLIENT_SECRET,BLING_CLIENT_ID,BLING_CLIENT_SECRET,BLING_INVITE_LINK,INNGEST_SIGNING_KEY,INNGEST_EVENT_KEY,BREVO_API_KEY,BREVO_SENDER_NAME,BREVO_SENDER_EMAIL
           script_stop: true
           timeout: 180s
           script: |
@@ -59,34 +62,35 @@ jobs:
             mkdir -p "$WORKDIR"
             cd "$WORKDIR"
 
-            echo "Criando arquivo .env para o docker-compose"
-            cat > .env << EOF
-            DOMAIN=${DOMAIN}
-            LETSENCRYPT_EMAIL=${LETSENCRYPT_EMAIL}
-            POSTGRES_USER=${POSTGRES_USER}
-            POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-            POSTGRES_DB=${POSTGRES_DB}
-            NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
-            NEXTAUTH_URL=https://${DOMAIN}
-            NEXT_TELEMETRY_DISABLED=1
-            DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@nexus_db:5432/${POSTGRES_DB}?schema=public
-            GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
-            GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
-            BLING_CLIENT_ID=${BLING_CLIENT_ID}
-            BLING_CLIENT_SECRET=${BLING_CLIENT_SECRET}
-            BLING_INVITE_LINK=${BLING_INVITE_LINK}
-            INNGEST_SIGNING_KEY=${INNGEST_SIGNING_KEY}
-            INNGEST_EVENT_KEY=${INNGEST_EVENT_KEY}
-            BREVO_API_KEY=${BREVO_API_KEY}
-            BREVO_SENDER_NAME=${BREVO_SENDER_NAME}
-            BREVO_SENDER_EMAIL=${BREVO_SENDER_EMAIL}
-            EOF
+            echo "Gerando arquivo .env com variáveis de ambiente"
+            echo "DOMAIN=${{ secrets.DOMAIN }}" > .env
+            echo "LETSENCRYPT_EMAIL=${{ secrets.LETSENCRYPT_EMAIL }}" >> .env
+            echo "POSTGRES_USER=${{ secrets.POSTGRES_USER }}" >> .env
+            echo "POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}" >> .env
+            echo "POSTGRES_DB=${{ secrets.POSTGRES_DB }}" >> .env
+            echo "NEXTAUTH_SECRET=${{ secrets.NEXTAUTH_SECRET }}" >> .env
+            echo "NEXTAUTH_URL=https://${{ secrets.DOMAIN }}" >> .env
+            echo "NEXT_TELEMETRY_DISABLED=1" >> .env
+            echo "DATABASE_URL=postgresql://${{ secrets.POSTGRES_USER }}:${{ secrets.POSTGRES_PASSWORD }}@nexus_db:5432/${{ secrets.POSTGRES_DB }}?schema=public" >> .env
+            echo "GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}" >> .env
+            echo "GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}" >> .env
+            echo "BLING_CLIENT_ID=${{ secrets.BLING_CLIENT_ID }}" >> .env
+            echo "BLING_CLIENT_SECRET=${{ secrets.BLING_CLIENT_SECRET }}" >> .env
+            echo "BLING_INVITE_LINK=${{ secrets.BLING_INVITE_LINK }}" >> .env
+            echo "INNGEST_SIGNING_KEY=${{ secrets.INNGEST_SIGNING_KEY }}" >> .env
+            echo "INNGEST_EVENT_KEY=${{ secrets.INNGEST_EVENT_KEY }}" >> .env
+            echo "BREVO_API_KEY=${{ secrets.BREVO_API_KEY }}" >> .env
+            echo "BREVO_SENDER_NAME=${{ secrets.BREVO_SENDER_NAME }}" >> .env
+            echo "BREVO_SENDER_EMAIL=${{ secrets.BREVO_SENDER_EMAIL }}" >> .env
 
-            echo "Parando serviços existentes"
-            docker compose down
+            echo "Verificando .env gerado:"
+            cat .env
 
-            echo "Subindo serviços com Docker Compose"
+            echo "Parando containers antigos"
+            docker compose down || true
+
+            echo "Subindo novos serviços"
             docker compose up -d --build
 
-            echo "Mostrando status dos serviços"
+            echo "Status final dos containers"
             docker compose ps

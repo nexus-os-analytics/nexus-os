@@ -60,7 +60,7 @@ export function ProductDetails({ product }: ProductDetailsProps) {
         return {
           color: 'blue',
           icon: Info,
-          badge: 'Multa',
+          badge: 'Observar',
         } as const;
       case 'LIQUIDATION':
         return {

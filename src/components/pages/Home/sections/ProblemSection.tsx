@@ -15,10 +15,9 @@ import {
   IconAlertTriangle,
   IconCash,
   IconChartBar,
-  IconEyeClosed,
   IconFileSpreadsheet,
-  IconRotateClockwise,
 } from '@tabler/icons-react';
+import Link from 'next/link';
 
 const problems: { title: string; value: string; desc: string; icon: React.ReactNode }[] = [
   {
@@ -34,12 +33,6 @@ const problems: { title: string; value: string; desc: string; icon: React.ReactN
     icon: <IconCash size={18} />,
   },
   {
-    title: 'Reposição errada',
-    value: '35% de erro',
-    desc: 'Compra sem prioridade por margem e giro.',
-    icon: <IconRotateClockwise size={18} />,
-  },
-  {
     title: 'Horas perdidas no Excel',
     value: '15h/semana',
     desc: 'Planilhas manuais, dados desatualizados e erros humanos.',
@@ -50,12 +43,6 @@ const problems: { title: string; value: string; desc: string; icon: React.ReactN
     value: 'Perda de momentum',
     desc: 'Itens em alta sem ação rápida para aproveitar demanda.',
     icon: <IconChartBar size={18} />,
-  },
-  {
-    title: 'Decisões no escuro',
-    value: 'Sem previsibilidade',
-    desc: 'Falta de alertas e recomendações acionáveis.',
-    icon: <IconEyeClosed size={18} />,
   },
 ];
 
@@ -73,11 +60,11 @@ export function ProblemSection() {
           </Text>{' '}
           para o seu negócio
         </Title>
-        <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }} spacing="md" mt="md" w="100%">
+        <SimpleGrid cols={{ base: 1, sm: 2, lg: 4 }} spacing="md" mt="md" w="100%">
           {problems.map((p) => (
             <Card key={p.title} withBorder radius="md">
               <Group gap="sm">
-                <ThemeIcon variant="light" color="red" size={36} radius="md">
+                <ThemeIcon variant="light" color="gold" size={36} radius="md">
                   {p.icon}
                 </ThemeIcon>
                 <div>
@@ -93,15 +80,8 @@ export function ProblemSection() {
             </Card>
           ))}
         </SimpleGrid>
-        <Button
-          component="a"
-          href="#como-funciona"
-          mt="md"
-          size="md"
-          variant="filled"
-          color="brand"
-        >
-          Resolver esses problemas agora
+        <Button component={Link} href="/precos" mt="md" size="md" variant="filled" color="brand">
+          Resolver problemas agora
         </Button>
       </Stack>
     </Container>

@@ -14,11 +14,14 @@ export async function GET() {
 
     const integration = await BlingIntegration.getBlingIntegration(userId);
 
+    // If integration is missing, return an empty overview to keep UX stable
     if (!integration) {
-      return NextResponse.json(
-        { error: 'Integração com Bling não encontrada para o usuário.' },
-        { status: 404 }
-      );
+      return NextResponse.json({
+        capitalStuck: 0,
+        ruptureCount: 0,
+        opportunityCount: 0,
+        topActions: [],
+      });
     }
 
     const blingRepository = createBlingRepository({ integrationId: integration.id });

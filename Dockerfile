@@ -34,6 +34,7 @@ RUN pnpm build
 FROM node:20-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV=production
+ENV HOST=0.0.0.0
 ENV PORT=3000
 
 # Create non-root user for security
@@ -48,4 +49,4 @@ USER 1001
 EXPOSE 3000
 
 # Next.js standalone server entry
-CMD ["node", "server.js"]
+ENTRYPOINT ["sh", "-c", "HOST=0.0.0.0 PORT=3000 node server.js"]
