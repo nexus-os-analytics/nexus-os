@@ -1,4 +1,6 @@
 /** biome-ignore-all lint/complexity/noStaticOnlyClass: <explanation> */
+
+import { BlingSyncStatus } from '@prisma/client';
 import prisma from '@/lib/prisma';
 
 export type BlingIntegrationType = {
@@ -68,8 +70,15 @@ export class BlingIntegration {
    * @returns {Promise<void>}
    */
   static async disconnectBling(userId: string): Promise<void> {
-    await prisma.blingIntegration.delete({
+    // Idempotent delete to allow multiple disconnects without errors
+    await prisma.blingIntegration.deleteMany({
       where: { userId },
+    });
+
+    // Reset user's sync status to IDLE upon disconnect
+    await prisma.user.update({
+      where: { id: userId },
+      data: { blingSyncStatus: BlingSyncStatus.IDLE },
     });
 
     await prisma.auditLog.create({
