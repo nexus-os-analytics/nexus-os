@@ -48,6 +48,7 @@ export interface BlingProductAlertType {
   excessCapital: number;
   message?: string | null;
   recommendations?: string | null; // JSON stringified array of strings
+  lastCriticalNotifiedAt?: Date | null;
   createdAt: Date;
   updatedAt: Date;
   product?: BlingProductType | null;

@@ -1,6 +1,7 @@
 import { BlingSyncStatus } from '@prisma/client';
 import pino from 'pino';
 import {
+  type BlingProductMetrics,
   calculateAllMetrics,
   createBlingRepository,
   getDaysWithSales,
@@ -74,6 +75,23 @@ export const generateAlerts = inngest.createFunction(
         errorsCount: 0,
         totalProducts: 0,
       };
+
+      interface CriticalAlertCandidate {
+        integrationId: string;
+        userId: string | null;
+        jobId: string | null;
+        blingProductId: string;
+        metrics: BlingProductMetrics;
+        productSnapshot: {
+          name: string;
+          sku: string;
+          currentStock: number;
+          salePrice: number;
+          costPrice: number;
+        };
+      }
+
+      const criticalAlertCandidates: CriticalAlertCandidate[] = [];
 
       logger.info(
         `[bling/generate-alerts] Starting alert generation for integration ${integrationId}, user ${userId}, job ${jobId}`
@@ -149,10 +167,52 @@ export const generateAlerts = inngest.createFunction(
             productSettings
           );
 
-          await blingRepository.upsertProductAlert(product.blingProductId, productMetrics);
+          const { previousRisk } = await blingRepository.upsertProductAlert(
+            product.blingProductId,
+            productMetrics
+          );
+
+          const transitionedToCritical =
+            productMetrics.risk === 'CRITICAL' && previousRisk !== 'CRITICAL';
+
+          if (transitionedToCritical) {
+            if (userId) {
+              criticalAlertCandidates.push({
+                integrationId,
+                userId,
+                jobId: jobId ?? null,
+                blingProductId: product.blingProductId,
+                metrics: productMetrics,
+                productSnapshot: {
+                  name: product.name,
+                  sku: product.sku,
+                  currentStock: product.currentStock,
+                  salePrice: product.salePrice,
+                  costPrice: product.costPrice,
+                },
+              });
+              result.alertsGenerated += 1;
+            } else {
+              logger.warn(
+                {
+                  integrationId,
+                  blingProductId: product.blingProductId,
+                },
+                '[bling/generate-alerts] Skipping critical notification: missing userId'
+              );
+            }
+          }
         }
 
+        result.totalProducts += products.length;
         skip += take;
+      }
+
+      for (const candidate of criticalAlertCandidates) {
+        await step.sendEvent('bling/alert-critical', {
+          name: 'bling/alert-critical',
+          data: candidate,
+        });
       }
 
       await step.sendEvent('bling/sync:complete', {
