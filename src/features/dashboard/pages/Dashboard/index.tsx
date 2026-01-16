@@ -11,7 +11,7 @@ import { useProductAlerts } from '../../hooks/use-product-alerts';
 export function Dashboard() {
   const { status, loading } = useBlingIntegration();
   const [criticalCount, setCriticalCount] = useState(0);
-  const [params, setParams] = useState<GetProductsAlertsParams | undefined>();
+  const [params, _] = useState<GetProductsAlertsParams | undefined>();
 
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } =
     useProductAlerts(params);
@@ -19,9 +19,12 @@ export function Dashboard() {
   useEffect(() => {
     if (data) {
       const allAlerts = data.pages.flatMap((p) => p.data);
-      // Contabiliza apenas rupturas críticas para corresponder ao filtro clicável
       setCriticalCount(
-        allAlerts.filter((a) => a.alert?.type === 'RUPTURE' && a.alert?.risk === 'CRITICAL').length
+        allAlerts.filter(
+          (a) =>
+            a.alert?.type === 'RUPTURE' ||
+            (a.alert?.type === 'DEAD_STOCK' && (a.alert?.daysOutOfStock ?? 0) > 30)
+        ).length
       );
     }
   }, [data]);
@@ -61,9 +64,6 @@ export function Dashboard() {
               <Package size={24} />
             </ThemeIcon>
           </Group>
-          <Button mt="md" variant="light" onClick={() => setParams(undefined)}>
-            Ver todos
-          </Button>
         </Card>
 
         <Card padding="lg" radius="md" withBorder shadow="md">
