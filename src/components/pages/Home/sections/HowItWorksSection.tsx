@@ -28,16 +28,8 @@ const steps = [
 export function HowItWorksSection() {
   /* biome-ignore lint/style/noMagicNumbers: Aspect ratio constant for YouTube embeds */
   const YOUTUBE_ASPECT_RATIO = 16 / 9;
-  const toYouTubeEmbed = (url: string | undefined): string => {
-    if (!url) return 'https://www.youtube.com/embed/M7lc1UVf-VE';
-    const watchMatch = /[?&]v=([^&]+)/.exec(url);
-    if (watchMatch?.[1]) return `https://www.youtube.com/embed/${watchMatch[1]}`;
-    const shortMatch = /youtu\.be\/([^?&/]+)/.exec(url);
-    if (shortMatch?.[1]) return `https://www.youtube.com/embed/${shortMatch[1]}`;
-    const embedMatch = /youtube\.com\/embed\/([^?&/]+)/.exec(url);
-    if (embedMatch?.[1]) return `https://www.youtube.com/embed/${embedMatch[1]}`;
-    return 'https://www.youtube.com/embed/M7lc1UVf-VE';
-  };
+  // Vídeo definitivo: https://youtu.be/P3vLLNasOeI?si=Zq2GMvlgjs50iUX-
+  const toYouTubeEmbed = (_url?: string): string => 'https://www.youtube.com/embed/P3vLLNasOeI';
 
   const embedSrc = toYouTubeEmbed(APP_VIDEO_URL);
   return (
