@@ -23,9 +23,15 @@ export function FeaturesTabsSection() {
 
         <Tabs defaultValue="ruptura" mt="md" w="100%">
           <Tabs.List grow>
-            <Tabs.Tab value="ruptura">Alertas de Ruptura</Tabs.Tab>
-            <Tabs.Tab value="capital">Capital Parado</Tabs.Tab>
-            <Tabs.Tab value="oportunidades">Oportunidades</Tabs.Tab>
+            <Tabs.Tab value="ruptura" fw={700} fz="lg">
+              Alertas de Ruptura
+            </Tabs.Tab>
+            <Tabs.Tab value="capital" fw={700} fz="lg">
+              Capital Parado
+            </Tabs.Tab>
+            <Tabs.Tab value="oportunidades" fw={700} fz="lg">
+              Oportunidades
+            </Tabs.Tab>
           </Tabs.List>
 
           <Tabs.Panel value="ruptura" pt="md">
@@ -33,17 +39,25 @@ export function FeaturesTabsSection() {
               <Stack flex={1} gap="sm" maw={560}>
                 <Title order={3}>Evite perda de vendas</Title>
                 <Text c="dimmed">
-                  Detectamos produtos em risco antes da ruptura, considerando giro, lead time e
-                  sazonalidade.
+                  Detectamos produtos antes de acabar seu estoque, considerando giro, lead time e
+                  sazonalidade para priorizar o que mais impacta margem.
                 </Text>
                 <List size="sm">
-                  <List.Item>Repor antes de acabar</List.Item>
-                  <List.Item>Priorização por margem e demanda</List.Item>
-                  <List.Item>Alertas por e-mail</List.Item>
+                  <List.Item>Alertas preventivos com janela de reposição ideal</List.Item>
+                  <List.Item>Priorização automática por margem e demanda</List.Item>
+                  <List.Item>Recomendações de compra por fornecedor</List.Item>
                 </List>
-                <Text fw={500}>Exemplo: 3 itens críticos — R$ 2.800 em risco</Text>
+                <Text fw={500}>
+                  Exemplo: 3 itens críticos (R$ 2.800) → 1º item: 4 dias de estoque, repor agora ·
+                  2º item: 6 dias, combine compra com fornecedor · 3º item: 8 dias, monitorar.
+                </Text>
               </Stack>
-              <MantineImage src="/img/product_placeholder.webp" alt="Ruptura" radius="md" w={420} />
+              <MantineImage
+                src="/img/hero-image.png"
+                alt="Dashboard de ruptura"
+                radius="md"
+                w={420}
+              />
             </Group>
           </Tabs.Panel>
 
@@ -55,15 +69,18 @@ export function FeaturesTabsSection() {
                   Mostramos capital parado por categoria, idade do estoque e chance de liquidação.
                 </Text>
                 <List size="sm">
-                  <List.Item>Estoque parado há 90+ dias</List.Item>
-                  <List.Item>Recomendação de preço de liquidação</List.Item>
-                  <List.Item>Relatórios exportáveis</List.Item>
+                  <List.Item>Estoque parado há 30+ dias com valor imobilizado</List.Item>
+                  <List.Item>Simulações de liquidação por canal</List.Item>
+                  <List.Item>Relatórios exportáveis por categoria e SKU</List.Item>
                 </List>
-                <Text fw={500}>Exemplo: R$ 11.700 parados — 12 SKUs</Text>
+                <Text fw={500}>
+                  Exemplo: R$ 11.700 parados → Estratégia A: kit promocional limpa 60% em 10 dias ·
+                  Estratégia B: campanha marketplace com desconto progressivo.
+                </Text>
               </Stack>
               <MantineImage
-                src="/img/product_placeholder.webp"
-                alt="Capital Parado"
+                src="/img/auth-bg.jpg"
+                alt="Dashboard de capital parado"
                 radius="md"
                 w={420}
               />
@@ -73,20 +90,24 @@ export function FeaturesTabsSection() {
           <Tabs.Panel value="oportunidades" pt="md">
             <Group align="flex-start" gap="xl" wrap="wrap">
               <Stack flex={1} gap="sm" maw={560}>
-                <Title order={3}>Detecte crescimento e momentum</Title>
+                <Title order={3}>Antecipe as oportunidades</Title>
                 <Text c="dimmed">
-                  Aproveite picos de demanda com recomendações de compra e campanhas.
+                  Antecipe a alta, lucre com isso, teste novas estratégias e coloque dinheiro no
+                  bolso com planos de ação prontos.
                 </Text>
                 <List size="sm">
                   <List.Item>Itens com aceleração de vendas</List.Item>
                   <List.Item>Sugestão de reorder otimizado</List.Item>
                   <List.Item>Gatilhos para campanhas</List.Item>
                 </List>
-                <Text fw={500}>Exemplo: +150% em 7 dias — abasteça já</Text>
+                <Text fw={500}>
+                  Exemplo: Produto Z → +30% em 7 dias → aumente estoque em 20% e teste campanha ou
+                  ajuste preço em +10% para capturar margem.
+                </Text>
               </Stack>
               <MantineImage
-                src="/img/product_placeholder.webp"
-                alt="Oportunidades"
+                src="/img/hero-image.png"
+                alt="Dashboard de oportunidades"
                 radius="md"
                 w={420}
               />

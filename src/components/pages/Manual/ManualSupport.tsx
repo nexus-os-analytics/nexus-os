@@ -13,7 +13,12 @@ export function ManualSupport({ id = 'suporte' }: ManualSupportProps) {
         <Text>Precisa de ajuda? Fale com nosso time ou acesse materiais de apoio.</Text>
         <List spacing="xs">
           <List.Item>
-            <Anchor href="mailto:suporte@nexusos.app">suporte@nexusos.app</Anchor>
+            Documentação:{' '}
+            <Anchor href="mailto:contato@nexusos.com.br">contato@nexusos.com.br</Anchor>
+          </List.Item>
+          <List.Item>
+            Suporte e ajuda:{' '}
+            <Anchor href="mailto:contato@nexusos.com.br">contato@nexusos.com.br</Anchor>
           </List.Item>
           <List.Item>Base de conhecimento (em breve)</List.Item>
           <List.Item>Onboarding assistido para planos empresariais</List.Item>
