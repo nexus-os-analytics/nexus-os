@@ -33,13 +33,13 @@ export function ProductCard({ product }: ProductCardProps) {
     switch (alert.type) {
       case 'RUPTURE':
         return {
-          color: alert.risk === 'CRITICAL' ? 'red' : alert.risk === 'HIGH' ? 'orange' : 'yellow',
+          color: alert.risk === 'CRITICAL' ? 'red' : 'brand',
           icon: AlertTriangle,
-          badge: 'Risco de Ruptura',
+          badge: 'Risco de Ruptura do Estoque',
         };
       case 'DEAD_STOCK':
         return {
-          color: 'orange',
+          color: 'brand',
           icon: DollarSign,
           badge: 'Dinheiro Parado',
         };
@@ -129,10 +129,7 @@ export function ProductCard({ product }: ProductCardProps) {
                 p="md"
                 radius="md"
                 style={{
-                  backgroundColor:
-                    alert.risk === 'CRITICAL'
-                      ? 'rgba(250, 82, 82, 0.08)'
-                      : 'rgba(253, 126, 20, 0.08)',
+                  backgroundColor: `var(--mantine-color-${alert.risk === 'CRITICAL' ? 'red' : 'brand'}-light)`,
                 }}
               >
                 {/* Risk Message */}
@@ -141,17 +138,14 @@ export function ProductCard({ product }: ProductCardProps) {
                   radius="sm"
                   mb="md"
                   style={{
-                    backgroundColor:
-                      alert.risk === 'CRITICAL'
-                        ? 'rgba(250, 82, 82, 0.15)'
-                        : 'rgba(253, 126, 20, 0.1)',
-                    borderLeft: `3px solid ${alert.risk === 'CRITICAL' ? '#FA5252' : '#FD7E14'}`,
+                    backgroundColor: `var(--mantine-color-${alert.risk === 'CRITICAL' ? 'red' : 'brand'}-0)`,
+                    borderLeft: `3px solid var(--mantine-color-${alert.risk === 'CRITICAL' ? 'red' : 'brand'}-5)`,
                   }}
                 >
                   <Group gap="xs">
                     <AlertTriangle size={16} />
                     <Text size="xs" style={{ flex: 1 }}>
-                      {alert.message ?? 'Atenção: risco de ruptura identificado.'}
+                      {alert.message ?? 'Atenção: risco de ruptura de estoque identificado.'}
                     </Text>
                   </Group>
                 </Paper>
@@ -179,14 +173,18 @@ export function ProductCard({ product }: ProductCardProps) {
                   Tempo de Reposição: {product.settings?.leadTimeDays ?? 0} dias +{' '}
                   {product.settings?.safetyDays ?? 0} dias de segurança
                 </Text>
+                <Text size="xs" c="dimmed" mt={4}>
+                  O lead time é o tempo que o fornecedor leva para entregar um novo pedido após a
+                  compra ser realizada.
+                </Text>
                 {alert.daysOutOfStock && alert.daysOutOfStock > 0 && (
                   <Paper
                     p="xs"
                     radius="sm"
                     mt="xs"
                     style={{
-                      backgroundColor: 'rgba(250, 82, 82, 0.05)',
-                      borderLeft: '3px solid #FA5252',
+                      backgroundColor: 'var(--mantine-color-red-light)',
+                      borderLeft: '3px solid var(--mantine-color-red-5)',
                     }}
                   >
                     <Group gap="xs">
@@ -202,7 +200,11 @@ export function ProductCard({ product }: ProductCardProps) {
             )}
 
             {alert.type === 'DEAD_STOCK' && (
-              <Paper p="md" radius="md" style={{ backgroundColor: 'rgba(253, 126, 20, 0.08)' }}>
+              <Paper
+                p="md"
+                radius="md"
+                style={{ backgroundColor: 'var(--mantine-color-brand-light)' }}
+              >
                 <Text size="sm" mb="xs">
                   <strong>{formatCurrency(alert.capitalStuck || 0)}</strong> parados há{' '}
                   <strong>{alert.daysSinceLastSale ?? 0} dias</strong>
@@ -221,7 +223,11 @@ export function ProductCard({ product }: ProductCardProps) {
             )}
 
             {alert.type === 'OPPORTUNITY' && (
-              <Paper p="md" radius="md" style={{ backgroundColor: 'rgba(18, 184, 134, 0.08)' }}>
+              <Paper
+                p="md"
+                radius="md"
+                style={{ backgroundColor: 'var(--mantine-color-teal-light)' }}
+              >
                 <Text size="sm" mb="xs">
                   Tendência de crescimento: <strong>{(alert.growthTrend ?? 0).toFixed(1)}%</strong>
                 </Text>
@@ -248,15 +254,19 @@ export function ProductCard({ product }: ProductCardProps) {
             )}
 
             {alert.type === 'FINE' && (
-              <Paper p="md" radius="md" style={{ backgroundColor: 'rgba(34, 139, 230, 0.08)' }}>
+              <Paper
+                p="md"
+                radius="md"
+                style={{ backgroundColor: 'var(--mantine-color-blue-light)' }}
+              >
                 {alert.message ? (
                   <Paper
                     p="xs"
                     radius="sm"
                     mb="md"
                     style={{
-                      backgroundColor: 'rgba(34, 139, 230, 0.12)',
-                      borderLeft: '3px solid #228BE6',
+                      backgroundColor: 'var(--mantine-color-blue-0)',
+                      borderLeft: '3px solid var(--mantine-color-blue-5)',
                     }}
                   >
                     <Group gap="xs">
@@ -363,7 +373,11 @@ export function ProductCard({ product }: ProductCardProps) {
             )}
 
             {alert.type === 'LIQUIDATION' && (
-              <Paper p="md" radius="md" style={{ backgroundColor: 'rgba(34, 197, 94, 0.08)' }}>
+              <Paper
+                p="md"
+                radius="md"
+                style={{ backgroundColor: 'var(--mantine-color-teal-light)' }}
+              >
                 <Group gap="xs" mb="xs">
                   <PackageIcon size={14} />
                   <Text size="xs">Estoque atual: {product.currentStock} unidades</Text>

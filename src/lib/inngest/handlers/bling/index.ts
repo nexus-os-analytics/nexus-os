@@ -1,4 +1,5 @@
 export * from './generate-alerts';
+export * from './notify-critical-alert';
 export * from './sync-categories';
 export * from './sync-products';
 export * from './sync-sales-batch';

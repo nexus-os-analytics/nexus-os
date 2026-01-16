@@ -40,9 +40,9 @@ export function ProductDetails({ product }: ProductDetailsProps) {
     switch (alert.type) {
       case 'RUPTURE':
         return {
-          color: alert.risk === 'CRITICAL' ? 'red' : alert.risk === 'HIGH' ? 'orange' : 'yellow',
+          color: alert.risk === 'CRITICAL' ? 'red' : 'brand',
           icon: AlertTriangle,
-          badge: 'Risco de Ruptura',
+          badge: 'Risco de Ruptura do Estoque',
         } as const;
       case 'DEAD_STOCK':
         return {
@@ -124,12 +124,7 @@ export function ProductDetails({ product }: ProductDetailsProps) {
             <Badge color={color} variant="filled">
               {typeBadge}
             </Badge>
-            <Badge
-              color={
-                alert.risk === 'CRITICAL' ? 'red' : alert.risk === 'HIGH' ? 'orange' : 'yellow'
-              }
-              variant="light"
-            >
+            <Badge color={alert.risk === 'CRITICAL' ? 'red' : 'brand'} variant="light">
               {alert.risk}
             </Badge>
           </Group>
