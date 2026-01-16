@@ -67,7 +67,7 @@ export function ProductMetrics({ product }: ProductMetricsProps) {
       <Grid.Col span={{ base: 12, md: 6 }}>
         <Card padding="lg" radius="md" withBorder shadow="sm">
           <Group mb="md">
-            <ThemeIcon size={32} radius="md" color="gold" variant="light">
+            <ThemeIcon size={32} radius="md" color="brand" variant="light">
               <TrendingUp size={18} />
             </ThemeIcon>
             <Title order={5}>Métricas do Alerta</Title>
@@ -108,6 +108,17 @@ export function ProductMetrics({ product }: ProductMetricsProps) {
               <Text size="sm">Ponto de Pedido:</Text>
               <Text size="sm">{alert.reorderPoint.toFixed(0)} unidades</Text>
             </Group>
+            {typeof product.settings?.leadTimeDays === 'number' ? (
+              <>
+                <Group justify="space-between">
+                  <Text size="sm">Lead time (tempo de reposição):</Text>
+                  <Text size="sm">{product.settings.leadTimeDays} dias</Text>
+                </Group>
+                <Text size="xs" c="dimmed">
+                  Lead time é o tempo que o fornecedor leva para entregar novos itens após o pedido.
+                </Text>
+              </>
+            ) : null}
           </Stack>
         </Card>
       </Grid.Col>

@@ -36,7 +36,7 @@ export function HowItWorksSection() {
     <Container id="como-funciona" size="lg" py="xl">
       <Stack gap="sm" align="center">
         <Title ta="center" maw={840}>
-          Como o Nexus OS resolve isso para você (em menos de 5 minutos)
+          Como o Nexus OS resolve isso para você (em menos de 2 minutos)
         </Title>
         <Text ta="center" c="dimmed" maw={760}>
           Implantação instantânea e segura — sem senha, sem complicação.

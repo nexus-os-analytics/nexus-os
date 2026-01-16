@@ -96,7 +96,7 @@ export function ProductSettingsForm({ settings, blingProductId }: ProductSetting
         <Grid.Col span={{ base: 12, sm: 6, md: 4 }}>
           <NumberInput
             label="Lead Time (dias)"
-            description="Tempo de reposição do fornecedor"
+            description="Tempo de reposição do fornecedor (lead time — período entre o pedido e a entrega)"
             value={formSettings.leadTimeDays}
             onChange={(val) => setSettings((prev) => ({ ...prev, leadTimeDays: Number(val) }))}
             min={1}
