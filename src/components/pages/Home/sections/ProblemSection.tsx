@@ -48,7 +48,7 @@ const problems: { title: string; value: string; desc: string; icon: React.ReactN
 
 export function ProblemSection() {
   return (
-    <Container id="problema" size="lg" py="xl">
+    <Container id="problema" size="lg" py={64}>
       <Stack gap="sm" align="center">
         <Badge variant="light" color="gray">
           Você não está sozinho — 78% dos lojistas enfrentam isso

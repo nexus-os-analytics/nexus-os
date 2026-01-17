@@ -7,7 +7,7 @@ export function ComparisonSection() {
       <Title ta="center" mb="md">
         Por que o Nexus OS?
       </Title>
-      <Table withTableBorder highlightOnHover>
+      <Table withTableBorder highlightOnHover w="100%" maw={800} mx="auto">
         <Table.Thead>
           <Table.Tr>
             <Table.Th>Funcionalidade</Table.Th>
