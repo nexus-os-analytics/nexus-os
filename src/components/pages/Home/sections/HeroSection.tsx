@@ -36,7 +36,7 @@ export function HeroSection() {
               variant="gradient"
               gradient={{ from: 'brand.6', to: 'brand.8', deg: 135 }}
             >
-              Começar Gratuitamente
+              Comece Agora
             </Button>
           </Stack>
         </Grid.Col>
