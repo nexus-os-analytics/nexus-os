@@ -1,4 +1,5 @@
 import axios, { isAxiosError } from 'axios';
+import criticalAlertTemplate from './templates/critical-alert.template';
 import inviteTemplate from './templates/invite-user.template';
 import resetPasswordTemplate from './templates/reset-password.template';
 import welcomeTemplate from './templates/welcome.template';
@@ -11,6 +12,7 @@ const emailTemplates = {
   welcome: welcomeTemplate,
   resetPassword: resetPasswordTemplate,
   inviteUser: inviteTemplate,
+  criticalAlert: criticalAlertTemplate,
 };
 
 export async function sendEmail({

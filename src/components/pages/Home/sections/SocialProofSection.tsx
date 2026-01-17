@@ -29,7 +29,7 @@ export function SocialProofSection() {
               initials: 'RP',
               name: 'Rafael Pereira',
               role: 'Gerente de E-commerce',
-              text: 'Os alertas são superdiretos e fáceis de resolver. Ganhei horas que eu perdia no Excel.',
+              text: 'Os alertas são super diretos e fáceis de resolver. Ganhei horas que eu perdia no Excel.',
             },
             {
               initials: 'CL',

@@ -3,10 +3,12 @@ import {
   Avatar,
   Badge,
   Box,
+  Button,
   Card,
   Container,
   Divider,
   Group,
+  Paper,
   Tabs,
   Text,
   ThemeIcon,
@@ -20,6 +22,8 @@ import {
   Settings,
   TrendingUp,
 } from 'lucide-react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import type { BlingProductType } from '@/lib/bling';
 import { formatDate } from '@/lib/utils';
 import { ProductMetrics } from '../ProductMetrics';
@@ -31,6 +35,7 @@ interface ProductDetailsProps {
 
 export function ProductDetails({ product }: ProductDetailsProps) {
   const { alert } = product;
+  const router = useRouter();
 
   if (!alert) {
     throw new Error('Alert data is required for ProductDetailsPage component.');
@@ -40,19 +45,19 @@ export function ProductDetails({ product }: ProductDetailsProps) {
     switch (alert.type) {
       case 'RUPTURE':
         return {
-          color: alert.risk === 'CRITICAL' ? 'red' : alert.risk === 'HIGH' ? 'orange' : 'yellow',
+          color: 'red',
           icon: AlertTriangle,
-          badge: 'Risco de Ruptura',
+          badge: 'Risco de Ruptura do Estoque',
         } as const;
       case 'DEAD_STOCK':
         return {
-          color: 'orange',
+          color: 'brand',
           icon: DollarSign,
           badge: 'Dinheiro Parado',
         } as const;
       case 'OPPORTUNITY':
         return {
-          color: 'teal',
+          color: 'green',
           icon: TrendingUp,
           badge: 'Oportunidade',
         } as const;
@@ -60,11 +65,11 @@ export function ProductDetails({ product }: ProductDetailsProps) {
         return {
           color: 'blue',
           icon: Info,
-          badge: 'Multa',
+          badge: 'Observar',
         } as const;
       case 'LIQUIDATION':
         return {
-          color: 'green',
+          color: 'orange',
           icon: PackageIcon,
           badge: 'Liquidação',
         } as const;
@@ -78,6 +83,15 @@ export function ProductDetails({ product }: ProductDetailsProps) {
 
   return (
     <Container size="xl">
+      {/* Voltar para Dashboard */}
+      <Group justify="space-between" align="center" py="md">
+        <Button variant="light" onClick={() => router.push('/dashboard')}>
+          Voltar ao Painel
+        </Button>
+        <Button component={Link} href="/visao-geral" variant="subtle">
+          Ver todos insights
+        </Button>
+      </Group>
       {/* Header */}
       <Container size="xl" py="md">
         <Group justify="space-between" align="center">
@@ -114,7 +128,7 @@ export function ProductDetails({ product }: ProductDetailsProps) {
         </Group>
       </Container>
 
-      {/* Alert Message */}
+      {/* Alert Message destacado com a cor do card */}
       <Card padding="lg" radius="md" withBorder shadow="sm" mb="lg">
         <Group align="center" justify="space-between" mb="sm" wrap="wrap">
           <Group gap="sm" align="center">
@@ -124,12 +138,7 @@ export function ProductDetails({ product }: ProductDetailsProps) {
             <Badge color={color} variant="filled">
               {typeBadge}
             </Badge>
-            <Badge
-              color={
-                alert.risk === 'CRITICAL' ? 'red' : alert.risk === 'HIGH' ? 'orange' : 'yellow'
-              }
-              variant="light"
-            >
+            <Badge color={alert.risk === 'CRITICAL' ? 'red' : 'brand'} variant="light">
               {alert.risk}
             </Badge>
           </Group>
@@ -138,8 +147,16 @@ export function ProductDetails({ product }: ProductDetailsProps) {
             Última atualização: {formatDate(product.updatedAt.toString())}
           </Text>
         </Group>
-
-        <Text size="md">{alert.message}</Text>
+        <Paper
+          p="sm"
+          radius="md"
+          style={{
+            backgroundColor: `var(--mantine-color-${color}-light)`,
+            borderLeft: `4px solid var(--mantine-color-${color}-5)`,
+          }}
+        >
+          <Text size="md">{alert.message}</Text>
+        </Paper>
       </Card>
 
       {/* Tabs */}

@@ -29,7 +29,7 @@ const problems: { title: string; value: string; desc: string; icon: React.ReactN
   {
     title: 'Dinheiro parado',
     value: 'R$ 15.000 travados',
-    desc: 'Estoque envelhecido consumindo caixa e espaço.',
+    desc: 'Estoque que não vende consumindo caixa e espaço.',
     icon: <IconCash size={18} />,
   },
   {
@@ -40,7 +40,7 @@ const problems: { title: string; value: string; desc: string; icon: React.ReactN
   },
   {
     title: 'Descobre oportunidades tarde',
-    value: 'Perda de momentum',
+    value: 'Receita deixada na mesa',
     desc: 'Itens em alta sem ação rápida para aproveitar demanda.',
     icon: <IconChartBar size={18} />,
   },
@@ -48,7 +48,7 @@ const problems: { title: string; value: string; desc: string; icon: React.ReactN
 
 export function ProblemSection() {
   return (
-    <Container id="problema" size="lg" py="xl">
+    <Container id="problema" size="lg" py={64}>
       <Stack gap="sm" align="center">
         <Badge variant="light" color="gray">
           Você não está sozinho — 78% dos lojistas enfrentam isso
