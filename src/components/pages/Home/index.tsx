@@ -1,5 +1,4 @@
-/** biome-ignore-all lint/style/noMagicNumbers: <explanation> */
-
+import { Stack } from '@mantine/core';
 import { ComparisonSection } from './sections/ComparisonSection';
 import { FAQSection } from './sections/FAQSection';
 import { FeaturesTabsSection } from './sections/FeaturesTabsSection';
@@ -12,7 +11,7 @@ import { SocialProofSection } from './sections/SocialProofSection';
 
 export function Home() {
   return (
-    <div>
+    <Stack gap={64}>
       <HeroSection />
       <ProblemSection />
       <HowItWorksSection />
@@ -22,6 +21,6 @@ export function Home() {
       <PricingSection />
       <FAQSection />
       <FinalCTASection />
-    </div>
+    </Stack>
   );
 }
