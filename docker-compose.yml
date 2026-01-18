@@ -6,6 +6,8 @@ services:
     command:
       - --api.dashboard=true
       - --entrypoints.web.address=:80
+      - --entrypoints.web.http.redirections.entrypoint.to=websecure
+      - --entrypoints.web.http.redirections.entrypoint.scheme=https
       - --entrypoints.websecure.address=:443
       - --providers.docker=true
       - --providers.docker.exposedbydefault=false
@@ -73,8 +75,9 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.nexus.rule=Host(`${DOMAIN}`)"
-      - "traefik.http.routers.nexus.entrypoints=web"
-      - "traefik.docker.network=nexus-os_web"
+      - "traefik.http.routers.nexus.entrypoints=websecure"
+      - "traefik.http.routers.nexus.tls.certresolver=le"
+      - "traefik.docker.network=web"
       - "traefik.http.services.nexus.loadbalancer.server.port=3000"
     depends_on:
       db:
@@ -91,6 +94,7 @@ volumes:
 
 networks:
   web:
+    name: web
     driver: bridge
   internal:
     driver: bridge
