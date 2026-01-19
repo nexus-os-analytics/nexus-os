@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server';
-import { authOptions } from '@/lib/next-auth';
 import { getServerSession } from 'next-auth';
-import { BlingIntegration } from '@/lib/bling';
 import pino from 'pino';
+import { BlingIntegration } from '@/lib/bling';
+import { authOptions } from '@/lib/next-auth';
 
 const logger = pino().child({ module: 'bling-homologation-route' });
 
@@ -54,7 +54,10 @@ export async function POST() {
     const { access_token: tokenPost } = await BlingIntegration.fetchAndRefreshBlingTokens(userId);
 
     // Step 2: POST homologation
-    const payload = (getJson as any)?.data;
+    const isRecord = (v: unknown): v is Record<string, unknown> =>
+      typeof v === 'object' && v !== null && !Array.isArray(v);
+    const payload =
+      isRecord(getJson) && 'data' in getJson ? (getJson as { data?: unknown }).data : undefined;
     const postRes = await fetch(`${baseUrl}/homologacao/produtos`, {
       method: 'POST',
       headers: {
@@ -62,7 +65,7 @@ export async function POST() {
         Authorization: `Bearer ${tokenPost}`,
         ...(xHomolog ? { 'x-bling-homologacao': xHomolog } : {}),
       },
-      body: JSON.stringify(payload),
+      body: JSON.stringify(payload ?? {}),
     });
     const postJson = await parseJsonOrText(postRes);
     const xHomologPost = postRes.headers.get('x-bling-homologacao');
@@ -72,7 +75,28 @@ export async function POST() {
     const { access_token: tokenPut } = await BlingIntegration.fetchAndRefreshBlingTokens(userId);
 
     // Step 3: PUT homologation
-    const productId = (postJson as any)?.data?.id ?? (postJson as any)?.id;
+    const extractProductId = (v: unknown): string | number | undefined => {
+      if (isRecord(v)) {
+        const data = 'data' in v ? (v as Record<string, unknown>).data : undefined;
+        if (isRecord(data) && 'id' in data) {
+          const id = (data as Record<string, unknown>).id;
+          if (typeof id === 'string' || typeof id === 'number') return id;
+        }
+        if ('id' in v) {
+          const id = (v as Record<string, unknown>).id;
+          if (typeof id === 'string' || typeof id === 'number') return id;
+        }
+      }
+      return undefined;
+    };
+    const productId = extractProductId(postJson);
+    if (productId === undefined) {
+      logger.error({ postJson }, 'Não foi possível extrair o ID do produto de homologação');
+      return NextResponse.json(
+        { success: false, error: 'Falha ao extrair ID do produto de homologação' },
+        { status: 502 }
+      );
+    }
     const putRes = await fetch(`${baseUrl}/homologacao/produtos/${productId}`, {
       method: 'PUT',
       headers: {
@@ -81,9 +105,9 @@ export async function POST() {
         ...(xHomologPost ? { 'x-bling-homologacao': xHomologPost } : {}),
       },
       body: JSON.stringify({
-        "nome": "Copo",
-        "preco": 32.56,
-        "codigo": "COD-4587"
+        nome: 'Copo',
+        preco: 32.56,
+        codigo: 'COD-4587',
       }),
     });
     const putJson = await parseJsonOrText(putRes);
@@ -129,9 +153,7 @@ export async function POST() {
       delete: { status: deleteRes.status, data: deleteJson },
     };
 
-    const success = [getRes, postRes, putRes, patchRes, deleteRes].every(
-      (r) => r.status >= 200 && r.status < 300
-    );
+    const success = [getRes, postRes, putRes, patchRes, deleteRes].every((r) => r.ok);
 
     return NextResponse.json({ success, steps });
   } catch (error) {

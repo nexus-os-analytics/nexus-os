@@ -20,12 +20,13 @@ import {
   Info,
   Package as PackageIcon,
   Settings,
+  Sparkles,
   TrendingUp,
 } from 'lucide-react';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import type { BlingProductType } from '@/lib/bling';
 import { formatDate } from '@/lib/utils';
+import { ProductCampaingGenerator } from '../ProductCampaingGenerator';
 import { ProductMetrics } from '../ProductMetrics';
 import { ProductSettingsForm } from '../ProductSettingsForm';
 
@@ -87,9 +88,6 @@ export function ProductDetails({ product }: ProductDetailsProps) {
       <Group justify="space-between" align="center" py="md">
         <Button variant="light" onClick={() => router.push('/dashboard')}>
           Voltar ao Painel
-        </Button>
-        <Button component={Link} href="/visao-geral" variant="subtle">
-          Ver todos insights
         </Button>
       </Group>
       {/* Header */}
@@ -168,6 +166,9 @@ export function ProductDetails({ product }: ProductDetailsProps) {
           <Tabs.Tab value="settings" leftSection={<Settings size={16} />}>
             Configurações
           </Tabs.Tab>
+          <Tabs.Tab value="campaign" leftSection={<Sparkles size={16} />}>
+            Gerador de Campanhas
+          </Tabs.Tab>
         </Tabs.List>
 
         {/* Details Tab */}
@@ -181,6 +182,11 @@ export function ProductDetails({ product }: ProductDetailsProps) {
             settings={product.settings}
             blingProductId={product.blingProductId}
           />
+        </Tabs.Panel>
+
+        {/* Campaign Generator Tab */}
+        <Tabs.Panel value="campaign" pt="lg">
+          <ProductCampaingGenerator product={product} />
         </Tabs.Panel>
       </Tabs>
     </Container>

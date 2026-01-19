@@ -1,10 +1,23 @@
 'use client';
-import { Alert, Badge, Button, Card, Code, Divider, Group, Loader, Stack, Table, Text, Title } from '@mantine/core';
+import {
+  Alert,
+  Badge,
+  Button,
+  Card,
+  Code,
+  Divider,
+  Group,
+  Loader,
+  Stack,
+  Table,
+  Text,
+  Title,
+} from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import { useRouter } from 'next/navigation';
-import { useBlingIntegration } from '@/hooks/useBlingIntegration';
-import { use, useState } from 'react';
+import { useState } from 'react';
 import { useAuth } from '@/features/auth/context/AuthContext';
+import { useBlingIntegration } from '@/hooks/useBlingIntegration';
 
 interface MethodResult {
   status: number;
@@ -57,7 +70,9 @@ export default function BlingIntegrationForm() {
         credentials: 'same-origin',
       });
 
-      const json = (await res.json()) as HomologationResult | { success?: boolean; steps?: HomologationSteps };
+      const json = (await res.json()) as
+        | HomologationResult
+        | { success?: boolean; steps?: HomologationSteps };
       if (!res.ok || !('success' in json) || json.success !== true) {
         notifications.show({
           title: 'Homologação falhou',
@@ -72,7 +87,7 @@ export default function BlingIntegrationForm() {
         });
       }
       setResult(json as HomologationResult);
-    } catch (error) {
+    } catch (_error) {
       notifications.show({
         title: 'Erro ao executar homologação',
         message: 'Verifique sua sessão e tente novamente.',
@@ -119,10 +134,15 @@ export default function BlingIntegrationForm() {
               <Stack gap={0}>
                 <Title order={5}>Teste de Homologação</Title>
                 <Text size="sm" color="dimmed">
-                  Execute o teste de homologação necessário para enviar o Nexus OS para a revisão do Bling.
+                  Execute o teste de homologação necessário para enviar o Nexus OS para a revisão do
+                  Bling.
                 </Text>
               </Stack>
-              <Button onClick={handleRunHomologation} disabled={!status?.connected || isRunning} loading={isRunning}>
+              <Button
+                onClick={handleRunHomologation}
+                disabled={!status?.connected || isRunning}
+                loading={isRunning}
+              >
                 Executar homologação
               </Button>
             </Group>
@@ -161,10 +181,14 @@ export default function BlingIntegrationForm() {
                         return (
                           <Table.Tr key={m}>
                             <Table.Td>
-                              <Text size="sm" fw={500} tt="uppercase">{m}</Text>
+                              <Text size="sm" fw={500} tt="uppercase">
+                                {m}
+                              </Text>
                             </Table.Td>
                             <Table.Td>
-                              <Badge color={ok ? 'green' : 'red'} variant="light">{r.status}</Badge>
+                              <Badge color={ok ? 'green' : 'red'} variant="light">
+                                {r.status}
+                              </Badge>
                             </Table.Td>
                             <Table.Td>
                               <Code block>{JSON.stringify(r.data, null, 2)}</Code>
