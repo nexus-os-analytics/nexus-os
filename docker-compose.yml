@@ -12,7 +12,7 @@ services:
       - --providers.docker=true
       - --providers.docker.exposedbydefault=false
       - --certificatesresolvers.le.acme.tlschallenge=true
-      - --certificatesresolvers.le.acme.email=agencia.foliveira@gmail.com
+      - --certificatesresolvers.le.acme.email=${LETSENCRYPT_EMAIL}
       - --certificatesresolvers.le.acme.storage=/letsencrypt/acme.json
       - --accesslog=true
       - --log.level=INFO

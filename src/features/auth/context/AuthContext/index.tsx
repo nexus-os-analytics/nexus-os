@@ -1,6 +1,6 @@
 'use client';
 import { useSession } from 'next-auth/react';
-import { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { getPermissions, type PermissionPath, type User } from '@/features/auth/services';
 
 type AuthStatusType = 'authenticated' | 'unauthenticated' | 'loading';
@@ -22,16 +22,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [status, setStatus] = useState<AuthStatusType>('loading');
   const { data: session, status: sessionStatus, update } = useSession();
 
-  const signOut = () => {
+  const signOut = useCallback(() => {
     setUser(null);
     setStatus('unauthenticated');
-  };
+  }, []);
 
-  const hasPermission = (permission: PermissionPath) => {
-    if (!user || status !== 'authenticated') return false;
-    const roles = getPermissions(permission);
-    return roles.includes(user.role);
-  };
+  const hasPermission = useCallback(
+    (permission: PermissionPath) => {
+      if (!user || status !== 'authenticated') return false;
+      const roles = getPermissions(permission);
+      return roles.includes(user.role);
+    },
+    [status, user]
+  );
 
   const authState = useMemo(
     () => ({
@@ -42,7 +45,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       signOut,
       hasPermission,
     }),
-    [status, user, required2FA]
+    [status, user, required2FA, update, signOut, hasPermission]
   );
 
   useEffect(() => {
