@@ -13,7 +13,7 @@ export interface User extends DefaultUser {
 }
 
 export type PermissionKeys<T> = {
-  [K in keyof T]: T[K] extends Array<any>
+  [K in keyof T]: T[K] extends Array<unknown>
     ? Extract<K, string>
     : T[K] extends object
       ? `${Extract<K, string>}.${PermissionKeys<T[K]>}`

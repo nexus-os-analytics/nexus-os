@@ -38,6 +38,8 @@ interface HomologationResult {
 }
 
 export default function BlingIntegrationForm() {
+  const HTTP_OK_MIN = 200;
+  const HTTP_OK_MAX = 299;
   const [result, setResult] = useState<HomologationResult | null>(null);
   const [isRunning, setIsRunning] = useState(false);
   const { user } = useAuth();
@@ -174,10 +176,12 @@ export default function BlingIntegrationForm() {
                   </Table.Thead>
                   <Table.Tbody>
                     {(['get', 'post', 'put', 'patch', 'delete'] as const)
-                      .filter((m) => result.steps?.[m] !== undefined)
+                      .filter((m) => (result.steps ?? {})[m] !== undefined)
                       .map((m) => {
-                        const r = result.steps[m]!;
-                        const ok = r.status >= 200 && r.status < 300;
+                        const steps = result.steps ?? {};
+                        const r = steps[m];
+                        if (!r) return null;
+                        const ok = r.status >= HTTP_OK_MIN && r.status <= HTTP_OK_MAX;
                         return (
                           <Table.Tr key={m}>
                             <Table.Td>

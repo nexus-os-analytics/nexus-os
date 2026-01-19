@@ -24,14 +24,16 @@ export async function rateLimited<T>(fn: () => Promise<T>): Promise<T> {
   while (true) {
     const now = Date.now();
     // Remove timestamps mais antigos que 1 segundo
-    timestamps = timestamps.filter((t) => now - t < 1000);
+    const ONE_SECOND_MS = 1000;
+    const MIN_WAIT_MS = 100;
+    timestamps = timestamps.filter((t) => now - t < ONE_SECOND_MS);
     if (timestamps.length < MAX_PER_SECOND) {
       timestamps.push(now);
       break;
     }
     // Espera o tempo necessário para liberar uma vaga
-    const wait = 1000 - (now - timestamps[0]);
-    await sleep(wait > 0 ? wait : 100);
+    const wait = ONE_SECOND_MS - (now - timestamps[0]);
+    await sleep(wait > 0 ? wait : MIN_WAIT_MS);
   }
   // Executa com controle de concorrência
   return limit(fn);

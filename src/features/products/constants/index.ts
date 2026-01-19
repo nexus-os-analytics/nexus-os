@@ -1,3 +1,5 @@
+import type { BlingRuptureRisk } from '@prisma/client';
+
 export const toneOfVoiceOptions = [
   { value: 'urgent-direct' as const, label: 'Urgente e Direto' },
   { value: 'friendly-casual' as const, label: 'Amigável e Casual' },
@@ -27,3 +29,10 @@ export const campaignStrategies = [
     pricingSuggestion: 'Desconto de 15-25%',
   },
 ];
+
+export const ruptureRiskLabel: Record<BlingRuptureRisk, string> = {
+  CRITICAL: 'Crítico',
+  HIGH: 'Alto',
+  MEDIUM: 'Médio',
+  LOW: 'Baixo',
+};

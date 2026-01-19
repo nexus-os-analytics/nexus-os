@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+const CUSTOM_INSTRUCTIONS_MAX = 500;
+
 const ToneEnum = z.enum([
   'urgent-direct',
   'friendly-casual',
@@ -27,7 +29,7 @@ export const GenerateProductCampaignSchema = z
     product: ProductInfoSchema,
     strategy: StrategyEnum,
     toneOfVoice: ToneEnum,
-    customInstructions: z.string().max(500).optional(),
+    customInstructions: z.string().max(CUSTOM_INSTRUCTIONS_MAX).optional(),
   })
   .strict();
 

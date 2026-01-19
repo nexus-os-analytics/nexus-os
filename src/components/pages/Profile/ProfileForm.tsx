@@ -17,12 +17,20 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '@/features/auth/context/AuthContext';
 import { AccountRemoveModal } from './AccountRemoveModal';
 
+interface ProfileFormValues {
+  name: string;
+  email: string;
+  phone: string;
+  avatar: File | null;
+  acceptedTerms: boolean;
+}
+
 export default function ProfileForm() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const { user } = useAuth();
 
-  const profileForm = useForm({
+  const profileForm = useForm<ProfileFormValues>({
     initialValues: {
       name: '',
       email: '',
@@ -41,7 +49,7 @@ export default function ProfileForm() {
     return initials;
   };
 
-  async function handleProfileSubmit(values: any) {
+  async function handleProfileSubmit(values: ProfileFormValues) {
     // Validate / sanitize in backend
     // Call PATCH /api/user
     // console.log('save profile', values);
@@ -71,7 +79,7 @@ export default function ProfileForm() {
       });
       setAvatarPreview(user.avatar || null);
     }
-  }, [user]);
+  }, [user, profileForm.setValues]);
 
   return (
     <>

@@ -41,19 +41,21 @@ export function Overview() {
 
   const onContinue = () => router.push('/dashboard');
 
+  const SYNC_POLL_INTERVAL_MS = 3000;
+  const TIP_ROTATE_INTERVAL_MS = 4000;
   useEffect(() => {
     const interval = setInterval(() => {
       if (status?.syncStatus !== 'COMPLETED') {
         refresh();
         refetch();
       }
-    }, 3000);
+    }, SYNC_POLL_INTERVAL_MS);
     return () => clearInterval(interval);
-  }, [status, refresh]);
+  }, [status, refresh, refetch]);
 
   useEffect(() => {
     if (!isLoading) return;
-    const id = setInterval(() => setTipIndex((i) => (i + 1) % tips.length), 4000);
+    const id = setInterval(() => setTipIndex((i) => (i + 1) % tips.length), TIP_ROTATE_INTERVAL_MS);
     return () => clearInterval(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isLoading]);
@@ -218,8 +220,8 @@ export function Overview() {
                         <List type="ordered">
                           {action.recommendations &&
                             (JSON.parse(action.recommendations) as string[]).map(
-                              (recommendation, index) => (
-                                <List.Item key={index}>{recommendation}</List.Item>
+                              (recommendation) => (
+                                <List.Item key={recommendation}>{recommendation}</List.Item>
                               )
                             )}
                         </List>

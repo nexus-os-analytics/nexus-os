@@ -17,7 +17,7 @@ import {
 import { AlertCircle, CheckCircle2 } from 'lucide-react';
 import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useBlingIntegration } from '@/hooks/useBlingIntegration';
 
 type ConnectionState = 'idle' | 'connecting' | 'analyzing' | 'complete' | 'error';
@@ -30,6 +30,17 @@ export function BlingConnect() {
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [simStats, setSimStats] = useState({ products: 0, sales: 0 });
+  const PROGRESS_INITIAL = 50;
+  const PROGRESS_COMPLETE = 100;
+  const PROGRESS_CONNECTING = 25;
+  const PROGRESS_INCREMENT = 7;
+  const ANALYZE_TICK_MS = 220;
+  const STATS_TICK_MS = 180;
+  const COMPLETE_DELAY_MS = 1500;
+  const PRODUCTS_RANDOM_MAX = 12;
+  const PRODUCTS_CAP = 127;
+  const SALES_RANDOM_MAX = 40;
+  const SALES_CAP = 847;
 
   // Verificar parâmetros de URL para erros/sucesso
   useEffect(() => {
@@ -58,7 +69,7 @@ export function BlingConnect() {
 
     if (successParam === 'bling_connected') {
       setState('analyzing');
-      setProgress(50);
+      setProgress(PROGRESS_INITIAL);
     }
   }, [searchParams]);
 
@@ -66,33 +77,36 @@ export function BlingConnect() {
   useEffect(() => {
     if (status?.syncStatus === 'COMPLETED' && state === 'idle') {
       setState('complete');
-      setProgress(100);
+      setProgress(PROGRESS_COMPLETE);
     }
   }, [status, state]);
 
-  const handleComplete = () => {
+  const handleComplete = useCallback(() => {
     router.push('/visao-geral');
-  };
+  }, [router]);
 
   useEffect(() => {
     if (state === 'analyzing') {
       const interval = setInterval(() => {
         setProgress((prev) => {
-          if (prev >= 100) {
+          if (prev >= PROGRESS_COMPLETE) {
             clearInterval(interval);
             setState('complete');
-            return 100;
+            return PROGRESS_COMPLETE;
           }
-          return prev + 7;
+          return prev + PROGRESS_INCREMENT;
         });
-      }, 220);
+      }, ANALYZE_TICK_MS);
 
       const stats = setInterval(() => {
         setSimStats((s) => ({
-          products: Math.min(s.products + Math.ceil(Math.random() * 12), 127),
-          sales: Math.min(s.sales + Math.ceil(Math.random() * 40), 847),
+          products: Math.min(
+            s.products + Math.ceil(Math.random() * PRODUCTS_RANDOM_MAX),
+            PRODUCTS_CAP
+          ),
+          sales: Math.min(s.sales + Math.ceil(Math.random() * SALES_RANDOM_MAX), SALES_CAP),
         }));
-      }, 180);
+      }, STATS_TICK_MS);
 
       return () => {
         clearInterval(interval);
@@ -103,16 +117,16 @@ export function BlingConnect() {
     if (state === 'complete') {
       const timer = setTimeout(() => {
         handleComplete();
-      }, 1500);
+      }, COMPLETE_DELAY_MS);
       return () => clearTimeout(timer);
     }
-  }, [state]);
+  }, [state, handleComplete]);
 
   const handleConnect = async () => {
     try {
       setState('connecting');
       setError(null);
-      setProgress(25);
+      setProgress(PROGRESS_CONNECTING);
 
       const authUrl = await connect();
 

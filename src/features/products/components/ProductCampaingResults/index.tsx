@@ -69,7 +69,8 @@ export function ProductCampaignResults({
         message: 'Texto copiado!',
         color: 'teal',
       });
-      setTimeout(() => setCopiedField(null), 2000);
+      const COPY_TIMEOUT_MS = 2000;
+      setTimeout(() => setCopiedField(null), COPY_TIMEOUT_MS);
     } catch (err) {
       console.error('Copy failed:', err);
       notifications.show({
