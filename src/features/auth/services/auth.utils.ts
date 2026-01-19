@@ -1,10 +1,17 @@
+import type { UserRole } from '@prisma/client';
 import { authenticator } from 'otplib';
 import QRCode from 'qrcode';
 import { PERMISSIONS } from './auth.constants';
 import type { PermissionPath } from './auth.types';
 
-export function getPermissions<Path extends PermissionPath>(path: Path) {
-  return path.split('.').reduce((acc, key) => acc?.[key], PERMISSIONS as any);
+export function getPermissions<Path extends PermissionPath>(path: Path): ReadonlyArray<UserRole> {
+  const keys = path.split('.');
+  let acc: unknown = PERMISSIONS as Record<string, unknown>;
+  for (const key of keys) {
+    if (typeof acc !== 'object' || acc === null) return [];
+    acc = (acc as Record<string, unknown>)[key];
+  }
+  return Array.isArray(acc) ? (acc as ReadonlyArray<UserRole>) : [];
 }
 
 export function generateTwoFactorSecret(email: string) {

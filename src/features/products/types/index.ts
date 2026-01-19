@@ -34,3 +34,17 @@ export interface GetOverviewMetricsResponse {
     impactLabel?: string; // Texto curto explicando o impacto
   }>;
 }
+
+export type CampaignStrategy = 'aggressive-liquidation' | 'strategic-combo' | 'checkout-upsell';
+
+export type CampaignOutput = {
+  instagram: string;
+  email: string;
+  remarketing: string;
+};
+
+export type ToneOfVoice =
+  | 'urgent-direct'
+  | 'friendly-casual'
+  | 'professional-technical'
+  | 'enthusiastic-emotional';
