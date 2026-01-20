@@ -1,8 +1,11 @@
 import bcrypt from 'bcryptjs';
 import { type NextRequest, NextResponse } from 'next/server';
-import { type SignUpRequest, SignUpSchema } from '@/features/auth/services';
-import { createActivationToken } from '@/features/auth/services/activation-token';
-import { sendWelcomeActivationEmail } from '@/features/auth/services/send-welcome-activation-email';
+import {
+  createActivationToken,
+  type SignUpRequest,
+  SignUpSchema,
+  sendWelcomeActivationEmail,
+} from '@/features/auth/services';
 import prisma from '@/lib/prisma';
 
 export async function POST(req: NextRequest) {

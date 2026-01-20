@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { consumeActivationToken } from '@/features/auth/services/activation-token';
+import { consumeActivationToken } from '@/features/auth/services';
 import prisma from '@/lib/prisma';
 
 export async function GET(request: Request) {

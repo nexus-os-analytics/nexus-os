@@ -1,5 +1,13 @@
+'use server';
 import crypto from 'crypto';
+import { sendEmail } from '@/lib/brevo';
 import prisma from '@/lib/prisma';
+
+interface SendWelcomeParams {
+  email: string;
+  name?: string | null;
+  activationLink: string;
+}
 
 interface CreateActivationTokenResult {
   token: string;
@@ -50,4 +58,19 @@ export async function consumeActivationToken(email: string, token: string): Prom
   });
 
   return true;
+}
+
+export async function sendWelcomeActivationEmail({
+  email,
+  name,
+  activationLink,
+}: SendWelcomeParams): Promise<void> {
+  const subject = 'Bem-vindo ao Nexus OS — Ative sua conta';
+  await sendEmail({
+    toEmail: email,
+    toName: name || 'Cliente',
+    subject,
+    link: activationLink,
+    templateName: 'welcome',
+  });
 }
