@@ -13,6 +13,7 @@ import {
   Title,
 } from '@mantine/core';
 import Link from 'next/link';
+import { useState } from 'react';
 
 interface Tier {
   id: string;
@@ -48,6 +49,28 @@ const tiers: Tier[] = [
 ];
 
 export function Pricing() {
+  const [loading, setLoading] = useState(false);
+
+  async function startProCheckout() {
+    try {
+      setLoading(true);
+      const res = await fetch('/api/stripe/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ plan: 'pro' }),
+      });
+      if (res.status === 401) {
+        window.location.href = '/login?plan=PRO';
+        return;
+      }
+      const data = await res.json();
+      if (data.url) {
+        window.location.href = data.url as string;
+      }
+    } finally {
+      setLoading(false);
+    }
+  }
   return (
     <Container size="lg" py="xl">
       <Stack gap="md" align="center">
@@ -86,15 +109,27 @@ export function Pricing() {
                 <List.Item key={f}>{f}</List.Item>
               ))}
             </List>
-            <Button
-              component={Link}
-              mt="md"
-              href={t.id === 'pro' ? '/cadastre-se?plan=pro' : '/cadastre-se?plan=free'}
-              color="brand"
-              variant={t.recommended ? 'filled' : 'outline'}
-            >
-              {t.id === 'pro' ? 'Experimentar PRO' : 'Começar Grátis'}
-            </Button>
+            {t.id === 'pro' ? (
+              <Button
+                mt="md"
+                onClick={startProCheckout}
+                loading={loading}
+                color="brand"
+                variant={t.recommended ? 'filled' : 'outline'}
+              >
+                Experimentar PRO
+              </Button>
+            ) : (
+              <Button
+                component={Link}
+                mt="md"
+                href={'/cadastre-se?plan=free'}
+                color="brand"
+                variant={t.recommended ? 'filled' : 'outline'}
+              >
+                Começar Grátis
+              </Button>
+            )}
           </Card>
         ))}
       </SimpleGrid>
