@@ -30,7 +30,8 @@ export function SignIn() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const { getQueryParam } = useQueryString();
   const nextPage = '/bling';
-  const redirect = getQueryParam('redirect') || nextPage;
+  const planParam = (getQueryParam('plan') || '').toUpperCase();
+  const redirect = planParam ? `/bling?plan=${planParam}` : getQueryParam('redirect') || nextPage;
   const router = useRouter();
 
   const form = useForm({

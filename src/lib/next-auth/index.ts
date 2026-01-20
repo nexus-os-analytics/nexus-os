@@ -1,5 +1,5 @@
 import { PrismaAdapter } from '@next-auth/prisma-adapter';
-import { BlingSyncStatus, UserRole } from '@prisma/client';
+import { BlingSyncStatus, type PlanTier, UserRole } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import type { AuthOptions } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
@@ -146,6 +146,7 @@ export const authOptions: AuthOptions = {
           onboardingCompleted: user.onboardingCompleted,
           required2FA: false,
           blingSyncStatus: user.blingSyncStatus,
+          planTier: user.planTier as PlanTier,
         };
       },
     }),
@@ -243,6 +244,7 @@ export const authOptions: AuthOptions = {
             token.onboardingCompleted = dbUser.onboardingCompleted;
             token.blingSyncStatus = dbUser.blingSyncStatus;
             token.hasBlingIntegration = !!dbUser.blingIntegration;
+            token.planTier = dbUser.planTier as PlanTier;
 
             // Criar audit log para novo usuário OAuth
             if (!token.auditCreated) {
@@ -269,6 +271,7 @@ export const authOptions: AuthOptions = {
         token.image = user.image;
         token.onboardingCompleted = user.onboardingCompleted;
         token.required2FA = user.required2FA;
+        token.planTier = user.planTier;
 
         // Fetch additional user data
         const dbUser = await prisma.user.findUnique({
@@ -279,6 +282,7 @@ export const authOptions: AuthOptions = {
         if (dbUser) {
           token.blingSyncStatus = dbUser.blingSyncStatus;
           token.hasBlingIntegration = !!dbUser.blingIntegration;
+          token.planTier = dbUser.planTier as PlanTier;
         }
       }
 
@@ -296,6 +300,7 @@ export const authOptions: AuthOptions = {
           token.onboardingCompleted = updatedUser.onboardingCompleted;
           token.blingSyncStatus = updatedUser.blingSyncStatus;
           token.hasBlingIntegration = !!updatedUser.blingIntegration;
+          token.planTier = updatedUser.planTier as PlanTier;
         }
       }
 
@@ -313,6 +318,7 @@ export const authOptions: AuthOptions = {
           onboardingCompleted: token.onboardingCompleted as boolean,
           blingSyncStatus: token.blingSyncStatus,
           hasBlingIntegration: token.hasBlingIntegration,
+          planTier: (token.planTier as PlanTier) ?? 'FREE',
         };
         session.required2FA = token.required2FA as boolean;
       }

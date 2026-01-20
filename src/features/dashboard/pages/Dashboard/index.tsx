@@ -175,12 +175,12 @@ export function Dashboard() {
         </Button>
       </Group>
 
-      {/* Product Cards Stack */}
-      <Stack gap="lg">
+      {/* Product Cards Grid */}
+      <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }} spacing="lg">
         {visibleProducts.map((product) => (
           <ProductCard key={product.id} product={product} />
         ))}
-      </Stack>
+      </SimpleGrid>
 
       {/* Infinite load button */}
       {hasNextPage && (

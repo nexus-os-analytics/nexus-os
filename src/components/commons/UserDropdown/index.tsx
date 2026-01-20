@@ -1,9 +1,16 @@
 'use client';
 import { Avatar, Group, Menu, Text } from '@mantine/core';
-import { IconLogout, IconUserEdit, IconUsers } from '@tabler/icons-react';
+import {
+  IconCreditCard,
+  IconCrown,
+  IconLogout,
+  IconUserEdit,
+  IconUsers,
+} from '@tabler/icons-react';
 import Link from 'next/link';
 import { signOut } from 'next-auth/react';
 import { useAuth } from '@/features/auth/context/AuthContext';
+import { openCheckout, openPortal } from '@/features/billing/services/stripeClient';
 
 export function UserDropdown() {
   const { user, signOut: logout } = useAuth();
@@ -63,6 +70,14 @@ export function UserDropdown() {
             </>
           )}
           <Menu.Label>Minha Conta</Menu.Label>
+          {user?.planTier === 'FREE' && (
+            <Menu.Item leftSection={<IconCrown size={16} stroke={1.5} />} onClick={openCheckout}>
+              Upgrade para PRO
+            </Menu.Item>
+          )}
+          <Menu.Item leftSection={<IconCreditCard size={16} stroke={1.5} />} onClick={openPortal}>
+            Gerenciar cobrança
+          </Menu.Item>
           <Menu.Item
             leftSection={<IconUserEdit size={16} stroke={1.5} />}
             component={Link}

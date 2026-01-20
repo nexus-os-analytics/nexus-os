@@ -1,6 +1,9 @@
 'use client';
+import type { MantineTheme } from '@mantine/core';
 import {
   Alert,
+  AspectRatio,
+  alpha,
   Badge,
   Box,
   Button,
@@ -15,11 +18,27 @@ import {
   ThemeIcon,
   Title,
 } from '@mantine/core';
-import { AlertTriangle, DollarSign, Info, Package as PackageIcon, TrendingUp } from 'lucide-react';
+
+type ThemeWithScheme = MantineTheme & { colorScheme?: 'dark' | 'light' };
+const BORDER_SHADE = 6 as const;
+const BG_SHADE_LIGHT = 0 as const;
+const BG_SHADE_DARK = 9 as const;
+const BG_ALPHA_LIGHT = 0.12 as const;
+const BG_ALPHA_DARK = 0.06 as const;
+
+import {
+  AlertTriangle,
+  DollarSign,
+  Info,
+  Package as PackageIcon,
+  Sparkles,
+  TrendingUp,
+} from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import type { BlingProductType } from '@/lib/bling';
 import { formatCurrency } from '@/lib/utils';
-import { ruptureRiskLabel } from '../../constants';
+
+// rupture risk badge removed from ProductCard
 
 interface ProductCardProps {
   product: BlingProductType;
@@ -74,65 +93,69 @@ export function ProductCard({ product }: ProductCardProps) {
   const Icon = style?.icon;
 
   return (
-    <Card padding="lg" radius="md" withBorder shadow="sm" style={{ height: '100%' }}>
+    <Card
+      padding="lg"
+      radius="md"
+      withBorder
+      shadow="sm"
+      style={{ height: '100%' }}
+      styles={(theme: ThemeWithScheme) => {
+        const palette =
+          (theme.colors as Record<string, readonly string[]>)[style.color] ?? theme.colors.gray;
+        const BG_SHADE = theme.colorScheme === 'dark' ? BG_SHADE_DARK : BG_SHADE_LIGHT;
+        const BG_ALPHA = theme.colorScheme === 'dark' ? BG_ALPHA_DARK : BG_ALPHA_LIGHT;
+        return {
+          root: {
+            borderColor: palette[BORDER_SHADE],
+            backgroundColor: alpha(palette[BG_SHADE], BG_ALPHA),
+          },
+        };
+      }}
+    >
       <Stack gap="md" style={{ height: '100%' }}>
         {/* Header + Status */}
         <Group justify="space-between" align="center">
           <Group gap="sm">
-            <ThemeIcon size={40} radius="md" color={style.color} variant="light">
+            <ThemeIcon size={36} radius="md" color={style.color} variant="light">
               <Icon size={20} />
             </ThemeIcon>
-            <Badge color={style.color} variant="light" size="xl">
+            <Badge color={style.color} variant="light" size="md">
               {style.badge}
             </Badge>
           </Group>
-          {alert.risk && (
-            <Badge
-              color={
-                alert.risk === 'CRITICAL'
-                  ? 'red'
-                  : alert.risk === 'HIGH'
-                    ? 'orange'
-                    : alert.risk === 'MEDIUM'
-                      ? 'yellow'
-                      : 'green'
-              }
-              size="lg"
-              variant="filled"
-            >
-              {ruptureRiskLabel[alert.risk]}
-            </Badge>
-          )}
+          {/* Rupture risk badge removed as requested */}
         </Group>
 
         {/* Product Media + Summary */}
         <Flex gap="md" align="stretch" wrap="wrap">
-          <Box style={{ flex: '0 0 180px' }}>
-            <Image
-              src={product.image || undefined}
-              alt={product.name}
-              radius="md"
-              fit="cover"
-              height={180}
-            />
+          <Box style={{ flex: '0 0 120px' }}>
+            <AspectRatio ratio={1} style={{ width: '100%' }}>
+              <Image
+                src={product.image || undefined}
+                alt={product.name}
+                radius="md"
+                fit="contain"
+                height="100%"
+              />
+            </AspectRatio>
           </Box>
           <Stack gap={6} style={{ flex: 1 }}>
-            <Title order={4} style={{ lineHeight: 1.2 }}>
+            <Title order={5} style={{ lineHeight: 1.2 }}>
               {product.name}
             </Title>
             <Group gap="xs" c="dimmed">
-              <Text size="sm">SKU: {product.sku}</Text>
-              <Text size="sm">•</Text>
-              <Text size="sm">Categoria: {product.category?.name ?? '—'}</Text>
+              <Text size="xs">SKU: {product.sku}</Text>
+              <Text size="xs">•</Text>
+              <Text size="xs">Categoria: {product.category?.name ?? '—'}</Text>
             </Group>
             <Group justify="space-between" align="center" mt="xs">
-              <Title order={3}>{formatCurrency(product.salePrice || 0)}</Title>
+              <Title order={4}>{formatCurrency(product.salePrice || 0)}</Title>
               <Group gap="xs">
-                <Badge color="gray" variant="light" size="lg">
+                <Badge color="gray" variant="light" size="md">
                   Estoque: {product.currentStock}
                 </Badge>
                 {typeof alert.idealStock === 'number' && (
-                  <Badge color="gray" variant="outline" size="lg">
+                  <Badge color="gray" variant="outline" size="md">
                     Ideal: {alert.idealStock}
                   </Badge>
                 )}
@@ -156,40 +179,40 @@ export function ProductCard({ product }: ProductCardProps) {
                 {alert.message ?? 'Atenção: risco de ruptura de estoque identificado.'}
               </Alert>
 
-              <Title order={5} mb="xs">
+              <Title order={6} mb="xs">
                 Estoque e Consumo
               </Title>
               <Stack gap={6}>
                 <Group justify="space-between">
-                  <Text size="md" c="dimmed">
+                  <Text size="sm" c="dimmed">
                     Estoque atual
                   </Text>
-                  <Text size="md" fw={600}>
+                  <Text size="sm" fw={600}>
                     {product.currentStock} unid.
                   </Text>
                 </Group>
                 <Group justify="space-between">
-                  <Text size="md" c="dimmed">
+                  <Text size="sm" c="dimmed">
                     VVD real
                   </Text>
-                  <Text size="md" fw={600}>
+                  <Text size="sm" fw={600}>
                     {alert.vvdReal?.toFixed(2)} unid./dia
                   </Text>
                 </Group>
                 <Group justify="space-between">
-                  <Text size="md" c="dimmed">
+                  <Text size="sm" c="dimmed">
                     Ponto de pedido
                   </Text>
-                  <Text size="md" fw={600}>
+                  <Text size="sm" fw={600}>
                     {alert.reorderPoint?.toFixed(0)} unid.
                   </Text>
                 </Group>
                 {typeof alert.daysRemaining === 'number' && (
                   <Group justify="space-between">
-                    <Text size="md" c="dimmed">
+                    <Text size="sm" c="dimmed">
                       Dias restantes
                     </Text>
-                    <Text size="md" fw={600}>
+                    <Text size="sm" fw={600}>
                       {alert.daysRemaining} dias
                     </Text>
                   </Group>
@@ -201,18 +224,18 @@ export function ProductCard({ product }: ProductCardProps) {
               <Title order={6} mb="xs">
                 Reposição
               </Title>
-              <Text size="md">
+              <Text size="sm">
                 {product.settings?.leadTimeDays ?? 0} dias de lead time +{' '}
                 {product.settings?.safetyDays ?? 0} dias de segurança
               </Text>
-              <Text size="md" c="dimmed" mt={4}>
+              <Text size="sm" c="dimmed" mt={4}>
                 Lead time: tempo entre o pedido e a entrega do fornecedor.
               </Text>
               {alert.daysOutOfStock && alert.daysOutOfStock > 0 && (
                 <Paper p="xs" radius="sm" mt="xs" withBorder>
                   <Group gap="xs">
                     <Info size={12} />
-                    <Text size="md" style={{ flex: 1 }}>
+                    <Text size="sm" style={{ flex: 1 }}>
                       ⚠️ Produto ficou {alert.daysOutOfStock} dias sem estoque no período analisado.
                     </Text>
                   </Group>
@@ -223,36 +246,36 @@ export function ProductCard({ product }: ProductCardProps) {
 
           {alert.type === 'DEAD_STOCK' && (
             <Paper p="md" radius="md" withBorder>
-              <Title order={5} mb="xs">
+              <Title order={6} mb="xs">
                 Capital parado
               </Title>
-              <Title order={4}>{formatCurrency(alert.capitalStuck || 0)}</Title>
-              <Text size="md" c="dimmed" mb="sm">
+              <Title order={5}>{formatCurrency(alert.capitalStuck || 0)}</Title>
+              <Text size="sm" c="dimmed" mb="sm">
                 Sem vendas há {alert.daysSinceLastSale ?? 0} dias
               </Text>
 
               <Stack gap={6}>
                 <Group justify="space-between">
-                  <Text size="md" c="dimmed">
+                  <Text size="sm" c="dimmed">
                     Estoque
                   </Text>
-                  <Text size="md" fw={600}>
+                  <Text size="sm" fw={600}>
                     {product.currentStock} unid.
                   </Text>
                 </Group>
                 <Group justify="space-between">
-                  <Text size="md" c="dimmed">
+                  <Text size="sm" c="dimmed">
                     Custo
                   </Text>
-                  <Text size="md" fw={600}>
+                  <Text size="sm" fw={600}>
                     {formatCurrency(product.costPrice || 0)}
                   </Text>
                 </Group>
                 <Group justify="space-between">
-                  <Text size="md" c="dimmed">
+                  <Text size="sm" c="dimmed">
                     Preço de venda
                   </Text>
-                  <Text size="md" fw={600}>
+                  <Text size="sm" fw={600}>
                     {formatCurrency(product.salePrice || 0)}
                   </Text>
                 </Group>
@@ -262,34 +285,34 @@ export function ProductCard({ product }: ProductCardProps) {
 
           {alert.type === 'OPPORTUNITY' && (
             <Paper p="md" radius="md" withBorder>
-              <Title order={5} mb="xs">
+              <Title order={6} mb="xs">
                 Oportunidade
               </Title>
-              <Title order={4}>{(alert.growthTrend ?? 0).toFixed(1)}%</Title>
+              <Title order={5}>{(alert.growthTrend ?? 0).toFixed(1)}%</Title>
 
               <Stack gap={6} mt="xs">
                 <Group justify="space-between">
-                  <Text size="md" c="dimmed">
+                  <Text size="sm" c="dimmed">
                     VVD últimos 7 dias
                   </Text>
-                  <Text size="md" fw={600}>
+                  <Text size="sm" fw={600}>
                     {alert.vvd7?.toFixed(1)} unid./dia
                   </Text>
                 </Group>
                 <Group justify="space-between">
-                  <Text size="md" c="dimmed">
+                  <Text size="sm" c="dimmed">
                     VVD últimos 30 dias
                   </Text>
-                  <Text size="md" fw={600}>
+                  <Text size="sm" fw={600}>
                     {alert.vvd30?.toFixed(1)} unid./dia
                   </Text>
                 </Group>
                 {typeof alert.daysRemaining === 'number' && (
                   <Group justify="space-between">
-                    <Text size="md" c="dimmed">
+                    <Text size="sm" c="dimmed">
                       Dias de estoque restante
                     </Text>
-                    <Text size="md" fw={600}>
+                    <Text size="sm" fw={600}>
                       {alert.daysRemaining} dias
                     </Text>
                   </Group>
@@ -298,7 +321,7 @@ export function ProductCard({ product }: ProductCardProps) {
               <Divider my="xs" />
               <Group gap="xs">
                 <PackageIcon size={14} />
-                <Text size="md">Estoque atual: {product.currentStock} unidades</Text>
+                <Text size="sm">Estoque atual: {product.currentStock} unidades</Text>
               </Group>
             </Paper>
           )}
@@ -316,25 +339,25 @@ export function ProductCard({ product }: ProductCardProps) {
                   {alert.message ?? 'Atenção: recomenda-se observar este produto.'}
                 </Alert>
               ) : null}
-              <Title order={5} mb="xs">
+              <Title order={6} mb="xs">
                 Resumo
               </Title>
               <Stack gap={6}>
                 <Group justify="space-between">
-                  <Text size="md" c="dimmed">
+                  <Text size="sm" c="dimmed">
                     Estoque atual
                   </Text>
-                  <Text size="md" fw={600}>
+                  <Text size="sm" fw={600}>
                     {product.currentStock} unid.
                   </Text>
                 </Group>
 
                 {typeof alert.idealStock === 'number' && (
                   <Group justify="space-between">
-                    <Text size="md" c="dimmed">
+                    <Text size="sm" c="dimmed">
                       Estoque ideal
                     </Text>
-                    <Text size="md" fw={600}>
+                    <Text size="sm" fw={600}>
                       {alert.idealStock}
                     </Text>
                   </Group>
@@ -355,10 +378,10 @@ export function ProductCard({ product }: ProductCardProps) {
                     }
                     return (
                       <Group justify="space-between">
-                        <Text size="md" c="dimmed">
+                        <Text size="sm" c="dimmed">
                           Excesso
                         </Text>
-                        <Text size="md" fw={600}>
+                        <Text size="sm" fw={600}>
                           {label}
                         </Text>
                       </Group>
@@ -367,10 +390,10 @@ export function ProductCard({ product }: ProductCardProps) {
 
                 {typeof alert.excessCapital === 'number' && (
                   <Group justify="space-between">
-                    <Text size="md" c="dimmed">
+                    <Text size="sm" c="dimmed">
                       Capital em excesso
                     </Text>
-                    <Text size="md" fw={600}>
+                    <Text size="sm" fw={600}>
                       {formatCurrency(alert.excessCapital)}
                     </Text>
                   </Group>
@@ -378,10 +401,10 @@ export function ProductCard({ product }: ProductCardProps) {
 
                 {typeof alert.estimatedDeadline === 'number' && alert.estimatedDeadline > 0 && (
                   <Group justify="space-between">
-                    <Text size="md" c="dimmed">
+                    <Text size="sm" c="dimmed">
                       Prazo estimado
                     </Text>
-                    <Text size="md" fw={600}>
+                    <Text size="sm" fw={600}>
                       {alert.estimatedDeadline} dias
                     </Text>
                   </Group>
@@ -389,10 +412,10 @@ export function ProductCard({ product }: ProductCardProps) {
 
                 {typeof alert.recoverableAmount === 'number' && (
                   <Group justify="space-between">
-                    <Text size="md" c="dimmed">
+                    <Text size="sm" c="dimmed">
                       Valor recuperável
                     </Text>
-                    <Text size="md" fw={600}>
+                    <Text size="sm" fw={600}>
                       {formatCurrency(alert.recoverableAmount)}
                     </Text>
                   </Group>
@@ -400,10 +423,10 @@ export function ProductCard({ product }: ProductCardProps) {
 
                 {typeof alert.suggestedPrice === 'number' && alert.suggestedPrice > 0 && (
                   <Group justify="space-between">
-                    <Text size="md" c="dimmed">
+                    <Text size="sm" c="dimmed">
                       Preço sugerido
                     </Text>
-                    <Text size="md" fw={600}>
+                    <Text size="sm" fw={600}>
                       {formatCurrency(alert.suggestedPrice)}
                     </Text>
                   </Group>
@@ -413,17 +436,17 @@ export function ProductCard({ product }: ProductCardProps) {
                   <>
                     <Divider my="xs" />
                     {typeof alert.vvdReal === 'number' && (
-                      <Text size="md" mb="xs">
+                      <Text size="sm" mb="xs">
                         VVD Real: {alert.vvdReal.toFixed(1)} unid./dia
                       </Text>
                     )}
                     {typeof alert.vvd7 === 'number' && (
-                      <Text size="md" mb="xs">
+                      <Text size="sm" mb="xs">
                         VVD 7d: {alert.vvd7.toFixed(1)} unid./dia
                       </Text>
                     )}
                     {typeof alert.vvd30 === 'number' && (
-                      <Text size="md">VVD 30d: {alert.vvd30.toFixed(1)} unid./dia</Text>
+                      <Text size="sm">VVD 30d: {alert.vvd30.toFixed(1)} unid./dia</Text>
                     )}
                   </>
                 )}
@@ -437,12 +460,12 @@ export function ProductCard({ product }: ProductCardProps) {
                       return Array.isArray(recs) && recs.length > 0 ? (
                         <>
                           <Divider my="xs" />
-                          <Text size="md" mb="xs">
+                          <Text size="sm" mb="xs">
                             Recomendações:
                           </Text>
                           <Stack gap={4}>
                             {recs.map((r: string, i: number) => (
-                              <Text key={i} size="md">
+                              <Text key={i} size="sm">
                                 - {r}
                               </Text>
                             ))}
@@ -459,25 +482,25 @@ export function ProductCard({ product }: ProductCardProps) {
 
           {alert.type === 'LIQUIDATION' && (
             <Paper p="md" radius="md" withBorder>
-              <Title order={5} mb="xs">
+              <Title order={6} mb="xs">
                 Liquidação
               </Title>
               <Stack gap={6}>
                 <Group justify="space-between">
-                  <Text size="md" c="dimmed">
+                  <Text size="sm" c="dimmed">
                     Estoque atual
                   </Text>
-                  <Text size="md" fw={600}>
+                  <Text size="sm" fw={600}>
                     {product.currentStock} unid.
                   </Text>
                 </Group>
 
                 {typeof alert.idealStock === 'number' && (
                   <Group justify="space-between">
-                    <Text size="md" c="dimmed">
+                    <Text size="sm" c="dimmed">
                       Estoque ideal
                     </Text>
-                    <Text size="md" fw={600}>
+                    <Text size="sm" fw={600}>
                       {alert.idealStock}
                     </Text>
                   </Group>
@@ -498,10 +521,10 @@ export function ProductCard({ product }: ProductCardProps) {
                     }
                     return (
                       <Group justify="space-between">
-                        <Text size="md" c="dimmed">
+                        <Text size="sm" c="dimmed">
                           Excesso
                         </Text>
-                        <Text size="md" fw={600}>
+                        <Text size="sm" fw={600}>
                           {label}
                         </Text>
                       </Group>
@@ -510,10 +533,10 @@ export function ProductCard({ product }: ProductCardProps) {
 
                 {typeof alert.excessCapital === 'number' && (
                   <Group justify="space-between">
-                    <Text size="md" c="dimmed">
+                    <Text size="sm" c="dimmed">
                       Capital em excesso
                     </Text>
-                    <Text size="md" fw={600}>
+                    <Text size="sm" fw={600}>
                       {formatCurrency(alert.excessCapital)}
                     </Text>
                   </Group>
@@ -521,10 +544,10 @@ export function ProductCard({ product }: ProductCardProps) {
 
                 {typeof alert.capitalStuck === 'number' && alert.capitalStuck > 0 && (
                   <Group justify="space-between">
-                    <Text size="md" c="dimmed">
+                    <Text size="sm" c="dimmed">
                       Capital parado
                     </Text>
-                    <Text size="md" fw={600}>
+                    <Text size="sm" fw={600}>
                       {formatCurrency(alert.capitalStuck)}
                     </Text>
                   </Group>
@@ -532,28 +555,28 @@ export function ProductCard({ product }: ProductCardProps) {
 
                 {typeof alert.suggestedPrice === 'number' && alert.suggestedPrice > 0 ? (
                   <Group justify="space-between">
-                    <Text size="md" c="dimmed">
+                    <Text size="sm" c="dimmed">
                       Preço sugerido
                     </Text>
-                    <Text size="md" fw={600}>
+                    <Text size="sm" fw={600}>
                       {formatCurrency(alert.suggestedPrice)}
                     </Text>
                   </Group>
                 ) : (
                   <>
                     <Group justify="space-between">
-                      <Text size="md" c="dimmed">
+                      <Text size="sm" c="dimmed">
                         Preço atual
                       </Text>
-                      <Text size="md" fw={600}>
+                      <Text size="sm" fw={600}>
                         {formatCurrency(product.salePrice || 0)}
                       </Text>
                     </Group>
                     <Group justify="space-between">
-                      <Text size="md" c="dimmed">
+                      <Text size="sm" c="dimmed">
                         Custo
                       </Text>
-                      <Text size="md" fw={600}>
+                      <Text size="sm" fw={600}>
                         {formatCurrency(product.costPrice || 0)}
                       </Text>
                     </Group>
@@ -562,10 +585,10 @@ export function ProductCard({ product }: ProductCardProps) {
 
                 {typeof alert.daysSinceLastSale === 'number' && alert.daysSinceLastSale > 0 && (
                   <Group justify="space-between">
-                    <Text size="md" c="dimmed">
+                    <Text size="sm" c="dimmed">
                       Dias desde última venda
                     </Text>
-                    <Text size="md" fw={600}>
+                    <Text size="sm" fw={600}>
                       {alert.daysSinceLastSale}
                     </Text>
                   </Group>
@@ -577,22 +600,22 @@ export function ProductCard({ product }: ProductCardProps) {
                   <>
                     <Divider my="xs" />
                     {typeof alert.vvdReal === 'number' && (
-                      <Text size="md" mb="xs">
+                      <Text size="sm" mb="xs">
                         VVD Real: {alert.vvdReal.toFixed(1)} unid./dia
                       </Text>
                     )}
                     {typeof alert.vvd7 === 'number' && (
-                      <Text size="md" mb="xs">
+                      <Text size="sm" mb="xs">
                         VVD 7d: {alert.vvd7.toFixed(1)} unid./dia
                       </Text>
                     )}
                     {typeof alert.vvd30 === 'number' && (
-                      <Text size="md" mb="xs">
+                      <Text size="sm" mb="xs">
                         VVD 30d: {alert.vvd30.toFixed(1)} unid./dia
                       </Text>
                     )}
                     {typeof alert.daysRemaining === 'number' && (
-                      <Text size="md">Dias de estoque restante: {alert.daysRemaining} dias</Text>
+                      <Text size="sm">Dias de estoque restante: {alert.daysRemaining} dias</Text>
                     )}
                   </>
                 )}
@@ -606,12 +629,12 @@ export function ProductCard({ product }: ProductCardProps) {
                       return Array.isArray(recs) && recs.length > 0 ? (
                         <>
                           <Divider my="xs" />
-                          <Text size="md" mb="xs">
+                          <Text size="sm" mb="xs">
                             Recomendações:
                           </Text>
                           <Stack gap={4}>
                             {recs.map((r: string, i: number) => (
-                              <Text key={i} size="md">
+                              <Text key={i} size="sm">
                                 - {r}
                               </Text>
                             ))}
@@ -631,14 +654,14 @@ export function ProductCard({ product }: ProductCardProps) {
         <Group justify="flex-end" mt="sm">
           <Button
             type="button"
-            size="lg"
             onClick={() => {
               router.push(`/produto/${product.blingProductId}`);
             }}
             variant="filled"
-            color={style.color}
+            leftSection={<Sparkles size={16} />}
+            fullWidth
           >
-            Ver detalhes
+            Gerar campanha
           </Button>
         </Group>
       </Stack>
