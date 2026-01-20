@@ -89,7 +89,10 @@ export function BlingConnect() {
 
   const handleStripeCheckout = async () => {
     try {
-      await stripeCheckout();
+      const { url } = await stripeCheckout();
+      if (url) {
+        window.location.href = url;
+      }
     } catch (error) {
       console.error('Erro ao iniciar o checkout do Stripe:', error);
     }

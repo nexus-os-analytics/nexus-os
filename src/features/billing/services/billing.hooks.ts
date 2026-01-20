@@ -4,14 +4,10 @@ import axiosInstance from '@/lib/api';
 
 export function useStripeCheckout() {
   return useMutation({
-    mutationFn: async (): Promise<void> => {
-      const response = await axiosInstance.post<{ url: string }>('/stripe/checkout', {
+    mutationFn: async (): Promise<{ url: string }> => {
+      return axiosInstance.post('/stripe/checkout', {
         plan: 'pro',
       });
-      const url = response.data?.url;
-      if (url) {
-        window.location.href = url;
-      }
     },
     onError(error) {
       notifications.show({
