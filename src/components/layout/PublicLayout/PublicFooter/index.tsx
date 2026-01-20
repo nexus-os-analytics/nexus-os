@@ -23,14 +23,14 @@ const data = [
 
 export function PublicFooter() {
   const groups = data.map((group) => {
-    const links = group.links.map((link, index) => {
+    const links = group.links.map((link) => {
       const isInternal = link.link.startsWith('/');
       return isInternal ? (
-        <Link key={index} href={link.link} className={classes.link}>
+        <Link key={link.link} href={link.link} className={classes.link}>
           {link.label}
         </Link>
       ) : (
-        <Text<'a'> key={index} className={classes.link} component="a" href={link.link}>
+        <Text<'a'> key={link.link} className={classes.link} component="a" href={link.link}>
           {link.label}
         </Text>
       );

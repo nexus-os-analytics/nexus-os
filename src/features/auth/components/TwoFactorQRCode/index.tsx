@@ -3,7 +3,7 @@ import { Button, Paper, PinInput, Stack, Text } from '@mantine/core';
 import Image from 'next/image';
 import { signOut } from 'next-auth/react';
 import QRCode from 'qrcode';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { use2FAGenerateSecret, use2FAVerify } from '../../services';
 
 interface TwoFactorQRCodeProps {
@@ -15,7 +15,7 @@ export function TwoFactorQRCode({ onSuccess }: TwoFactorQRCodeProps) {
   const { mutateAsync: generateSecret, error } = use2FAGenerateSecret();
   const { mutateAsync: verify2FA, isPending: isVerifying } = use2FAVerify();
 
-  const handleGenerateQR = async () => {
+  const handleGenerateQR = useCallback(async () => {
     try {
       const { otpauth } = await generateSecret();
 
@@ -26,7 +26,7 @@ export function TwoFactorQRCode({ onSuccess }: TwoFactorQRCodeProps) {
     } catch (err) {
       console.error('Error generating QR code:', err);
     }
-  };
+  }, [generateSecret]);
 
   const handleEnable2FA = async (code: string) => {
     try {
@@ -39,7 +39,7 @@ export function TwoFactorQRCode({ onSuccess }: TwoFactorQRCodeProps) {
 
   useEffect(() => {
     handleGenerateQR();
-  }, []);
+  }, [handleGenerateQR]);
 
   return (
     <Paper radius="md" p="lg" withBorder>

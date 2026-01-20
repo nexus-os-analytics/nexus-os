@@ -1,8 +1,10 @@
 import { useInfiniteQuery } from '@tanstack/react-query';
 import queryString from 'query-string';
-import type { GetProductAlertsResponse, GetProductsAlertsParams } from '@/features/products/types';
+import type { GetProductAlertsResponse } from '@/features/products/types';
 
-export function useProductAlerts(params?: GetProductsAlertsParams) {
+type AlertsQueryParams = Record<string, string | number | undefined>;
+
+export function useProductAlerts(params?: AlertsQueryParams) {
   return useInfiniteQuery<GetProductAlertsResponse>({
     queryKey: ['get-product-alerts', { ...params }],
     queryFn: async ({ pageParam = 1 }) => {

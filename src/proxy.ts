@@ -9,31 +9,31 @@ export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   if (pathname === '/' && NEXT_ENABLE_HOME_PAGE === 'false') {
-    return NextResponse.redirect(new URL(AUTH_ROUTES['login'].path, request.url));
+    return NextResponse.redirect(new URL(AUTH_ROUTES.login.path, request.url));
   }
 
   if (pathname === AUTH_ROUTES['cadastre-se'].path && NEXT_ENABLE_SIGN_UP_PAGE === 'false') {
-    return NextResponse.redirect(new URL(AUTH_ROUTES['login'].path, request.url));
+    return NextResponse.redirect(new URL(AUTH_ROUTES.login.path, request.url));
   }
 
   if (token) {
     const { role, required2FA } = token;
 
     if (isPrivateRoute(pathname) && required2FA) {
-      return NextResponse.redirect(new URL(AUTH_ROUTES['login'].path, request.url));
+      return NextResponse.redirect(new URL(AUTH_ROUTES.login.path, request.url));
     }
 
     if (isAuthRoute(pathname) && !required2FA) {
       return NextResponse.redirect(new URL('/bling', request.url));
     }
 
-    if (!canAccessRoute(role, pathname as any)) {
+    if (!canAccessRoute(role, pathname)) {
       return NextResponse.redirect(new URL('/sem-permissao', request.url));
     }
   }
 
   if (!token && isPrivateRoute(pathname)) {
-    const redirectUrl = new URL(AUTH_ROUTES['login'].path, request.url);
+    const redirectUrl = new URL(AUTH_ROUTES.login.path, request.url);
     redirectUrl.searchParams.set('redirect', request.url);
     return NextResponse.redirect(redirectUrl);
   }

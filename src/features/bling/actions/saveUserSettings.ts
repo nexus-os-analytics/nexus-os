@@ -61,7 +61,7 @@ export async function saveUserSettings(_: UserSettingsInput) {
   });
 
   // this ensures middleware redirects work correctly post-onboarding
-  session.user['onboardingCompleted'] = true;
+  session.user.onboardingCompleted = true;
 
   // Optional: revalidate UI paths that depend on settings
   revalidatePath('/onboarding');
