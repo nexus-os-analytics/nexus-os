@@ -1,6 +1,9 @@
 'use client';
+import type { MantineTheme } from '@mantine/core';
 import {
   Alert,
+  AspectRatio,
+  alpha,
   Badge,
   Box,
   Button,
@@ -15,11 +18,20 @@ import {
   ThemeIcon,
   Title,
 } from '@mantine/core';
+
+type ThemeWithScheme = MantineTheme & { colorScheme?: 'dark' | 'light' };
+const BORDER_SHADE = 6 as const;
+const BG_SHADE_LIGHT = 0 as const;
+const BG_SHADE_DARK = 9 as const;
+const BG_ALPHA_LIGHT = 0.12 as const;
+const BG_ALPHA_DARK = 0.06 as const;
+
 import { AlertTriangle, DollarSign, Info, Package as PackageIcon, TrendingUp } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import type { BlingProductType } from '@/lib/bling';
 import { formatCurrency } from '@/lib/utils';
-import { ruptureRiskLabel } from '../../constants';
+
+// rupture risk badge removed from ProductCard
 
 interface ProductCardProps {
   product: BlingProductType;
@@ -74,7 +86,25 @@ export function ProductCard({ product }: ProductCardProps) {
   const Icon = style?.icon;
 
   return (
-    <Card padding="lg" radius="md" withBorder shadow="sm" style={{ height: '100%' }}>
+    <Card
+      padding="lg"
+      radius="md"
+      withBorder
+      shadow="sm"
+      style={{ height: '100%' }}
+      styles={(theme: ThemeWithScheme) => {
+        const palette =
+          (theme.colors as Record<string, readonly string[]>)[style.color] ?? theme.colors.gray;
+        const BG_SHADE = theme.colorScheme === 'dark' ? BG_SHADE_DARK : BG_SHADE_LIGHT;
+        const BG_ALPHA = theme.colorScheme === 'dark' ? BG_ALPHA_DARK : BG_ALPHA_LIGHT;
+        return {
+          root: {
+            borderColor: palette[BORDER_SHADE],
+            backgroundColor: alpha(palette[BG_SHADE], BG_ALPHA),
+          },
+        };
+      }}
+    >
       <Stack gap="md" style={{ height: '100%' }}>
         {/* Header + Status */}
         <Group justify="space-between" align="center">
@@ -86,35 +116,21 @@ export function ProductCard({ product }: ProductCardProps) {
               {style.badge}
             </Badge>
           </Group>
-          {alert.risk && (
-            <Badge
-              color={
-                alert.risk === 'CRITICAL'
-                  ? 'red'
-                  : alert.risk === 'HIGH'
-                    ? 'orange'
-                    : alert.risk === 'MEDIUM'
-                      ? 'yellow'
-                      : 'green'
-              }
-              size="lg"
-              variant="filled"
-            >
-              {ruptureRiskLabel[alert.risk]}
-            </Badge>
-          )}
+          {/* Rupture risk badge removed as requested */}
         </Group>
 
         {/* Product Media + Summary */}
         <Flex gap="md" align="stretch" wrap="wrap">
           <Box style={{ flex: '0 0 180px' }}>
-            <Image
-              src={product.image || undefined}
-              alt={product.name}
-              radius="md"
-              fit="cover"
-              height={180}
-            />
+            <AspectRatio ratio={1} style={{ width: '100%' }}>
+              <Image
+                src={product.image || undefined}
+                alt={product.name}
+                radius="md"
+                fit="contain"
+                height="100%"
+              />
+            </AspectRatio>
           </Box>
           <Stack gap={6} style={{ flex: 1 }}>
             <Title order={4} style={{ lineHeight: 1.2 }}>
@@ -638,7 +654,7 @@ export function ProductCard({ product }: ProductCardProps) {
             variant="filled"
             color={style.color}
           >
-            Ver detalhes
+            Gerar campanha
           </Button>
         </Group>
       </Stack>

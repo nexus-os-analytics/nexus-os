@@ -1,6 +1,6 @@
 'use client';
 import {
-  Avatar,
+  AspectRatio,
   Badge,
   Box,
   Button,
@@ -8,6 +8,7 @@ import {
   Container,
   Divider,
   Group,
+  Image,
   Paper,
   Tabs,
   Text,
@@ -94,9 +95,31 @@ export function ProductDetails({ product }: ProductDetailsProps) {
       <Container size="xl" py="md">
         <Group justify="space-between" align="center">
           <Group gap="md" align="center">
-            <Avatar size={56} radius="md" src={product?.image ?? undefined} color="gray">
-              <PackageIcon size={28} />
-            </Avatar>
+            <Box style={{ width: 56 }}>
+              <AspectRatio ratio={1} style={{ width: '100%' }}>
+                {product?.image ? (
+                  <Image
+                    src={product.image}
+                    alt={product.name}
+                    radius="md"
+                    fit="contain"
+                    height="100%"
+                  />
+                ) : (
+                  <Box
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      borderRadius: 'var(--mantine-radius-md)',
+                      backgroundColor: 'var(--mantine-color-gray-2)',
+                    }}
+                  >
+                    <PackageIcon size={28} />
+                  </Box>
+                )}
+              </AspectRatio>
+            </Box>
 
             <ThemeIcon size={40} radius="lg" variant="filled" color={color}>
               <Icon size={24} />
@@ -166,7 +189,15 @@ export function ProductDetails({ product }: ProductDetailsProps) {
           <Tabs.Tab value="settings" leftSection={<Settings size={16} />}>
             Configurações
           </Tabs.Tab>
-          <Tabs.Tab value="campaign" leftSection={<Sparkles size={16} />}>
+          <Tabs.Tab
+            value="campaign"
+            leftSection={<Sparkles size={16} />}
+            style={{
+              boxShadow:
+                '0 0 0 2px var(--mantine-color-brand-5), 0 0 12px var(--mantine-color-brand-4)',
+              borderRadius: 'var(--mantine-radius-md)',
+            }}
+          >
             Gerador de Campanhas
           </Tabs.Tab>
         </Tabs.List>
