@@ -211,7 +211,7 @@ INNGEST_SIGNING_KEY=""
 ```
 
 ### Scripts de Deploy
- 
+
 ### Deploy em VPS (Docker Compose + Traefik)
 
 Este projeto fornece um `docker-compose.yml` pronto para produção com Traefik (HTTPS automático via Let's Encrypt), Postgres e o app Next.js (modo standalone).
@@ -255,6 +255,11 @@ Há uma workflow pronta em [.github/workflows/deploy.yml](.github/workflows/depl
 - `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB`
 - `NEXTAUTH_SECRET`
 - Integrações opcionais: `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `BLING_CLIENT_ID`, `BLING_CLIENT_SECRET`, `INNGEST_SIGNING_KEY`, `INNGEST_EVENT_KEY`, `BREVO_API_KEY`, `BREVO_SENDER_NAME`, `BREVO_SENDER_EMAIL`
+
+##### Email (Brevo)
+- SDK: `@getbrevo/brevo` (já instalado)
+- Variáveis: `BREVO_API_KEY`, `BREVO_SENDER_NAME`, `BREVO_SENDER_EMAIL`
+- Implementação: ver `src/lib/brevo/index.ts` usando `TransactionalEmailsApi.sendTransacEmail()`
 
 #### Disparo
 - `push` na branch `main` ou manual via "Run workflow".
