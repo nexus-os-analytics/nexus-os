@@ -1,8 +1,10 @@
 'use client';
-import { Box, Button, Card, Container, Group, Stack, Text, Title } from '@mantine/core';
+import { Badge, Box, Button, Card, Container, Group, Stack, Text, Title } from '@mantine/core';
 import { ArrowLeft } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 import { lazy } from 'react';
+import { openCheckout, openPortal } from '@/features/billing/services/stripeClient';
 
 const ProfileForm = lazy(() => import('./ProfileForm'));
 const BlingIntegrationForm = lazy(() => import('./BlingIntegrationForm'));
@@ -13,6 +15,9 @@ const SecurityForm = lazy(() => import('./SecurityForm'));
 
 export default function Profile() {
   const router = useRouter();
+  const { data } = useSession();
+  const plan = data?.user?.planTier ?? 'FREE';
+  const isPro = plan === 'PRO';
 
   return (
     <Container size="md">
@@ -34,9 +39,24 @@ export default function Profile() {
               <Title order={2} mb="xs">
                 Configurações do Perfil
               </Title>
-              <Text size="sm" mb="md">
-                Gerencie suas informações pessoais, segurança da conta e preferências aqui.
-              </Text>
+              <Group gap="sm" mb="md">
+                <Text size="sm">
+                  Gerencie suas informações pessoais, segurança da conta e preferências aqui.
+                </Text>
+                <Badge color={isPro ? 'green' : 'gray'} variant={isPro ? 'light' : 'outline'}>
+                  Plano {plan}
+                </Badge>
+              </Group>
+              <Group gap="sm">
+                {!isPro && (
+                  <Button onClick={openCheckout} color="brand">
+                    Fazer upgrade para PRO
+                  </Button>
+                )}
+                <Button variant="light" onClick={openPortal}>
+                  Gerenciar assinatura
+                </Button>
+              </Group>
             </Box>
             <ProfileForm />
             <SecurityForm />

@@ -3,14 +3,16 @@ import { AppShell } from '@mantine/core';
 import { useHeadroom } from '@mantine/hooks';
 import { PublicFooter } from '@/components/layout/PublicLayout/PublicFooter';
 import { PublicHeader } from '@/components/layout/PublicLayout/PublicHeader';
+import { useAuth } from '@/features/auth/context/AuthContext';
 
 export function PublicLayout({ children }: { children: React.ReactNode }) {
   const pinned = useHeadroom({ fixedAt: 120 });
+  const { user } = useAuth();
 
   return (
     <AppShell header={{ height: 100, collapsed: !pinned, offset: false }} padding="md">
       <AppShell.Header p="md">
-        <PublicHeader />
+        <PublicHeader user={user} />
       </AppShell.Header>
 
       <AppShell.Main pt="var(--app-shell-header-height)" px={0}>

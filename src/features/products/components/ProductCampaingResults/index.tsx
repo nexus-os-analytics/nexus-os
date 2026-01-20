@@ -106,17 +106,17 @@ export function ProductCampaignResults({
     <Stack gap="xl">
       {/* Header */}
       <Box>
-        <Title order={2} mb="xs" style={{ color: '#2E2E2E' }}>
+        <Title order={2} mb="xs">
           Suas Campanhas Geradas ✨
         </Title>
         <Text c="#6E6E6E" size="sm" mb="md">
           Edite os textos conforme necessário e copie ou publique diretamente nos canais.
         </Text>
         <Group gap="xs">
-          <Badge color="gold" variant="light">
+          <Badge color="gold" variant="outline">
             {strategyLabels[strategy]}
           </Badge>
-          <Badge color="gray" variant="light">
+          <Badge color="gray" variant="outline">
             {toneLabels[toneOfVoice]}
           </Badge>
         </Group>
@@ -129,7 +129,7 @@ export function ProductCampaignResults({
         <Group justify="space-between" align="center">
           <Group gap="xs">
             <Instagram size={20} color="#C13584" />
-            <Text style={{ color: '#2E2E2E' }}>Post Instagram / Facebook</Text>
+            <Text>Post Instagram / Facebook</Text>
           </Group>
           <Group gap="xs">
             <ActionIcon
@@ -166,7 +166,7 @@ export function ProductCampaignResults({
         <Group justify="space-between" align="center">
           <Group gap="xs">
             <Mail size={20} color="#C7A446" />
-            <Text style={{ color: '#2E2E2E' }}>Assunto de Email Marketing</Text>
+            <Text>Assunto de Email Marketing</Text>
           </Group>
           <Group gap="xs">
             <ActionIcon
@@ -204,7 +204,7 @@ export function ProductCampaignResults({
         <Group justify="space-between" align="center">
           <Group gap="xs">
             <ImageIcon size={20} color="#1E90FF" />
-            <Text style={{ color: '#2E2E2E' }}>Anúncio de Remarketing (Banner)</Text>
+            <Text>Anúncio de Remarketing (Banner)</Text>
           </Group>
           <Group gap="xs">
             <ActionIcon
