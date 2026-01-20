@@ -30,30 +30,7 @@ jobs:
       - name: Configure and deploy via SSH
         uses: appleboy/ssh-action@v1.0.0
         env:
-          DOMAIN: ${{ secrets.DOMAIN }}
-          LETSENCRYPT_EMAIL: ${{ secrets.LETSENCRYPT_EMAIL }}
-          POSTGRES_HOST: ${{ secrets.POSTGRES_HOST }}
-          POSTGRES_PORT: ${{ secrets.POSTGRES_PORT }}
-          POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
-          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
-          POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
-          NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
-          NEXT_PUBLIC_BASE_URL: ${{ secrets.NEXT_PUBLIC_BASE_URL }}
-          NEXT_PUBLIC_APP_NAME: ${{ secrets.NEXT_PUBLIC_APP_NAME }}
-          NEXT_PUBLIC_APP_DESCRIPTION: ${{ secrets.NEXT_PUBLIC_APP_DESCRIPTION }}
-          NEXT_PUBLIC_APP_LANGUAGE: ${{ secrets.NEXT_PUBLIC_APP_LANGUAGE }}
-          NEXT_ENABLE_HOME_PAGE: ${{ secrets.NEXT_ENABLE_HOME_PAGE }}
-          NEXT_ENABLE_SIGN_UP_PAGE: ${{ secrets.NEXT_ENABLE_SIGN_UP_PAGE }}
-          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
-          GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
-          BLING_CLIENT_ID: ${{ secrets.BLING_CLIENT_ID }}
-          BLING_CLIENT_SECRET: ${{ secrets.BLING_CLIENT_SECRET }}
-          BLING_INVITE_LINK: ${{ secrets.BLING_INVITE_LINK }}
-          INNGEST_SIGNING_KEY: ${{ secrets.INNGEST_SIGNING_KEY }}
-          INNGEST_EVENT_KEY: ${{ secrets.INNGEST_EVENT_KEY }}
-          BREVO_API_KEY: ${{ secrets.BREVO_API_KEY }}
-          BREVO_SENDER_NAME: ${{ secrets.BREVO_SENDER_NAME }}
-          BREVO_SENDER_EMAIL: ${{ secrets.BREVO_SENDER_EMAIL }}
+          PROD_ENV_FILE: ${{ secrets.PROD_ENV_FILE }}
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
@@ -61,7 +38,7 @@ jobs:
           # Optional: set port via secret; if unset, action defaults to 22
           port: ${{ secrets.SSH_PORT }}
           # Forward envs to remote for expansion in script
-          envs: DOMAIN,LETSENCRYPT_EMAIL,POSTGRES_HOST,POSTGRES_PORT,POSTGRES_USER,POSTGRES_PASSWORD,POSTGRES_DB,NEXTAUTH_SECRET,NEXT_PUBLIC_BASE_URL,NEXT_PUBLIC_APP_NAME,NEXT_PUBLIC_APP_DESCRIPTION,NEXT_PUBLIC_APP_LANGUAGE,NEXT_ENABLE_HOME_PAGE,NEXT_ENABLE_SIGN_UP_PAGE,GOOGLE_CLIENT_ID,GOOGLE_CLIENT_SECRET,BLING_CLIENT_ID,BLING_CLIENT_SECRET,BLING_INVITE_LINK,INNGEST_SIGNING_KEY,INNGEST_EVENT_KEY,BREVO_API_KEY,BREVO_SENDER_NAME,BREVO_SENDER_EMAIL
+          envs: PROD_ENV_FILE
           script_stop: true
           timeout: 180s
           script: |
@@ -70,37 +47,17 @@ jobs:
             mkdir -p "$WORKDIR"
             cd "$WORKDIR"
 
-            echo "Gerando arquivo .env com variáveis de ambiente"
-            echo "DOMAIN=${{ secrets.DOMAIN }}" > .env
-            echo "LETSENCRYPT_EMAIL=${{ secrets.LETSENCRYPT_EMAIL }}" >> .env
-            echo "POSTGRES_HOST=${POSTGRES_HOST:-nexus_db}" >> .env
-            echo "POSTGRES_PORT=${POSTGRES_PORT:-5432}" >> .env
-            echo "POSTGRES_USER=${{ secrets.POSTGRES_USER }}" >> .env
-            echo "POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}" >> .env
-            echo "POSTGRES_DB=${{ secrets.POSTGRES_DB }}" >> .env
-            echo "NEXTAUTH_SECRET=${{ secrets.NEXTAUTH_SECRET }}" >> .env
-            echo "NEXTAUTH_URL=https://${{ secrets.DOMAIN }}" >> .env
-            echo "NEXT_TELEMETRY_DISABLED=1" >> .env
-            echo "DATABASE_URL=postgresql://${{ secrets.POSTGRES_USER }}:${{ secrets.POSTGRES_PASSWORD }}@nexus_db:5432/${{ secrets.POSTGRES_DB }}?schema=public" >> .env
-            echo "NEXT_PUBLIC_BASE_URL=${NEXT_PUBLIC_BASE_URL:-https://${DOMAIN}}" >> .env
-            echo "NEXT_PUBLIC_APP_NAME=${NEXT_PUBLIC_APP_NAME:-Nexus OS}" >> .env
-            echo "NEXT_PUBLIC_APP_DESCRIPTION=${NEXT_PUBLIC_APP_DESCRIPTION:-Plataforma inteligente que conecta dados do Bling ERP para otimizar estoque, reduzir rupturas e destravar capital.}" >> .env
-            echo "NEXT_PUBLIC_APP_LANGUAGE=${NEXT_PUBLIC_APP_LANGUAGE:-pt-BR}" >> .env
-            echo "NEXT_ENABLE_HOME_PAGE=${NEXT_ENABLE_HOME_PAGE:-true}" >> .env
-            echo "NEXT_ENABLE_SIGN_UP_PAGE=${NEXT_ENABLE_SIGN_UP_PAGE:-true}" >> .env
-            echo "GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}" >> .env
-            echo "GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}" >> .env
-            echo "BLING_CLIENT_ID=${{ secrets.BLING_CLIENT_ID }}" >> .env
-            echo "BLING_CLIENT_SECRET=${{ secrets.BLING_CLIENT_SECRET }}" >> .env
-            echo "BLING_INVITE_LINK=${{ secrets.BLING_INVITE_LINK }}" >> .env
-            echo "INNGEST_SIGNING_KEY=${{ secrets.INNGEST_SIGNING_KEY }}" >> .env
-            echo "INNGEST_EVENT_KEY=${{ secrets.INNGEST_EVENT_KEY }}" >> .env
-            echo "BREVO_API_KEY=${{ secrets.BREVO_API_KEY }}" >> .env
-            echo "BREVO_SENDER_NAME=${{ secrets.BREVO_SENDER_NAME }}" >> .env
-            echo "BREVO_SENDER_EMAIL=${{ secrets.BREVO_SENDER_EMAIL }}" >> .env
+            echo "Escrevendo .env a partir do secret PROD_ENV_FILE"
+            # Grava o conteúdo completo do secret no arquivo .env
+            # Usamos printf para preservar quebras de linha sem ecoar no log
+            printf "%s" "$PROD_ENV_FILE" > .env
 
-            echo "Verificando .env gerado:"
-            cat .env
+            # Validação básica sem expor segredos
+            if [ ! -s .env ]; then
+              echo "Falha ao criar .env: arquivo vazio" >&2
+              exit 1
+            fi
+            echo ".env criado com $(wc -l < .env) linhas"
 
             echo "Parando containers antigos"
             docker compose down || true

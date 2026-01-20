@@ -724,7 +724,9 @@ export function calculateAllMetrics(
 
   // Guards and integer casting for Prisma Int fields
   const safeDaysRemaining = Number.isFinite(daysRemaining) ? Math.round(daysRemaining) : 0;
-  const safeEstimatedDeadline = Number.isFinite(estimatedDeadline) ? Math.round(estimatedDeadline) : 0;
+  const safeEstimatedDeadline = Number.isFinite(estimatedDeadline)
+    ? Math.round(estimatedDeadline)
+    : 0;
   const safeDaysOutOfStock = Number.isFinite(daysOutOfStock) ? Math.round(daysOutOfStock) : 0;
   const safeEstimatedLostSales = Number.isFinite(estimatedLostSales)
     ? Math.round(estimatedLostSales)
@@ -740,7 +742,9 @@ export function calculateAllMetrics(
     growthTrend: Number.isFinite(growthTrend) ? Number.parseFloat(growthTrend.toFixed(1)) : 0,
     capitalStuck: Number.isFinite(capitalStuck) ? Number.parseFloat(capitalStuck.toFixed(2)) : 0,
     daysSinceLastSale,
-    suggestedPrice: Number.isFinite(suggestedPrice) ? Number.parseFloat(suggestedPrice.toFixed(2)) : 0,
+    suggestedPrice: Number.isFinite(suggestedPrice)
+      ? Number.parseFloat(suggestedPrice.toFixed(2))
+      : 0,
     estimatedDeadline: safeEstimatedDeadline,
     recoverableAmount: Number.isFinite(recoverableAmount)
       ? Number.parseFloat(recoverableAmount.toFixed(2))

@@ -17,10 +17,24 @@ import {
 import { AlertCircle, CheckCircle2 } from 'lucide-react';
 import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import { useStripeCheckout } from '@/features/billing/services';
+import { useQueryString } from '@/hooks';
 import { useBlingIntegration } from '@/hooks/useBlingIntegration';
 
 type ConnectionState = 'idle' | 'connecting' | 'analyzing' | 'complete' | 'error';
+
+const PROGRESS_INITIAL = 50;
+const PROGRESS_COMPLETE = 100;
+const PROGRESS_CONNECTING = 25;
+const PROGRESS_INCREMENT = 7;
+const ANALYZE_TICK_MS = 220;
+const STATS_TICK_MS = 180;
+const COMPLETE_DELAY_MS = 1500;
+const PRODUCTS_RANDOM_MAX = 12;
+const PRODUCTS_CAP = 127;
+const SALES_RANDOM_MAX = 40;
+const SALES_CAP = 847;
 
 export function BlingConnect() {
   const router = useRouter();
@@ -30,89 +44,19 @@ export function BlingConnect() {
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [simStats, setSimStats] = useState({ products: 0, sales: 0 });
+  const { getQueryParam } = useQueryString();
+  const planParam = (getQueryParam('plan') || '').toUpperCase();
+  const { mutateAsync: stripeCheckout } = useStripeCheckout();
 
-  // Verificar parâmetros de URL para erros/sucesso
-  useEffect(() => {
-    const errorParam = searchParams.get('error');
-    const successParam = searchParams.get('success');
-
-    if (errorParam) {
-      setState('error');
-      switch (errorParam) {
-        case 'auth_failed':
-          setError('Falha na autenticação com o Bling. Tente novamente.');
-          break;
-        case 'connection_failed':
-          setError('Erro ao conectar com o Bling. Verifique suas credenciais.');
-          break;
-        case 'invalid_callback':
-          setError('Callback inválido do Bling. Tente novamente.');
-          break;
-        case 'unauthorized':
-          setError('Usuário não autorizado. Faça login e tente novamente.');
-          break;
-        default:
-          setError('Erro desconhecido ao conectar com o Bling.');
-      }
-    }
-
-    if (successParam === 'bling_connected') {
-      setState('analyzing');
-      setProgress(50);
-    }
-  }, [searchParams]);
-
-  // Verificar se já está conectado
-  useEffect(() => {
-    if (status?.syncStatus === 'COMPLETED' && state === 'idle') {
-      setState('complete');
-      setProgress(100);
-    }
-  }, [status, state]);
-
-  const handleComplete = () => {
+  const handleComplete = useCallback(() => {
     router.push('/visao-geral');
-  };
-
-  useEffect(() => {
-    if (state === 'analyzing') {
-      const interval = setInterval(() => {
-        setProgress((prev) => {
-          if (prev >= 100) {
-            clearInterval(interval);
-            setState('complete');
-            return 100;
-          }
-          return prev + 7;
-        });
-      }, 220);
-
-      const stats = setInterval(() => {
-        setSimStats((s) => ({
-          products: Math.min(s.products + Math.ceil(Math.random() * 12), 127),
-          sales: Math.min(s.sales + Math.ceil(Math.random() * 40), 847),
-        }));
-      }, 180);
-
-      return () => {
-        clearInterval(interval);
-        clearInterval(stats);
-      };
-    }
-
-    if (state === 'complete') {
-      const timer = setTimeout(() => {
-        handleComplete();
-      }, 1500);
-      return () => clearTimeout(timer);
-    }
-  }, [state]);
+  }, [router]);
 
   const handleConnect = async () => {
     try {
       setState('connecting');
       setError(null);
-      setProgress(25);
+      setProgress(PROGRESS_CONNECTING);
 
       const authUrl = await connect();
 
@@ -142,6 +86,99 @@ export function BlingConnect() {
     if (state === 'error') return 'Houve um problema ao conectar com o Bling. Tente novamente.';
     return 'Conexão bem-sucedida! Seu dashboard estará pronto em breve. Você será notificado por e-mail.';
   };
+
+  const handleStripeCheckout = async () => {
+    try {
+      const { url } = await stripeCheckout();
+      if (url) {
+        window.location.href = url;
+      }
+    } catch (error) {
+      console.error('Erro ao iniciar o checkout do Stripe:', error);
+    }
+  };
+
+  useEffect(() => {
+    if (planParam && planParam === 'PRO') {
+      handleStripeCheckout();
+    }
+  }, [planParam]);
+
+  // Verificar parâmetros de URL para erros/sucesso
+  useEffect(() => {
+    const errorParam = searchParams.get('error');
+    const successParam = searchParams.get('success');
+
+    if (errorParam) {
+      setState('error');
+      switch (errorParam) {
+        case 'auth_failed':
+          setError('Falha na autenticação com o Bling. Tente novamente.');
+          break;
+        case 'connection_failed':
+          setError('Erro ao conectar com o Bling. Verifique suas credenciais.');
+          break;
+        case 'invalid_callback':
+          setError('Callback inválido do Bling. Tente novamente.');
+          break;
+        case 'unauthorized':
+          setError('Usuário não autorizado. Faça login e tente novamente.');
+          break;
+        default:
+          setError('Erro desconhecido ao conectar com o Bling.');
+      }
+    }
+
+    if (successParam === 'bling_connected') {
+      setState('analyzing');
+      setProgress(PROGRESS_INITIAL);
+    }
+  }, [searchParams]);
+
+  // Verificar se já está conectado
+  useEffect(() => {
+    if (status?.syncStatus === 'COMPLETED' && state === 'idle') {
+      setState('complete');
+      setProgress(PROGRESS_COMPLETE);
+    }
+  }, [status, state]);
+
+  useEffect(() => {
+    if (state === 'analyzing') {
+      const interval = setInterval(() => {
+        setProgress((prev) => {
+          if (prev >= PROGRESS_COMPLETE) {
+            clearInterval(interval);
+            setState('complete');
+            return PROGRESS_COMPLETE;
+          }
+          return prev + PROGRESS_INCREMENT;
+        });
+      }, ANALYZE_TICK_MS);
+
+      const stats = setInterval(() => {
+        setSimStats((s) => ({
+          products: Math.min(
+            s.products + Math.ceil(Math.random() * PRODUCTS_RANDOM_MAX),
+            PRODUCTS_CAP
+          ),
+          sales: Math.min(s.sales + Math.ceil(Math.random() * SALES_RANDOM_MAX), SALES_CAP),
+        }));
+      }, STATS_TICK_MS);
+
+      return () => {
+        clearInterval(interval);
+        clearInterval(stats);
+      };
+    }
+
+    if (state === 'complete') {
+      const timer = setTimeout(() => {
+        handleComplete();
+      }, COMPLETE_DELAY_MS);
+      return () => clearTimeout(timer);
+    }
+  }, [state, handleComplete]);
 
   // Se ainda está carregando o status da integração
   if (loading && state === 'idle') {

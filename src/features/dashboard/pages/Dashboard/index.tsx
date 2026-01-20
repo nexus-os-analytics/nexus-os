@@ -1,33 +1,67 @@
 'use client';
-import { Box, Button, Card, Group, SimpleGrid, Stack, Text, ThemeIcon, Title } from '@mantine/core';
-import { Filter, Package, Sparkles } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import {
+  Box,
+  Button,
+  Card,
+  Group,
+  MultiSelect,
+  SimpleGrid,
+  Stack,
+  Text,
+  TextInput,
+  ThemeIcon,
+  Title,
+} from '@mantine/core';
+import { Download, Filter, Package, Sparkles } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
 import { BlingConnectBanner } from '@/features/bling/components/BlingConnectBanner';
 import { ProductCard } from '@/features/products/components/ProductCard';
-import type { GetProductsAlertsParams } from '@/features/products/types';
 import { useBlingIntegration } from '@/hooks/useBlingIntegration';
 import { useProductAlerts } from '../../hooks/use-product-alerts';
 
 export function Dashboard() {
   const { status, loading } = useBlingIntegration();
   const [criticalCount, setCriticalCount] = useState(0);
-  const [params, _] = useState<GetProductsAlertsParams | undefined>();
+  // Filters (URL-synced as comma-separated strings)
+  const [search, setSearch] = useState('');
+  const [typeFilter, setTypeFilter] = useState<string>('');
+  const [riskFilter, setRiskFilter] = useState<string>('');
+
+  // Build API params
+  const queryParams = useMemo(() => {
+    return {
+      type: typeFilter || undefined,
+      risk: riskFilter || undefined,
+    } as Record<string, string | number | undefined>;
+  }, [typeFilter, riskFilter]);
 
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } =
-    useProductAlerts(params);
+    useProductAlerts(queryParams);
 
   useEffect(() => {
     if (data) {
       const allAlerts = data.pages.flatMap((p) => p.data);
+      const OUT_OF_STOCK_THRESHOLD_DAYS = 30;
       setCriticalCount(
         allAlerts.filter(
           (a) =>
             a.alert?.type === 'RUPTURE' ||
-            (a.alert?.type === 'DEAD_STOCK' && (a.alert?.daysOutOfStock ?? 0) > 30)
+            (a.alert?.type === 'DEAD_STOCK' &&
+              (a.alert?.daysOutOfStock ?? 0) > OUT_OF_STOCK_THRESHOLD_DAYS)
         ).length
       );
     }
   }, [data]);
+
+  // Compute client-side search filtering (name/SKU)
+  const flatProducts = useMemo(() => data?.pages.flatMap((p) => p.data) ?? [], [data]);
+  const visibleProducts = useMemo(() => {
+    const s = search.trim().toLowerCase();
+    if (!s) return flatProducts;
+    return flatProducts.filter((p) =>
+      [p.name, p.sku].some((v) => (v ?? '').toString().toLowerCase().includes(s))
+    );
+  }, [flatProducts, search]);
 
   return (
     <Stack gap="xl">
@@ -86,42 +120,66 @@ export function Dashboard() {
         </Card>
       </SimpleGrid>
 
-      {/* TODO: Refatorar os filtros */}
       {/* Filters */}
-      {/* <Group mb="lg" align="center">
-        <Text size="sm">Mostrando:</Text>
-        <Tabs value={params} onChange={setParams} color="gold">
-          <Tabs.List>
-            <Tabs.Tab value="all">Todos</Tabs.Tab>
-            <Tabs.Tab
-              value="critical"
-              rightSection={
-                criticalCount > 0 ? (
-                  <Badge
-                    size="sm"
-                    variant="filled"
-                    color="red"
-                    w={24}
-                    style={{ minWidth: 24, height: 24 }}
-                  >
-                    {criticalCount}
-                  </Badge>
-                ) : null
-              }
-            >
-              Apenas Críticos
-            </Tabs.Tab>
-          </Tabs.List>
-        </Tabs>
-      </Group> */}
+      <Group align="end" justify="space-between">
+        <Group align="end" gap="md" wrap="wrap">
+          <TextInput
+            label="Busca"
+            placeholder="Nome ou SKU"
+            value={search}
+            onChange={(e) => setSearch(e.currentTarget.value)}
+            style={{ minWidth: 220 }}
+          />
+          <MultiSelect
+            label="Tipo de alerta"
+            placeholder="Selecione"
+            value={typeFilter ? typeFilter.split(',') : []}
+            onChange={(values) => setTypeFilter(values.join(','))}
+            data={[
+              { value: 'RUPTURE', label: 'Ruptura' },
+              { value: 'DEAD_STOCK', label: 'Dinheiro Parado' },
+              { value: 'OPPORTUNITY', label: 'Oportunidade' },
+              { value: 'FINE', label: 'Observar' },
+              { value: 'LIQUIDATION', label: 'Liquidação' },
+            ]}
+            style={{ minWidth: 240 }}
+            searchable
+            clearable
+          />
+          <MultiSelect
+            label="Risco"
+            placeholder="Selecione"
+            value={riskFilter ? riskFilter.split(',') : []}
+            onChange={(values) => setRiskFilter(values.join(','))}
+            data={[
+              { value: 'CRITICAL', label: 'Crítico' },
+              { value: 'HIGH', label: 'Alto' },
+              { value: 'MEDIUM', label: 'Médio' },
+              { value: 'LOW', label: 'Baixo' },
+            ]}
+            style={{ minWidth: 200 }}
+            searchable
+            clearable
+          />
+        </Group>
+        <Button
+          variant="light"
+          leftSection={<Download size={16} />}
+          component="a"
+          href={`/api/dashboard/alerts/export?${new URLSearchParams({
+            ...(typeFilter ? { type: typeFilter } : {}),
+            ...(riskFilter ? { risk: riskFilter } : {}),
+          }).toString()}`}
+        >
+          Exportar CSV
+        </Button>
+      </Group>
 
       {/* Product Cards Grid */}
-      <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="lg">
-        {data?.pages
-          .flatMap((p) => p.data)
-          .map((product) => (
-            <ProductCard key={product.id} product={product} />
-          ))}
+      <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }} spacing="lg">
+        {visibleProducts.map((product) => (
+          <ProductCard key={product.id} product={product} />
+        ))}
       </SimpleGrid>
 
       {/* Infinite load button */}

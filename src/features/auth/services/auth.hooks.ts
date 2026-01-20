@@ -6,7 +6,7 @@ import type { ForgotPasswordRequest, ResetPasswordRequest, SignUpRequest } from 
 export function useSignUp() {
   return useMutation({
     mutationFn: (data: SignUpRequest) => {
-      return axiosInstance.post('/auth/cadastre-se', data);
+      return axiosInstance.post('/auth/sign-up', data);
     },
     onSuccess({ data }) {
       notifications.show({
@@ -29,7 +29,7 @@ export function useSignUp() {
 export function useForgotPassword() {
   return useMutation({
     mutationFn: (data: ForgotPasswordRequest) => {
-      return axiosInstance.post('/auth/esqueci-minha-senha', data);
+      return axiosInstance.post('/auth/forgot-password', data);
     },
     onSuccess({ data }) {
       notifications.show({

@@ -1,4 +1,4 @@
-import type { UserRole } from '@prisma/client';
+import type { PlanTier, UserRole } from '@prisma/client';
 import type { DefaultUser } from 'next-auth';
 import type { PERMISSIONS } from './auth.constants';
 
@@ -10,10 +10,11 @@ export interface User extends DefaultUser {
   avatar?: string | null;
   required2FA?: boolean;
   onboardingCompleted?: boolean;
+  planTier?: PlanTier;
 }
 
 export type PermissionKeys<T> = {
-  [K in keyof T]: T[K] extends Array<any>
+  [K in keyof T]: T[K] extends Array<unknown>
     ? Extract<K, string>
     : T[K] extends object
       ? `${Extract<K, string>}.${PermissionKeys<T[K]>}`
