@@ -18,12 +18,15 @@ import Link from 'next/link';
 import { signIn } from 'next-auth/react';
 import { useEffect, useState } from 'react';
 import { GoogleButton } from '@/components/commons/GoogleButton';
+import { useQueryString } from '@/hooks';
 import { SignUpSchema, useSignUp } from '../../services';
 
 export function SignUp() {
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const { mutateAsync: signUp, isPending, error } = useSignUp();
+  const { getQueryParam } = useQueryString();
+  const planParam = (getQueryParam('plan') || '').toUpperCase();
 
   const form = useForm({
     initialValues: {
@@ -49,7 +52,7 @@ export function SignUp() {
       await signIn('credentials', {
         email: values.email,
         password: values.password,
-        callbackUrl: '/bling',
+        callbackUrl: planParam ? `/bling?plan=${planParam}` : '/bling',
         redirect: true,
       });
     } catch (error) {
@@ -60,7 +63,7 @@ export function SignUp() {
   const handleGoogleSignIn = async () => {
     try {
       setLoading(true);
-      await signIn('google', { callbackUrl: '/bling' });
+      await signIn('google', { callbackUrl: planParam ? `/bling?plan=${planParam}` : '/bling' });
     } catch (error) {
       console.error('Erro ao autenticar com o Google:', error);
       setErrorMessage('Erro ao autenticar com o Google. Tente novamente.');

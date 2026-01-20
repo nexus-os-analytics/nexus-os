@@ -8,6 +8,11 @@ datasource db {
 
 // User and Authentication Models
 
+enum PlanTier {
+  FREE
+  PRO
+}
+
 enum UserRole {
   SUPER_ADMIN
   ADMIN
@@ -16,35 +21,42 @@ enum UserRole {
 }
 
 model User {
-  id                  String             @id @default(uuid())
-  name                String
-  email               String             @unique
-  hashedPassword      String? // Torne opcional para usuários OAuth
-  role                UserRole           @default(USER)
-  image               String?
-  phone               String?
-  acceptedTerms       Boolean            @default(false)
-  createdAt           DateTime           @default(now())
-  updatedAt           DateTime           @updatedAt
-  deletedAt           DateTime?
-  retentionUntil      DateTime?
-  twoFactorSecret     String?
-  resetToken          String?
-  resetTokenExpiry    DateTime?
-  isTwoFactorEnabled  Boolean            @default(false)
-  failedAttempts      Int                @default(0)
-  onboardingCompleted Boolean            @default(false)
-  lockedUntil         DateTime?
-  emailVerified       DateTime? // Adicionado para NextAuth
-  accounts            Account[] // Adicionado para NextAuth
-  sessions            Session[] // Adicionado para NextAuth
-  loginActivities     LoginActivity[]
-  auditLogs           AuditLog[]
-  apiKeys             ApiKey[]
-  securityIncidents   SecurityIncident[]
-  blingIntegration    BlingIntegration?
-  blingSyncStatus     BlingSyncStatus    @default(IDLE)
-  invitationsSent     UserInvitation[]
+  id                   String             @id @default(uuid())
+  name                 String
+  email                String             @unique
+  hashedPassword       String? // Torne opcional para usuários OAuth
+  role                 UserRole           @default(USER)
+  image                String?
+  phone                String?
+  acceptedTerms        Boolean            @default(false)
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+  deletedAt            DateTime?
+  retentionUntil       DateTime?
+  twoFactorSecret      String?
+  resetToken           String?
+  resetTokenExpiry     DateTime?
+  isTwoFactorEnabled   Boolean            @default(false)
+  failedAttempts       Int                @default(0)
+  onboardingCompleted  Boolean            @default(false)
+  lockedUntil          DateTime?
+  emailVerified        DateTime? // Adicionado para NextAuth
+  // Billing & subscriptions
+  planTier             PlanTier           @default(FREE)
+  stripeCustomerId     String?
+  stripeSubscriptionId String?
+  subscriptionStatus   String?
+  currentPeriodEnd     DateTime?
+  trialEnd             DateTime?
+  accounts             Account[] // Adicionado para NextAuth
+  sessions             Session[] // Adicionado para NextAuth
+  loginActivities      LoginActivity[]
+  auditLogs            AuditLog[]
+  apiKeys              ApiKey[]
+  securityIncidents    SecurityIncident[]
+  blingIntegration     BlingIntegration?
+  blingSyncStatus      BlingSyncStatus    @default(IDLE)
+  invitationsSent      UserInvitation[]
 
   @@index([email, createdAt, deletedAt])
   @@map("users")
@@ -307,36 +319,36 @@ model BlingStockBalance {
 }
 
 model BlingAlert {
-  id                  String           @id @default(uuid())
-  blingProductId      String           @unique
-  type                BlingAlertType   @default(FINE)
-  risk                BlingRuptureRisk @default(LOW)
-  vvdReal             Float            @default(0)
-  vvd30               Float            @default(0)
-  vvd7                Float            @default(0)
-  daysRemaining       Int              @default(0)
-  reorderPoint        Int              @default(0)
-  growthTrend         Float            @default(0)
-  capitalStuck        Float            @default(0)
-  daysSinceLastSale   Int              @default(0)
-  suggestedPrice      Float            @default(0)
-  estimatedDeadline   Int              @default(0)
-  recoverableAmount   Float            @default(0)
-  daysOutOfStock      Int              @default(0)
-  estimatedLostSales  Int              @default(0)
-  estimatedLostAmount Int              @default(0)
+  id                     String           @id @default(uuid())
+  blingProductId         String           @unique
+  type                   BlingAlertType   @default(FINE)
+  risk                   BlingRuptureRisk @default(LOW)
+  vvdReal                Float            @default(0)
+  vvd30                  Float            @default(0)
+  vvd7                   Float            @default(0)
+  daysRemaining          Int              @default(0)
+  reorderPoint           Int              @default(0)
+  growthTrend            Float            @default(0)
+  capitalStuck           Float            @default(0)
+  daysSinceLastSale      Int              @default(0)
+  suggestedPrice         Float            @default(0)
+  estimatedDeadline      Int              @default(0)
+  recoverableAmount      Float            @default(0)
+  daysOutOfStock         Int              @default(0)
+  estimatedLostSales     Int              @default(0)
+  estimatedLostAmount    Int              @default(0)
   // New excess/cover metrics
-  idealStock          Float            @default(0)
-  excessUnits         Int              @default(0)
-  excessPercentage    Float            @default(0)
-  excessCapital       Float            @default(0)
-  message             String?          @db.Text
-  recommendations     Json?
+  idealStock             Float            @default(0)
+  excessUnits            Int              @default(0)
+  excessPercentage       Float            @default(0)
+  excessCapital          Float            @default(0)
+  message                String?          @db.Text
+  recommendations        Json?
   lastCriticalNotifiedAt DateTime?
-  createdAt           DateTime         @default(now())
-  updatedAt           DateTime         @updatedAt
-  jobId               String?
-  product             BlingProduct     @relation(fields: [blingProductId], references: [blingProductId], onDelete: Cascade)
+  createdAt              DateTime         @default(now())
+  updatedAt              DateTime         @updatedAt
+  jobId                  String?
+  product                BlingProduct     @relation(fields: [blingProductId], references: [blingProductId], onDelete: Cascade)
 
   @@index([blingProductId, type, risk])
   @@map("bling_alerts")

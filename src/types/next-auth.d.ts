@@ -1,5 +1,5 @@
-import { UserRole, BlingSyncStatus } from '@prisma/client';
-import { DefaultSession } from 'next-auth';
+import type { BlingSyncStatus, PlanTier, UserRole } from '@prisma/client';
+import type { DefaultSession } from 'next-auth';
 
 declare module 'next-auth' {
   interface Session {
@@ -10,6 +10,7 @@ declare module 'next-auth' {
       onboardingCompleted: boolean;
       blingSyncStatus: BlingSyncStatus;
       hasBlingIntegration: boolean;
+      planTier: PlanTier;
     } & DefaultSession['user'];
     required2FA?: boolean;
   }
@@ -21,6 +22,7 @@ declare module 'next-auth' {
     required2FA?: boolean;
     blingSyncStatus: BlingSyncStatus;
     hasBlingIntegration?: boolean;
+    planTier?: PlanTier;
   }
 }
 
@@ -33,5 +35,6 @@ declare module 'next-auth/jwt' {
     blingSyncStatus: BlingSyncStatus;
     hasBlingIntegration: boolean;
     auditCreated?: boolean;
+    planTier?: PlanTier;
   }
 }

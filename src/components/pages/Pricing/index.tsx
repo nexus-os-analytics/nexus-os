@@ -12,42 +12,67 @@ import {
   Text,
   Title,
 } from '@mantine/core';
+import type { PlanTier } from '@prisma/client';
 import Link from 'next/link';
+import { useState } from 'react';
+import {
+  FEATURE_DEFINITIONS,
+  FEATURE_LIST_ORDER,
+  getPlanLimits,
+  isFeatureAvailable,
+} from '@/features/billing/entitlements';
 
-interface Tier {
-  id: string;
+interface TierCard {
+  id: PlanTier | 'FREE' | 'PRO';
   name: string;
   description: string;
   priceLabel: string; // e.g., "R$ 0/mês" or "R$ 97,00/mês"
-  features: string[];
+  plan: PlanTier;
   recommended?: boolean;
 }
 
-const tiers: Tier[] = [
+const tiers: TierCard[] = [
   {
-    id: 'free',
+    id: 'FREE',
+    plan: 'FREE',
     name: 'Free',
     description: 'Para começar sem custo',
     priceLabel: 'R$ 0/mês',
-    features: ['Máximo de produtos: 30', 'Integração com Bling', 'Alertas básicas pelo Dashboard'],
   },
   {
-    id: 'pro',
+    id: 'PRO',
+    plan: 'PRO',
     name: 'PRO',
     description: 'Para operar com escala e inteligência de ponta',
     priceLabel: 'R$ 97,00/mês',
-    features: [
-      'Máximo de produtos: Ilimitado',
-      'Integração completa com Bling',
-      'Alertas avançadas por Dashboard e E-mail',
-      'Recomendações de compra e liquidação de estoque',
-      'Relatórios personalizados',
-    ],
     recommended: true,
   },
 ];
 
 export function Pricing() {
+  const [loading, setLoading] = useState(false);
+
+  async function startProCheckout() {
+    try {
+      setLoading(true);
+      const res = await fetch('/api/stripe/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ plan: 'pro' }),
+      });
+      if (res.status === 401) {
+        window.location.href = '/login?plan=PRO';
+        return;
+      }
+      const data = await res.json();
+      if (data.url) {
+        window.location.href = data.url as string;
+      }
+    } finally {
+      setLoading(false);
+    }
+  }
+
   return (
     <Container size="lg" py="xl">
       <Stack gap="md" align="center">
@@ -82,19 +107,48 @@ export function Pricing() {
               </Text>
             </Stack>
             <List spacing="xs" size="sm">
-              {t.features.map((f) => (
-                <List.Item key={f}>{f}</List.Item>
-              ))}
+              {/* Limits */}
+              {(() => {
+                const limits = getPlanLimits(t.plan);
+                const limitsList = [
+                  `Máximo de produtos: ${limits.products === 'unlimited' ? 'Ilimitado' : limits.products}`,
+                  `Máximo de alertas: ${limits.alerts === 'unlimited' ? 'Ilimitado' : limits.alerts}`,
+                  `Integrações: ${limits.integrations === 'unlimited' ? 'Ilimitado' : limits.integrations}`,
+                ];
+                return limitsList.map((f) => <List.Item key={f}>{f}</List.Item>);
+              })()}
+              {/* Features */}
+              {FEATURE_LIST_ORDER.map((key) => {
+                const def = FEATURE_DEFINITIONS.find((d) => d.key === key)!;
+                const available = isFeatureAvailable(t.plan, key);
+                return (
+                  <List.Item key={key} c={available ? undefined : 'dimmed'}>
+                    {def.label}
+                  </List.Item>
+                );
+              })}
             </List>
-            <Button
-              component={Link}
-              mt="md"
-              href={t.id === 'pro' ? '/cadastre-se?plan=pro' : '/cadastre-se?plan=free'}
-              color="brand"
-              variant={t.recommended ? 'filled' : 'outline'}
-            >
-              {t.id === 'pro' ? 'Experimentar PRO' : 'Começar Grátis'}
-            </Button>
+            {t.plan === 'PRO' ? (
+              <Button
+                mt="md"
+                onClick={startProCheckout}
+                loading={loading}
+                color="brand"
+                variant={t.recommended ? 'filled' : 'outline'}
+              >
+                Experimentar PRO
+              </Button>
+            ) : (
+              <Button
+                component={Link}
+                mt="md"
+                href={'/cadastre-se?plan=free'}
+                color="brand"
+                variant={t.recommended ? 'filled' : 'outline'}
+              >
+                Começar Grátis
+              </Button>
+            )}
           </Card>
         ))}
       </SimpleGrid>

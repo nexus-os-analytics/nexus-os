@@ -1,10 +1,16 @@
 import { Burger, Button, Divider, Drawer, Group, ScrollArea } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import Link from 'next/link';
+import { UserDropdown } from '@/components/commons/UserDropdown';
+import type { User } from '@/features/auth/services';
 import { Logo } from '../../../commons/Logo';
 import classes from './PublicHeader.module.css';
 
-export function PublicHeader() {
+interface PublicHeaderProps {
+  user: User | null;
+}
+
+export function PublicHeader({ user }: PublicHeaderProps) {
   const [drawerOpened, { toggle: toggleDrawer, close: closeDrawer }] = useDisclosure(false);
 
   return (
@@ -21,18 +27,22 @@ export function PublicHeader() {
           </Link>
         </Group>
 
-        <Group visibleFrom="sm">
-          <Link href="/login">
-            <Button variant="outline" color="brand">
-              Entrar
-            </Button>
-          </Link>
-          <Link href="/cadastre-se">
-            <Button variant="gradient" gradient={{ from: 'brand.6', to: 'brand.8', deg: 135 }}>
-              Criar Conta
-            </Button>
-          </Link>
-        </Group>
+        {user ? (
+          <UserDropdown />
+        ) : (
+          <Group visibleFrom="sm">
+            <Link href="/login">
+              <Button variant="outline" color="brand">
+                Entrar
+              </Button>
+            </Link>
+            <Link href="/cadastre-se">
+              <Button variant="gradient" gradient={{ from: 'brand.6', to: 'brand.8', deg: 135 }}>
+                Criar Conta
+              </Button>
+            </Link>
+          </Group>
+        )}
 
         <Burger opened={drawerOpened} onClick={toggleDrawer} hiddenFrom="sm" />
       </Group>

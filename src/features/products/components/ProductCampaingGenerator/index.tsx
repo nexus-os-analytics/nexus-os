@@ -21,6 +21,7 @@ import { ProductCampaignResults } from '@/features/products/components/ProductCa
 import { campaignStrategies, toneOfVoiceOptions } from '@/features/products/constants';
 import type { CampaignOutput, CampaignStrategy, ToneOfVoice } from '@/features/products/types';
 import type { BlingProductType } from '@/lib/bling';
+import { formatCurrency } from '@/lib/utils';
 
 interface ProductCampaingGeneratorProps {
   product: BlingProductType;
@@ -91,17 +92,22 @@ export function ProductCampaingGenerator({ product }: ProductCampaingGeneratorPr
       </Box>
 
       <Paper p="md" radius="md" withBorder>
-        <Group align="start">
+        <Group wrap="nowrap" gap="md">
+          {/* Coluna da Imagem */}
           {product.image && (
-            <Image
-              src={product.image}
-              alt={product.name}
-              width={80}
-              height={80}
-              radius="md"
-              fit="cover"
-            />
+            <Box>
+              <Image
+                src={product.image}
+                alt={product.name}
+                width={120}
+                height={120}
+                radius="md"
+                fit="cover"
+              />
+            </Box>
           )}
+
+          {/* Coluna de Informações */}
           <Box style={{ flex: 1 }}>
             <Group justify="space-between" mb="xs">
               <Text size="sm" c="dimmed">
@@ -111,7 +117,9 @@ export function ProductCampaingGenerator({ product }: ProductCampaingGeneratorPr
                 Dinheiro Parado
               </Badge>
             </Group>
-            <Text mb={4}>{product.name}</Text>
+            <Text fw={500} mb={4}>
+              {product.name}
+            </Text>
             <Group gap="md">
               <Text size="sm" c="dimmed">
                 SKU: {product.sku}
@@ -124,10 +132,10 @@ export function ProductCampaingGenerator({ product }: ProductCampaingGeneratorPr
             </Group>
             <Group gap="md">
               <Text size="sm" c="dimmed">
-                Custo: R$ {product.costPrice.toFixed(2)}
+                Custo: {formatCurrency(product.costPrice)}
               </Text>
               <Text size="sm" c="dimmed">
-                Venda: R$ {product.salePrice.toFixed(2)}
+                Venda: {formatCurrency(product.salePrice)}
               </Text>
             </Group>
           </Box>
@@ -166,7 +174,7 @@ export function ProductCampaingGenerator({ product }: ProductCampaingGeneratorPr
               <Text size="sm" c="dimmed" mb="xs">
                 {strategy.description}
               </Text>
-              <Badge color="gold" variant="light" size="sm">
+              <Badge color="gold" variant="outline" size="sm">
                 {strategy.pricingSuggestion}
               </Badge>
             </Paper>
