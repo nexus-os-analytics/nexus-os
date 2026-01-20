@@ -1,6 +1,8 @@
 import bcrypt from 'bcryptjs';
 import { type NextRequest, NextResponse } from 'next/server';
 import { type SignUpRequest, SignUpSchema } from '@/features/auth/services';
+import { createActivationToken } from '@/features/auth/services/activation-token';
+import { sendWelcomeActivationEmail } from '@/features/auth/services/send-welcome-activation-email';
 import prisma from '@/lib/prisma';
 
 export async function POST(req: NextRequest) {
@@ -37,6 +39,8 @@ export async function POST(req: NextRequest) {
       },
       select: {
         id: true,
+        email: true,
+        name: true,
       },
     });
 
@@ -47,6 +51,12 @@ export async function POST(req: NextRequest) {
         resource: 'User',
       },
     });
+
+    // Generate activation token and send welcome email
+    const { token } = await createActivationToken(user.email);
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
+    const activationLink = `${appUrl}/api/auth/activate?token=${encodeURIComponent(token)}&email=${encodeURIComponent(user.email)}`;
+    await sendWelcomeActivationEmail({ email: user.email, name: user.name, activationLink });
 
     return NextResponse.json(
       { message: 'Cadastro efetuado com sucesso! Verifique seu e-mail para confirmar sua conta.' },

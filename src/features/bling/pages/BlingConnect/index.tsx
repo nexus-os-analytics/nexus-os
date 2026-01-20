@@ -18,9 +18,23 @@ import { AlertCircle, CheckCircle2 } from 'lucide-react';
 import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
+import { useStripeCheckout } from '@/features/billing/services';
+import { useQueryString } from '@/hooks';
 import { useBlingIntegration } from '@/hooks/useBlingIntegration';
 
 type ConnectionState = 'idle' | 'connecting' | 'analyzing' | 'complete' | 'error';
+
+const PROGRESS_INITIAL = 50;
+const PROGRESS_COMPLETE = 100;
+const PROGRESS_CONNECTING = 25;
+const PROGRESS_INCREMENT = 7;
+const ANALYZE_TICK_MS = 220;
+const STATS_TICK_MS = 180;
+const COMPLETE_DELAY_MS = 1500;
+const PRODUCTS_RANDOM_MAX = 12;
+const PRODUCTS_CAP = 127;
+const SALES_RANDOM_MAX = 40;
+const SALES_CAP = 847;
 
 export function BlingConnect() {
   const router = useRouter();
@@ -30,17 +44,62 @@ export function BlingConnect() {
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [simStats, setSimStats] = useState({ products: 0, sales: 0 });
-  const PROGRESS_INITIAL = 50;
-  const PROGRESS_COMPLETE = 100;
-  const PROGRESS_CONNECTING = 25;
-  const PROGRESS_INCREMENT = 7;
-  const ANALYZE_TICK_MS = 220;
-  const STATS_TICK_MS = 180;
-  const COMPLETE_DELAY_MS = 1500;
-  const PRODUCTS_RANDOM_MAX = 12;
-  const PRODUCTS_CAP = 127;
-  const SALES_RANDOM_MAX = 40;
-  const SALES_CAP = 847;
+  const { getQueryParam } = useQueryString();
+  const planParam = (getQueryParam('plan') || '').toUpperCase();
+  const { mutateAsync: stripeCheckout } = useStripeCheckout();
+
+  const handleComplete = useCallback(() => {
+    router.push('/visao-geral');
+  }, [router]);
+
+  const handleConnect = async () => {
+    try {
+      setState('connecting');
+      setError(null);
+      setProgress(PROGRESS_CONNECTING);
+
+      const authUrl = await connect();
+
+      // Redirecionar para a página de autorização do Bling
+      window.location.href = authUrl;
+    } catch (err) {
+      console.error('Error connecting to Bling:', err);
+      setState('error');
+      setError('Erro ao iniciar conexão com o Bling. Tente novamente.');
+    }
+  };
+
+  const getTitle = () => {
+    if (state === 'idle') return 'Conectar com Bling';
+    if (state === 'connecting') return 'Conectando...';
+    if (state === 'analyzing') return 'Analisando produtos...';
+    if (state === 'error') return 'Erro na conexão';
+    return 'Tudo pronto!';
+  };
+
+  const getDescription = () => {
+    if (state === 'idle')
+      return 'Conecte sua conta Bling para começar a análise inteligente do seu estoque.';
+    if (state === 'connecting') return 'Redirecionando para o Bling...';
+    if (state === 'analyzing')
+      return 'Analisando Produtos ⏳ | Importando dados dos últimos 7 dias para gerar valor rápido...';
+    if (state === 'error') return 'Houve um problema ao conectar com o Bling. Tente novamente.';
+    return 'Conexão bem-sucedida! Seu dashboard estará pronto em breve. Você será notificado por e-mail.';
+  };
+
+  const handleStripeCheckout = async () => {
+    try {
+      await stripeCheckout();
+    } catch (error) {
+      console.error('Erro ao iniciar o checkout do Stripe:', error);
+    }
+  };
+
+  useEffect(() => {
+    if (planParam && planParam === 'PRO') {
+      handleStripeCheckout();
+    }
+  }, [planParam]);
 
   // Verificar parâmetros de URL para erros/sucesso
   useEffect(() => {
@@ -81,10 +140,6 @@ export function BlingConnect() {
     }
   }, [status, state]);
 
-  const handleComplete = useCallback(() => {
-    router.push('/visao-geral');
-  }, [router]);
-
   useEffect(() => {
     if (state === 'analyzing') {
       const interval = setInterval(() => {
@@ -121,41 +176,6 @@ export function BlingConnect() {
       return () => clearTimeout(timer);
     }
   }, [state, handleComplete]);
-
-  const handleConnect = async () => {
-    try {
-      setState('connecting');
-      setError(null);
-      setProgress(PROGRESS_CONNECTING);
-
-      const authUrl = await connect();
-
-      // Redirecionar para a página de autorização do Bling
-      window.location.href = authUrl;
-    } catch (err) {
-      console.error('Error connecting to Bling:', err);
-      setState('error');
-      setError('Erro ao iniciar conexão com o Bling. Tente novamente.');
-    }
-  };
-
-  const getTitle = () => {
-    if (state === 'idle') return 'Conectar com Bling';
-    if (state === 'connecting') return 'Conectando...';
-    if (state === 'analyzing') return 'Analisando produtos...';
-    if (state === 'error') return 'Erro na conexão';
-    return 'Tudo pronto!';
-  };
-
-  const getDescription = () => {
-    if (state === 'idle')
-      return 'Conecte sua conta Bling para começar a análise inteligente do seu estoque.';
-    if (state === 'connecting') return 'Redirecionando para o Bling...';
-    if (state === 'analyzing')
-      return 'Analisando Produtos ⏳ | Importando dados dos últimos 7 dias para gerar valor rápido...';
-    if (state === 'error') return 'Houve um problema ao conectar com o Bling. Tente novamente.';
-    return 'Conexão bem-sucedida! Seu dashboard estará pronto em breve. Você será notificado por e-mail.';
-  };
 
   // Se ainda está carregando o status da integração
   if (loading && state === 'idle') {

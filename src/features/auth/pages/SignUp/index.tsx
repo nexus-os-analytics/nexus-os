@@ -52,7 +52,7 @@ export function SignUp() {
       await signIn('credentials', {
         email: values.email,
         password: values.password,
-        callbackUrl: planParam ? `/login?plan=${planParam}` : '/bling',
+        callbackUrl: planParam ? `/bling?plan=${planParam}` : '/bling',
         redirect: true,
       });
     } catch (error) {
@@ -63,7 +63,7 @@ export function SignUp() {
   const handleGoogleSignIn = async () => {
     try {
       setLoading(true);
-      await signIn('google', { callbackUrl: planParam ? `/login?plan=${planParam}` : '/bling' });
+      await signIn('google', { callbackUrl: planParam ? `/bling?plan=${planParam}` : '/bling' });
     } catch (error) {
       console.error('Erro ao autenticar com o Google:', error);
       setErrorMessage('Erro ao autenticar com o Google. Tente novamente.');

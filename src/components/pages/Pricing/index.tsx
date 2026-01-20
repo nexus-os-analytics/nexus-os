@@ -71,6 +71,7 @@ export function Pricing() {
       setLoading(false);
     }
   }
+
   return (
     <Container size="lg" py="xl">
       <Stack gap="md" align="center">

@@ -31,7 +31,7 @@ export function SignIn() {
   const { getQueryParam } = useQueryString();
   const nextPage = '/bling';
   const planParam = (getQueryParam('plan') || '').toUpperCase();
-  const redirect = planParam ? `/login?plan=${planParam}` : getQueryParam('redirect') || nextPage;
+  const redirect = planParam ? `/bling?plan=${planParam}` : getQueryParam('redirect') || nextPage;
   const router = useRouter();
 
   const form = useForm({
@@ -74,35 +74,8 @@ export function SignIn() {
   };
 
   useEffect(() => {
-    const startProCheckout = async () => {
-      try {
-        setLoading(true);
-        const res = await fetch('/api/stripe/checkout', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ plan: 'pro' }),
-        });
-        if (res.status === 401) {
-          router.replace('/login?plan=PRO');
-          return;
-        }
-        const data = await res.json();
-        if (data.url) {
-          window.location.href = data.url as string;
-        } else {
-          router.push(nextPage);
-        }
-      } finally {
-        setLoading(false);
-      }
-    };
-
     if (status === 'authenticated' && !required2FA) {
-      if (planParam === 'PRO') {
-        void startProCheckout();
-      } else {
-        router.push(redirect as string);
-      }
+      router.push(redirect as string);
     }
   }, [status, required2FA, router, redirect]);
 
