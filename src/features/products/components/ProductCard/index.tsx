@@ -461,7 +461,7 @@ export function ProductCard({ product }: ProductCardProps) {
                         <>
                           <Divider my="xs" />
                           <Text size="sm" mb="xs">
-                            Recomendações:
+                            Ações recomendadas:
                           </Text>
                           <Stack gap={4}>
                             {recs.map((r: string, i: number) => (
@@ -661,7 +661,7 @@ export function ProductCard({ product }: ProductCardProps) {
             leftSection={<Sparkles size={16} />}
             fullWidth
           >
-            Gerar campanha
+            Ver Detalhes
           </Button>
         </Group>
       </Stack>

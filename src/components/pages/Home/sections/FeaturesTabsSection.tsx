@@ -79,7 +79,7 @@ export function FeaturesTabsSection() {
                 </Text>
               </Stack>
               <MantineImage
-                src="/img/auth-bg.jpg"
+                src="/img/auth-bg.png"
                 alt="Dashboard de capital parado"
                 radius="md"
                 w={420}
