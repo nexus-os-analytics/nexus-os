@@ -2,7 +2,9 @@ import { TransactionalEmailsApi, TransactionalEmailsApiApiKeys } from '@getbrevo
 import pino from 'pino';
 import criticalAlertTemplate from './templates/critical-alert.template';
 import inviteTemplate from './templates/invite-user.template';
+import paymentConfirmedTemplate from './templates/payment-confirmed.template';
 import resetPasswordTemplate from './templates/reset-password.template';
+import subscriptionCanceledTemplate from './templates/subscription-canceled.template';
 import welcomeTemplate from './templates/welcome.template';
 
 const BREVO_API_KEY = process.env.BREVO_API_KEY;
@@ -15,8 +17,8 @@ const emailTemplates = {
   resetPassword: resetPasswordTemplate,
   inviteUser: inviteTemplate,
   criticalAlert: criticalAlertTemplate,
-  // Pagamento confirmado
-  // Assinatura cancelada
+  paymentConfirmed: paymentConfirmedTemplate,
+  subscriptionCanceled: subscriptionCanceledTemplate,
 };
 
 export async function sendEmail({
