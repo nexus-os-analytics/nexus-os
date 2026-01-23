@@ -13,7 +13,7 @@
     "prepare": "husky",
     "typecheck": "tsc --noEmit --skipLibCheck",
     "preinstall": "npx only-allow pnpm",
-    "postinstall": "npx prisma generate && npx prisma migrate deploy && npx prisma db seed",
+    "postinstall": "npx prisma generate && npx prisma migrate deploy",
     "seed": "npx prisma db seed",
     "inngest:dev": "npx inngest-cli@latest dev -u http://localhost:3000/api/inngest"
   },
@@ -98,11 +98,5 @@
     "node": ">=20",
     "pnpm": ">=10"
   },
-  "engineStrict": true,
-  "pnpm": {
-    "overrides": {
-      "@types/react": "19.2.7",
-      "@types/react-dom": "19.2.3"
-    }
-  }
+  "engineStrict": true
 }

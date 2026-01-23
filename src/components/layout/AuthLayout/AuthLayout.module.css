@@ -1,10 +1,18 @@
 .wrapper {
   height: 100vh;
-  background-size: cover;
-  background-repeat: no-repeat;
-  background-image: url("/img/auth-bg.png");
   display: flex;
   justify-content: end;
+  background-image: url("/img/auth-bg.jpeg");
+  background-repeat: no-repeat;
+  background-size: contain;
+
+  /* Center content and add padding on smaller screens */
+  @media (max-width: $mantine-breakpoint-md) {
+    justify-content: center;
+    padding: var(--mantine-spacing-md);
+    background-size: cover;
+    background-position: center;
+  }
 }
 
 .form {
@@ -13,11 +21,15 @@
   flex-direction: column;
   justify-content: center;
   border-right: 1px solid light-dark(var(--mantine-color-gray-3), var(--mantine-color-dark-7));
-  width: 40%;
-  padding: 30px;
+  width: 50%;
+  padding: var(--mantine-spacing-xl);
   border-radius: 0;
-  @media (max-width: 48rem) {
-    max-width: 100%;
+
+  /* Full width and compact padding on mobile */
+  @media (max-width: $mantine-breakpoint-md) {
+    width: 100%;
+    border-right: none;
+    padding: var(--mantine-spacing-md);
   }
 }
 
