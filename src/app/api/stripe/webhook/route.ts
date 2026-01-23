@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 import pino from 'pino';
 import type Stripe from 'stripe';
 import prisma from '@/lib/prisma';
-import { stripe } from '@/lib/stripe';
+import { getStripe } from '@/lib/stripe';
 
 const logger = pino();
 
@@ -15,6 +15,7 @@ export async function POST(req: Request) {
   const sig = hdrs.get('stripe-signature')!;
 
   try {
+    const stripe = getStripe();
     const event = stripe.webhooks.constructEvent(body, sig, process.env.STRIPE_WEBHOOK_SECRET!);
 
     switch (event.type) {
