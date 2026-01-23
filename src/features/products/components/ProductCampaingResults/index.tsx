@@ -11,7 +11,7 @@ import {
   Title,
 } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
-import { Check, Copy, Image as ImageIcon, Instagram, Mail } from 'lucide-react';
+import { Check, Copy, Image as ImageIcon, Instagram, MessageCircle } from 'lucide-react';
 import { useState } from 'react';
 import type { CampaignOutput, CampaignStrategy, ToneOfVoice } from '@/features/products/types';
 import type { BlingProductType } from '@/lib/bling';
@@ -41,7 +41,7 @@ export function ProductCampaignResults({
 
   const handleCopy = async (text: string, field: string) => {
     try {
-      if (navigator.clipboard && navigator.clipboard.writeText) {
+      if (navigator.clipboard?.writeText) {
         await navigator.clipboard.writeText(text);
       } else {
         const textArea = document.createElement('textarea');
@@ -113,7 +113,7 @@ export function ProductCampaignResults({
           Edite os textos conforme necessário e copie ou publique diretamente nos canais.
         </Text>
         <Group gap="xs">
-          <Badge color="gold" variant="outline">
+          <Badge color="brand" variant="outline">
             {strategyLabels[strategy]}
           </Badge>
           <Badge color="gray" variant="outline">
@@ -134,7 +134,7 @@ export function ProductCampaignResults({
           <Group gap="xs">
             <ActionIcon
               variant="subtle"
-              color="gold"
+              color="brand"
               onClick={() => handleCopy(instagram, 'instagram')}
               title="Copiar texto"
             >
@@ -142,7 +142,7 @@ export function ProductCampaignResults({
             </ActionIcon>
             <Button
               size="xs"
-              color="gold"
+              color="brand"
               variant="light"
               leftSection={<Instagram size={14} />}
               onClick={() => handlePublish('Instagram')}
@@ -161,17 +161,17 @@ export function ProductCampaignResults({
 
       <Divider />
 
-      {/* Email Marketing */}
+      {/* WhatsApp */}
       <Stack gap="xs">
         <Group justify="space-between" align="center">
           <Group gap="xs">
-            <Mail size={20} color="#C7A446" />
-            <Text>Assunto de Email Marketing</Text>
+            <MessageCircle size={20} />
+            <Text>WhatsApp</Text>
           </Group>
           <Group gap="xs">
             <ActionIcon
               variant="subtle"
-              color="gold"
+              color="brand"
               onClick={() => handleCopy(email, 'email')}
               title="Copiar texto"
             >
@@ -179,10 +179,10 @@ export function ProductCampaignResults({
             </ActionIcon>
             <Button
               size="xs"
-              color="gold"
+              color="brand"
               variant="light"
-              leftSection={<Mail size={14} />}
-              onClick={() => handlePublish('Email')}
+              leftSection={<MessageCircle size={14} />}
+              onClick={() => handlePublish('WhatsApp')}
             >
               Enviar
             </Button>
@@ -192,7 +192,7 @@ export function ProductCampaignResults({
           value={email}
           onChange={(e) => setEmail(e.currentTarget.value)}
           rows={2}
-          description="Otimizado para taxa de abertura (números e símbolos)"
+          description="Mensagem breve e direta para WhatsApp"
           styles={{ input: { resize: 'none' } }}
         />
       </Stack>
@@ -209,7 +209,7 @@ export function ProductCampaignResults({
           <Group gap="xs">
             <ActionIcon
               variant="subtle"
-              color="gold"
+              color="brand"
               onClick={() => handleCopy(remarketing, 'remarketing')}
               title="Copiar texto"
             >
@@ -234,7 +234,7 @@ export function ProductCampaignResults({
         leftSection={<Copy size={16} />}
         onClick={() =>
           handleCopy(
-            `INSTAGRAM/FACEBOOK:\n${instagram}\n\nEMAIL MARKETING:\n${email}\n\nREMARKETING:\n${remarketing}`,
+            `INSTAGRAM/FACEBOOK:\n${instagram}\n\nWHATSAPP:\n${email}\n\nREMARKETING:\n${remarketing}`,
             'all'
           )
         }
