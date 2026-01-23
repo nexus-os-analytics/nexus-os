@@ -3,7 +3,7 @@
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/next-auth';
 import prisma from '@/lib/prisma';
-import { stripe } from '@/lib/stripe';
+import { getStripe } from '@/lib/stripe';
 
 interface CreateCheckoutInput {
   planTier: 'PRO' | 'FREE'; // Expect PRO for paid plan
@@ -25,6 +25,7 @@ export async function createCheckoutSession({ planTier }: CreateCheckoutInput) {
   const priceId = process.env.STRIPE_PRICE_PRO_MONTHLY;
   if (!priceId) throw new Error('Missing STRIPE_PRICE_PRO_MONTHLY env');
 
+  const stripe = getStripe();
   const checkout = await stripe.checkout.sessions.create({
     mode: 'subscription',
     customer_email: user.email,

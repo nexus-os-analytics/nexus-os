@@ -1,3 +1,14 @@
 import Stripe from 'stripe';
 
-export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
+let stripeClient: Stripe | null = null;
+
+export function getStripe(): Stripe {
+  const key = process.env.STRIPE_SECRET_KEY;
+  if (!key) {
+    throw new Error('Missing STRIPE_SECRET_KEY environment variable');
+  }
+  if (!stripeClient) {
+    stripeClient = new Stripe(key);
+  }
+  return stripeClient;
+}
