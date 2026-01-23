@@ -1,9 +1,16 @@
-export default (name: string, activateLink?: string) => `
-  <html>
-    <body>
-      <h1>Welcome ${name}!</h1>
-      <p>We're excited to have you on board. Please activate your account using the link below:</p>
-      <a href="${activateLink}">Activate Account</a>
-    </body>
-  </html>
-`;
+import { wrapEmail } from './_shared';
+
+export default function welcomeTemplate(name: string, activateLink?: string) {
+  const contentHtml = `
+    <p>Olá <strong>${name}</strong>,</p>
+    <p>Estamos felizes em ter você conosco. Ative sua conta para começar a usar o Nexus OS.</p>
+  `;
+
+  return wrapEmail({
+    title: 'Bem-vindo ao Nexus OS',
+    accentColor: '#A8872A',
+    contentHtml,
+    buttonLabel: 'Ativar conta',
+    buttonHref: activateLink,
+  });
+}

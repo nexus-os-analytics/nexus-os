@@ -770,6 +770,8 @@ export function createBlingRepository({ integrationId }: BlingRepositoryOptions)
           recommendations: a.recommendations ? JSON.stringify(a.recommendations) : null,
           impactAmount,
           impactLabel,
+          alertType: a.type,
+          alertRisk: a.risk,
         });
       }
     }

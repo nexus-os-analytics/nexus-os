@@ -32,6 +32,8 @@ export interface GetOverviewMetricsResponse {
     recommendations: string | null;
     impactAmount?: number; // Valor monetário associado (ex.: capital parado/excesso)
     impactLabel?: string; // Texto curto explicando o impacto
+    alertType?: BlingAlertType;
+    alertRisk?: BlingRuptureRisk;
   }>;
 }
 

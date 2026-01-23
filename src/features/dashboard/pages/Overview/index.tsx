@@ -1,5 +1,6 @@
 'use client';
 import {
+  alpha,
   Badge,
   Box,
   Button,
@@ -9,6 +10,7 @@ import {
   Group,
   List,
   Loader,
+  type MantineTheme,
   Paper,
   SimpleGrid,
   Skeleton,
@@ -24,6 +26,11 @@ import { useBlingIntegration } from '@/hooks/useBlingIntegration';
 import { useOverviewMetrics } from '../../hooks/use-overview-metrics';
 
 export function Overview() {
+  type ThemeWithScheme = MantineTheme & { colorScheme?: 'dark' | 'light' };
+  const BG_SHADE_LIGHT = 0 as const;
+  const BG_SHADE_DARK = 9 as const;
+  const BG_ALPHA_LIGHT = 0.12 as const;
+  const BG_ALPHA_DARK = 0.06 as const;
   const { data, error, refetch } = useOverviewMetrics();
   const { status, refresh } = useBlingIntegration();
   const router = useRouter();
@@ -185,20 +192,61 @@ export function Overview() {
               </Title>
               <SimpleGrid cols={{ base: 1, sm: 3 }} mb="md" spacing="lg">
                 {data.topActions.map((action) => {
+                  const type = action.alertType;
+                  const style = (() => {
+                    switch (type) {
+                      case 'RUPTURE':
+                        return { color: 'red' as const, label: 'Ruptura' };
+                      case 'DEAD_STOCK':
+                        return { color: 'brand' as const, label: 'Dinheiro parado' };
+                      case 'OPPORTUNITY':
+                        return { color: 'green' as const, label: 'Oportunidade' };
+                      case 'FINE':
+                        return { color: 'blue' as const, label: 'Observar' };
+                      case 'LIQUIDATION':
+                        return { color: 'orange' as const, label: 'Liquidação' };
+                      default:
+                        return { color: 'gray' as const, label: 'Produto' };
+                    }
+                  })();
                   const label =
                     action.impactAmount && action.impactAmount > 0
                       ? `${action.impactLabel ?? 'Impacto'}: R$ ${action.impactAmount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`
                       : null;
 
                   return (
-                    <Card key={action.id} padding="xl" radius="md" withBorder shadow="md">
+                    <Card
+                      key={action.id}
+                      padding="xl"
+                      radius="md"
+                      withBorder
+                      shadow="md"
+                      styles={(theme: ThemeWithScheme) => {
+                        const palette =
+                          (theme.colors as Record<string, readonly string[]>)[style.color] ??
+                          theme.colors.gray;
+                        const BG_SHADE =
+                          theme.colorScheme === 'dark' ? BG_SHADE_DARK : BG_SHADE_LIGHT;
+                        const BG_ALPHA =
+                          theme.colorScheme === 'dark' ? BG_ALPHA_DARK : BG_ALPHA_LIGHT;
+                        return {
+                          root: {
+                            borderColor: palette[6],
+                            backgroundColor: alpha(palette[BG_SHADE], BG_ALPHA),
+                          },
+                        };
+                      }}
+                    >
                       <Group justify="space-between" mb="sm">
                         <Text size="sm" fw={700} component="div">
                           <Group gap="xs">
-                            <ThemeIcon size={20} radius="md" color="brand" variant="light">
+                            <ThemeIcon size={20} radius="md" color={style.color} variant="light">
                               <ArrowRight size={12} />
                             </ThemeIcon>
                             {action.name}
+                            <Badge color={style.color} variant="light" size="sm">
+                              {style.label}
+                            </Badge>
                           </Group>
                         </Text>
                         {label && (
