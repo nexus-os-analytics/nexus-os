@@ -91,6 +91,8 @@ export function ProductCard({ product }: ProductCardProps) {
 
   const style = getCardStyle();
   const Icon = style?.icon;
+  const isDeadStock = alert.type === 'DEAD_STOCK';
+  const buttonLabel = isDeadStock ? 'Gerar campanha com IA' : 'Ver Detalhes';
 
   return (
     <Card
@@ -658,10 +660,11 @@ export function ProductCard({ product }: ProductCardProps) {
               router.push(`/produto/${product.blingProductId}`);
             }}
             variant="filled"
+            color={style.color}
             leftSection={<Sparkles size={16} />}
             fullWidth
           >
-            Ver Detalhes
+            {buttonLabel}
           </Button>
         </Group>
       </Stack>
