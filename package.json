@@ -13,7 +13,7 @@
     "prepare": "husky",
     "typecheck": "tsc --noEmit --skipLibCheck",
     "preinstall": "npx only-allow pnpm",
-    "postinstall": "npx prisma generate && npx prisma migrate deploy",
+    "postinstall": "npx prisma generate && npx prisma migrate deploy && npx prisma db seed",
     "seed": "npx prisma db seed",
     "inngest:dev": "npx inngest-cli@latest dev -u http://localhost:3000/api/inngest"
   },
