@@ -81,13 +81,13 @@ export function ProductCampaingGenerator({ product }: ProductCampaingGeneratorPr
     <Stack gap="xl">
       <Box>
         <Group mb="xs">
-          <ThemeIcon size={32} radius="md" variant="filled" color="gold">
+          <ThemeIcon size={32} radius="md" variant="filled" color="brand">
             <Sparkles size={18} />
           </ThemeIcon>
           <Title order={2}>Gerador de Campanha com IA</Title>
         </Group>
         <Text size="sm" c="dimmed">
-          Escolha a estratégia e o tom. Geraremos textos para Instagram, Email e Remarketing.
+          Escolha a estratégia e o tom. Geraremos textos para Instagram, WhatsApp e Remarketing.
         </Text>
       </Box>
 
@@ -161,10 +161,10 @@ export function ProductCampaingGenerator({ product }: ProductCampaingGeneratorPr
                 cursor: 'pointer',
                 borderWidth: 2,
                 borderColor:
-                  selectedStrategy === strategy.value ? 'var(--mantine-color-gold-5)' : undefined,
+                  selectedStrategy === strategy.value ? 'var(--mantine-color-brand-5)' : undefined,
                 backgroundColor:
                   selectedStrategy === strategy.value
-                    ? 'var(--mantine-color-gold-light)'
+                    ? 'var(--mantine-color-brand-light)'
                     : undefined,
                 transition: 'all 0.2s ease',
               }}
@@ -174,7 +174,7 @@ export function ProductCampaingGenerator({ product }: ProductCampaingGeneratorPr
               <Text size="sm" c="dimmed" mb="xs">
                 {strategy.description}
               </Text>
-              <Badge color="gold" variant="outline" size="sm">
+              <Badge color="brand" variant="outline" size="sm">
                 {strategy.pricingSuggestion}
               </Badge>
             </Paper>
@@ -218,7 +218,7 @@ export function ProductCampaingGenerator({ product }: ProductCampaingGeneratorPr
         disabled={isGenerating}
         fullWidth
         size="lg"
-        color="gold"
+        color="brand"
         leftSection={isGenerating ? <Loader size="xs" color="white" /> : <Sparkles size={20} />}
       >
         {isGenerating ? 'Gerando Campanhas...' : 'Gerar Campanhas com IA'}
