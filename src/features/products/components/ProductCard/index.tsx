@@ -91,8 +91,7 @@ export function ProductCard({ product }: ProductCardProps) {
 
   const style = getCardStyle();
   const Icon = style?.icon;
-  const isDeadStock = alert.type === 'DEAD_STOCK';
-  const buttonLabel = isDeadStock ? 'Gerar campanha com IA' : 'Ver Detalhes';
+  const showDualCtas = alert.type === 'DEAD_STOCK' || alert.type === 'LIQUIDATION';
 
   return (
     <Card
@@ -163,6 +162,38 @@ export function ProductCard({ product }: ProductCardProps) {
                 )}
               </Group>
             </Group>
+
+            {/* VVD Summary (always visible) */}
+            <Divider my="xs" />
+            <Title order={6} mb="xs">
+              Vendas por dia (VVD)
+            </Title>
+            <Stack gap={6}>
+              <Group justify="space-between">
+                <Text size="sm" c="dimmed">
+                  VVD Real
+                </Text>
+                <Text size="sm" fw={600}>
+                  {typeof alert.vvdReal === 'number' ? alert.vvdReal.toFixed(1) : '—'} unid./dia
+                </Text>
+              </Group>
+              <Group justify="space-between">
+                <Text size="sm" c="dimmed">
+                  VVD últimos 7 dias
+                </Text>
+                <Text size="sm" fw={600}>
+                  {typeof alert.vvd7 === 'number' ? alert.vvd7.toFixed(1) : '—'} unid./dia
+                </Text>
+              </Group>
+              <Group justify="space-between">
+                <Text size="sm" c="dimmed">
+                  VVD últimos 30 dias
+                </Text>
+                <Text size="sm" fw={600}>
+                  {typeof alert.vvd30 === 'number' ? alert.vvd30.toFixed(1) : '—'} unid./dia
+                </Text>
+              </Group>
+            </Stack>
           </Stack>
         </Flex>
 
@@ -452,32 +483,6 @@ export function ProductCard({ product }: ProductCardProps) {
                     )}
                   </>
                 )}
-
-                {alert.recommendations &&
-                  (() => {
-                    try {
-                      const recs = Array.isArray(alert.recommendations)
-                        ? alert.recommendations
-                        : JSON.parse(alert.recommendations as unknown as string);
-                      return Array.isArray(recs) && recs.length > 0 ? (
-                        <>
-                          <Divider my="xs" />
-                          <Text size="sm" mb="xs">
-                            Ações recomendadas:
-                          </Text>
-                          <Stack gap={4}>
-                            {recs.map((r: string, i: number) => (
-                              <Text key={i} size="sm">
-                                - {r}
-                              </Text>
-                            ))}
-                          </Stack>
-                        </>
-                      ) : null;
-                    } catch {
-                      return null;
-                    }
-                  })()}
               </Stack>
             </Paper>
           )}
@@ -621,52 +626,80 @@ export function ProductCard({ product }: ProductCardProps) {
                     )}
                   </>
                 )}
-
-                {alert.recommendations &&
-                  (() => {
-                    try {
-                      const recs = Array.isArray(alert.recommendations)
-                        ? alert.recommendations
-                        : JSON.parse(alert.recommendations as unknown as string);
-                      return Array.isArray(recs) && recs.length > 0 ? (
-                        <>
-                          <Divider my="xs" />
-                          <Text size="sm" mb="xs">
-                            Recomendações:
-                          </Text>
-                          <Stack gap={4}>
-                            {recs.map((r: string, i: number) => (
-                              <Text key={i} size="sm">
-                                - {r}
-                              </Text>
-                            ))}
-                          </Stack>
-                        </>
-                      ) : null;
-                    } catch {
-                      return null;
-                    }
-                  })()}
               </Stack>
             </Paper>
           )}
         </Box>
 
-        {/* CTA: único botão de detalhes */}
-        <Group justify="flex-end" mt="sm">
-          <Button
-            type="button"
-            onClick={() => {
-              router.push(`/produto/${product.blingProductId}`);
-            }}
-            variant="filled"
-            color={style.color}
-            leftSection={<Sparkles size={16} />}
-            fullWidth
-          >
-            {buttonLabel}
-          </Button>
-        </Group>
+        {/* Recommended Actions - shown on all cards */}
+        {(() => {
+          try {
+            const raw = alert.recommendations;
+            let recs: string[] = [];
+            if (Array.isArray(raw)) {
+              recs = raw as string[];
+            } else if (raw) {
+              recs = JSON.parse(raw as unknown as string) as string[];
+            }
+            return recs.length > 0 ? (
+              <Paper p="md" radius="md" withBorder>
+                <Title order={6} mb="xs">
+                  Ações recomendadas
+                </Title>
+                <Stack gap={4}>
+                  {recs.map((r: string, i: number) => (
+                    <Text key={i} size="sm">
+                      - {r}
+                    </Text>
+                  ))}
+                </Stack>
+              </Paper>
+            ) : null;
+          } catch {
+            return null;
+          }
+        })()}
+
+        {/* CTAs */}
+        {showDualCtas ? (
+          <Stack mt="sm">
+            <Button
+              type="button"
+              onClick={() => {
+                router.push(`/produto/${product.blingProductId}`);
+              }}
+              variant="light"
+              color={style.color}
+            >
+              Ver detalhes
+            </Button>
+            <Button
+              type="button"
+              onClick={() => {
+                router.push(`/produto/${product.blingProductId}?tab=campaign`);
+              }}
+              variant="filled"
+              color={style.color}
+              leftSection={<Sparkles size={16} />}
+            >
+              Gerar campanha com IA
+            </Button>
+          </Stack>
+        ) : (
+          <Group justify="flex-end" mt="sm">
+            <Button
+              type="button"
+              onClick={() => {
+                router.push(`/produto/${product.blingProductId}`);
+              }}
+              variant="filled"
+              color={style.color}
+              fullWidth
+            >
+              Ver detalhes
+            </Button>
+          </Group>
+        )}
       </Stack>
     </Card>
   );
