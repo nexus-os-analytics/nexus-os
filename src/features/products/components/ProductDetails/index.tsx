@@ -24,7 +24,7 @@ import {
   Sparkles,
   TrendingUp,
 } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import type { BlingProductType } from '@/lib/bling';
 import { formatDate } from '@/lib/utils';
 import { ProductCampaingGenerator } from '../ProductCampaingGenerator';
@@ -82,6 +82,10 @@ export function ProductDetails({ product }: ProductDetailsProps) {
 
   const { icon: Icon, color, badge: typeBadge } = getCardStyle();
   const currencyBRL = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
+  const searchParams = useSearchParams();
+  const tabParam = searchParams.get('tab');
+  const defaultTab =
+    alert.type === 'LIQUIDATION' && tabParam === 'campaign' ? 'campaign' : 'details';
 
   return (
     <Container size="xl">
@@ -181,7 +185,7 @@ export function ProductDetails({ product }: ProductDetailsProps) {
       </Card>
 
       {/* Tabs */}
-      <Tabs defaultValue="details" color="gold">
+      <Tabs defaultValue={defaultTab} color="gold">
         <Tabs.List>
           <Tabs.Tab value="details" leftSection={<Info size={16} />}>
             Detalhes
@@ -189,17 +193,19 @@ export function ProductDetails({ product }: ProductDetailsProps) {
           <Tabs.Tab value="settings" leftSection={<Settings size={16} />}>
             Configurações
           </Tabs.Tab>
-          <Tabs.Tab
-            value="campaign"
-            leftSection={<Sparkles size={16} />}
-            style={{
-              boxShadow:
-                '0 0 0 2px var(--mantine-color-brand-5), 0 0 12px var(--mantine-color-brand-4)',
-              borderRadius: 'var(--mantine-radius-md)',
-            }}
-          >
-            Gerador de Campanhas
-          </Tabs.Tab>
+          {alert.type === 'LIQUIDATION' && (
+            <Tabs.Tab
+              value="campaign"
+              leftSection={<Sparkles size={16} />}
+              style={{
+                boxShadow:
+                  '0 0 0 2px var(--mantine-color-brand-5), 0 0 12px var(--mantine-color-brand-4)',
+                borderRadius: 'var(--mantine-radius-md)',
+              }}
+            >
+              Gerador de Campanhas
+            </Tabs.Tab>
+          )}
         </Tabs.List>
 
         {/* Details Tab */}
@@ -216,9 +222,11 @@ export function ProductDetails({ product }: ProductDetailsProps) {
         </Tabs.Panel>
 
         {/* Campaign Generator Tab */}
-        <Tabs.Panel value="campaign" pt="lg">
-          <ProductCampaingGenerator product={product} />
-        </Tabs.Panel>
+        {alert.type === 'LIQUIDATION' && (
+          <Tabs.Panel value="campaign" pt="lg">
+            <ProductCampaingGenerator product={product} />
+          </Tabs.Panel>
+        )}
       </Tabs>
     </Container>
   );
