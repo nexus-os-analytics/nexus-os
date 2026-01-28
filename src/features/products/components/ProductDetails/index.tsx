@@ -189,17 +189,19 @@ export function ProductDetails({ product }: ProductDetailsProps) {
           <Tabs.Tab value="settings" leftSection={<Settings size={16} />}>
             Configurações
           </Tabs.Tab>
-          <Tabs.Tab
-            value="campaign"
-            leftSection={<Sparkles size={16} />}
-            style={{
-              boxShadow:
-                '0 0 0 2px var(--mantine-color-brand-5), 0 0 12px var(--mantine-color-brand-4)',
-              borderRadius: 'var(--mantine-radius-md)',
-            }}
-          >
-            Gerador de Campanhas
-          </Tabs.Tab>
+          {alert.type === 'LIQUIDATION' && (
+            <Tabs.Tab
+              value="campaign"
+              leftSection={<Sparkles size={16} />}
+              style={{
+                boxShadow:
+                  '0 0 0 2px var(--mantine-color-brand-5), 0 0 12px var(--mantine-color-brand-4)',
+                borderRadius: 'var(--mantine-radius-md)',
+              }}
+            >
+              Gerador de Campanhas
+            </Tabs.Tab>
+          )}
         </Tabs.List>
 
         {/* Details Tab */}
@@ -216,9 +218,11 @@ export function ProductDetails({ product }: ProductDetailsProps) {
         </Tabs.Panel>
 
         {/* Campaign Generator Tab */}
-        <Tabs.Panel value="campaign" pt="lg">
-          <ProductCampaingGenerator product={product} />
-        </Tabs.Panel>
+        {alert.type === 'LIQUIDATION' && (
+          <Tabs.Panel value="campaign" pt="lg">
+            <ProductCampaingGenerator product={product} />
+          </Tabs.Panel>
+        )}
       </Tabs>
     </Container>
   );
