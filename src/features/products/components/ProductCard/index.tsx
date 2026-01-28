@@ -91,8 +91,7 @@ export function ProductCard({ product }: ProductCardProps) {
 
   const style = getCardStyle();
   const Icon = style?.icon;
-  const isDeadStock = alert.type === 'DEAD_STOCK';
-  const buttonLabel = isDeadStock ? 'Gerar campanha com IA' : 'Ver Detalhes';
+  const showDualCtas = alert.type === 'DEAD_STOCK' || alert.type === 'LIQUIDATION';
 
   return (
     <Card
@@ -652,21 +651,46 @@ export function ProductCard({ product }: ProductCardProps) {
           )}
         </Box>
 
-        {/* CTA: único botão de detalhes */}
-        <Group justify="flex-end" mt="sm">
-          <Button
-            type="button"
-            onClick={() => {
-              router.push(`/produto/${product.blingProductId}`);
-            }}
-            variant="filled"
-            color={style.color}
-            leftSection={<Sparkles size={16} />}
-            fullWidth
-          >
-            {buttonLabel}
-          </Button>
-        </Group>
+        {/* CTAs */}
+        {showDualCtas ? (
+          <Stack mt="sm">
+            <Button
+              type="button"
+              onClick={() => {
+                router.push(`/produto/${product.blingProductId}`);
+              }}
+              variant="light"
+              color={style.color}
+            >
+              Ver detalhes
+            </Button>
+            <Button
+              type="button"
+              onClick={() => {
+                router.push(`/produto/${product.blingProductId}?tab=campaign`);
+              }}
+              variant="filled"
+              color={style.color}
+              leftSection={<Sparkles size={16} />}
+            >
+              Gerar campanha com IA
+            </Button>
+          </Stack>
+        ) : (
+          <Group justify="flex-end" mt="sm">
+            <Button
+              type="button"
+              onClick={() => {
+                router.push(`/produto/${product.blingProductId}`);
+              }}
+              variant="filled"
+              color={style.color}
+              fullWidth
+            >
+              Ver detalhes
+            </Button>
+          </Group>
+        )}
       </Stack>
     </Card>
   );

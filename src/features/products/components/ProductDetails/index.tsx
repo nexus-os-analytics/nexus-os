@@ -24,7 +24,7 @@ import {
   Sparkles,
   TrendingUp,
 } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import type { BlingProductType } from '@/lib/bling';
 import { formatDate } from '@/lib/utils';
 import { ProductCampaingGenerator } from '../ProductCampaingGenerator';
@@ -82,6 +82,10 @@ export function ProductDetails({ product }: ProductDetailsProps) {
 
   const { icon: Icon, color, badge: typeBadge } = getCardStyle();
   const currencyBRL = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
+  const searchParams = useSearchParams();
+  const tabParam = searchParams.get('tab');
+  const defaultTab =
+    alert.type === 'LIQUIDATION' && tabParam === 'campaign' ? 'campaign' : 'details';
 
   return (
     <Container size="xl">
@@ -181,7 +185,7 @@ export function ProductDetails({ product }: ProductDetailsProps) {
       </Card>
 
       {/* Tabs */}
-      <Tabs defaultValue="details" color="gold">
+      <Tabs defaultValue={defaultTab} color="gold">
         <Tabs.List>
           <Tabs.Tab value="details" leftSection={<Info size={16} />}>
             Detalhes
