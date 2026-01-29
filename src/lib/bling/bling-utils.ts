@@ -22,6 +22,8 @@ const DEFAULT_GROWTH_THRESHOLD = 0.5; // 50%
 const DEFAULT_DEAD_STOCK_CAPITAL = 5000;
 const DEFAULT_CAPITAL_OPTIMIZATION_THRESHOLD = 10000;
 const DEFAULT_LIQUIDATION_EXCESS_CAPITAL = 2000;
+// Secondary fixed threshold for OPPORTUNITY when demand is strong
+const OPPORTUNITY_SECONDARY_GROWTH_THRESHOLD = 20; // percent
 const DEFAULT_LIQUIDATION_DISCOUNT = 0.3;
 
 import type { BlingAlertType, BlingRuptureRisk } from '@prisma/client';
@@ -431,7 +433,12 @@ export function determineProductType(
   }
   const growthMin = thresholds?.opportunityGrowthThresholdPct ?? DEFAULT_GROWTH_THRESHOLD; // 50%
   const vvdMin = thresholds?.opportunityDemandVvd ?? 1;
-  if (growthTrend > growthMin * PERCENT_FACTOR && vvdReal > vvdMin) return 'OPPORTUNITY';
+  if (
+    growthTrend > growthMin * PERCENT_FACTOR ||
+    (vvdReal > vvdMin && growthTrend > OPPORTUNITY_SECONDARY_GROWTH_THRESHOLD)
+  ) {
+    return 'OPPORTUNITY';
+  }
   const deadCap = thresholds?.deadStockCapitalThreshold ?? DEFAULT_DEAD_STOCK_CAPITAL;
   const liqCap =
     thresholds?.liquidationExcessCapitalThreshold ?? DEFAULT_LIQUIDATION_EXCESS_CAPITAL;
