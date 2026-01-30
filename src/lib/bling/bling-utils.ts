@@ -181,11 +181,24 @@ export function calculateCapitalStuck(costPrice: number, currentStock: number): 
  * calculateDaysSinceLastSale(new Date('2025-11-19'), new Date('2025-11-29'))
  * // retorna 10
  */
+// Overloads: calculate days since last sale from sales array or a given date
+export function calculateDaysSinceLastSale(orders: BlingSalesHistoryType[]): number;
+export function calculateDaysSinceLastSale(lastSaleDate: Date | null, referenceDate?: Date): number;
 export function calculateDaysSinceLastSale(
-  lastSaleDate: Date | null,
+  ordersOrDate: BlingSalesHistoryType[] | Date | null,
   referenceDate: Date = new Date()
 ): number {
-  return calc.daysSince(lastSaleDate, referenceDate);
+  if (Array.isArray(ordersOrDate)) {
+    const orders = ordersOrDate;
+    if (orders.length === 0) return 999;
+    const sorted = [...orders].sort(
+      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+    );
+    const lastSale = new Date(sorted[0].date);
+    const diffTime = referenceDate.getTime() - lastSale.getTime();
+    return Math.floor(diffTime / CONSTANTS.MS_PER_DAY);
+  }
+  return calc.daysSince(ordersOrDate, referenceDate);
 }
 
 /**
@@ -315,11 +328,47 @@ export function calculateExcessPercentage(
  * calculateDaysOutOfStock(new Date('2025-11-10'), new Date('2025-11-29'))
  * // retorna 19
  */
+// Overloads: calculate stock-out days from orders or fallback to date-based
 export function calculateDaysOutOfStock(
-  lastSaleDate: Date,
-  referenceDate: Date = new Date()
+  orders: BlingSalesHistoryType[],
+  currentStock: number,
+  periodDays: number
+): number;
+export function calculateDaysOutOfStock(lastSaleDate: Date, referenceDate?: Date): number;
+export function calculateDaysOutOfStock(
+  ordersOrDate: BlingSalesHistoryType[] | Date,
+  currentStockOrRef: number | Date = new Date(),
+  periodDays?: number
 ): number {
-  return calculateDaysSinceLastSale(lastSaleDate, referenceDate);
+  // Array-based implementation per spec
+  if (Array.isArray(ordersOrDate)) {
+    const orders = ordersOrDate;
+    const currentStock = typeof currentStockOrRef === 'number' ? currentStockOrRef : 0;
+    const days = typeof periodDays === 'number' ? periodDays : CONSTANTS.DAYS_IN_30;
+    if (currentStock > 0 && orders.length > 0) {
+      return 0;
+    }
+    if (currentStock === 0 && orders.length > 0) {
+      const sorted = [...orders].sort(
+        (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+      );
+      const lastSaleDate = new Date(sorted[0].date);
+      const today = new Date();
+      const diffTime = today.getTime() - lastSaleDate.getTime();
+      const daysSinceLastSale = Math.floor(diffTime / CONSTANTS.MS_PER_DAY);
+      return Math.min(daysSinceLastSale, days);
+    }
+    if (currentStock === 0 && orders.length === 0) {
+      return days;
+    }
+    return 0;
+  }
+  // Date-based fallback
+  if (ordersOrDate instanceof Date) {
+    const referenceDate = currentStockOrRef instanceof Date ? currentStockOrRef : new Date();
+    return calculateDaysSinceLastSale(ordersOrDate, referenceDate);
+  }
+  return 0;
 }
 
 /**
@@ -370,21 +419,13 @@ export function calculateEstimatedLostAmount(
  */
 export function determineRiskLevel(
   daysRemaining: number,
-  daysOutOfStock: number = 0,
-  thresholds?: {
-    criticalDaysRemainingThreshold: number;
-    highDaysRemainingThreshold: number;
-    mediumDaysRemainingThreshold: number;
-  }
+  daysOutOfStock: number,
+  leadTime: number
 ): BlingRuptureRisk {
-  const t = {
-    crit: thresholds?.criticalDaysRemainingThreshold ?? CONSTANTS.DEFAULTS.CRIT_DAYS,
-    high: thresholds?.highDaysRemainingThreshold ?? CONSTANTS.DEFAULTS.HIGH_DAYS,
-    med: thresholds?.mediumDaysRemainingThreshold ?? CONSTANTS.DEFAULTS.MEDIUM_DAYS,
-  };
-  if (daysOutOfStock > 0 || daysRemaining <= t.crit) return 'CRITICAL';
-  if (daysRemaining <= t.high) return 'HIGH';
-  if (daysRemaining <= t.med) return 'MEDIUM';
+  if (daysOutOfStock > 0) return 'CRITICAL';
+  if (daysRemaining <= 2) return 'CRITICAL';
+  if (daysRemaining <= 7) return 'HIGH';
+  if (daysRemaining <= leadTime) return 'MEDIUM';
   return 'LOW';
 }
 
@@ -401,41 +442,35 @@ export function determineRiskLevel(
  * // Para crescimento de 130% e risco médio
  * determineProductType(130, 'MEDIUM', 1000, 2.5) // retorna 'OPPORTUNITY'
  */
-export function determineProductType(
-  growthTrend: number,
-  riskLevel: BlingRuptureRisk,
-  capitalStuck: number,
-  vvdReal: number,
-  thresholds?: {
-    opportunityGrowthThresholdPct: number;
-    opportunityDemandVvd: number;
-    deadStockCapitalThreshold: number;
-    ruptureCapitalThreshold: number;
-    currentStock?: number;
-    reorderPoint?: number;
-    idealStock?: number;
-    excessCapital?: number;
-    liquidationExcessCapitalThreshold?: number;
-  }
-): BlingAlertType {
-  // Simplified classification aligned to example
-  if (riskLevel === 'CRITICAL' || riskLevel === 'HIGH') return 'RUPTURE';
+export function determineProductType(params: {
+  riskLevel: BlingRuptureRisk;
+  growthTrend: number;
+  excessCapital: number;
+  capitalStuck: number;
+  vvdReal: number;
+  daysSinceLastSale: number;
+  daysRemaining: number;
+  leadTime: number;
+  safetyDays: number;
+  excessPercentage: number;
+}): BlingAlertType {
+  const {
+    riskLevel,
+    growthTrend,
+    excessCapital: _excessCapital,
+    capitalStuck: _capitalStuck,
+    vvdReal,
+    daysSinceLastSale,
+    daysRemaining,
+    leadTime,
+    safetyDays,
+    excessPercentage,
+  } = params;
 
-  const defaults = CONSTANTS.DEFAULTS;
-  const growthMin = thresholds?.opportunityGrowthThresholdPct ?? defaults.GROWTH_THRESHOLD;
-  const vvdMin = thresholds?.opportunityDemandVvd ?? 1;
-  if (
-    growthTrend > growthMin * CONSTANTS.PERCENT ||
-    (vvdReal > vvdMin && growthTrend > defaults.OPPORTUNITY_SECONDARY_GROWTH)
-  ) {
-    return 'OPPORTUNITY';
-  }
-  const liqCap = thresholds?.liquidationExcessCapitalThreshold ?? defaults.LIQUIDATION_EXCESS;
-  if (thresholds?.excessCapital !== undefined && thresholds.excessCapital >= liqCap) {
-    return 'LIQUIDATION' as unknown as BlingAlertType;
-  }
-  const deadCap = thresholds?.deadStockCapitalThreshold ?? defaults.DEAD_CAPITAL;
-  if (capitalStuck > deadCap && vvdReal <= 1) return 'DEAD_STOCK';
+  if (daysSinceLastSale > 90) return 'DEAD_STOCK';
+  if (riskLevel === 'CRITICAL' || daysRemaining < leadTime + safetyDays) return 'RUPTURE';
+  if (growthTrend > 50 && vvdReal >= 1) return 'OPPORTUNITY';
+  if (excessPercentage > 200 && daysSinceLastSale < 90) return 'LIQUIDATION';
   return 'FINE';
 }
 
@@ -628,7 +663,7 @@ export function calculateAllMetrics(
 } {
   const {
     totalSales,
-    daysWithSales,
+    // daysWithSales,
     totalLast30DaysSales,
     totalLast7DaysSales,
     currentStock,
@@ -637,30 +672,32 @@ export function calculateAllMetrics(
     lastSaleDate,
     hasStockOut,
     stockOutDate,
-    daysWithSalesWithinLast30,
-    daysWithSalesWithinLast7,
+    // daysWithSalesWithinLast30,
+    // daysWithSalesWithinLast7,
   } = productData;
 
   // Cálculos básicos
-  const vvdReal = calc.vvdReal(totalSales, daysWithSales);
-  const vvd30 = calc.vvdPeriod(
-    totalLast30DaysSales,
-    CONSTANTS.DAYS_IN_30,
-    daysWithSalesWithinLast30
-  );
-  const vvd7 = calc.vvdPeriod(totalLast7DaysSales, CONSTANTS.DAYS_IN_7, daysWithSalesWithinLast7);
+  // Days since last sale and stock-out aware VVD calculations
+  const daysSinceLastSale = calc.daysSince(lastSaleDate);
+  const daysOutOfStock30 =
+    currentStock === 0 ? Math.min(daysSinceLastSale, CONSTANTS.DAYS_IN_30) : 0;
+  const daysWithStock30 = CONSTANTS.DAYS_IN_30 - daysOutOfStock30;
+  const vvdReal = daysWithStock30 > 0 ? totalSales / daysWithStock30 : 0;
+  const vvd30 = totalLast30DaysSales / Math.max(daysWithStock30, 1);
+  const daysOutOfStock7 = currentStock === 0 ? Math.min(daysSinceLastSale, CONSTANTS.DAYS_IN_7) : 0;
+  const daysWithStock7 = CONSTANTS.DAYS_IN_7 - daysOutOfStock7;
+  const vvd7 = totalLast7DaysSales / Math.max(daysWithStock7, 1);
   const daysRemaining = calc.daysRemaining(currentStock, vvdReal);
   const reorderPoint = calc.reorderPoint(vvdReal, settings?.leadTimeDays, settings?.safetyDays);
   const growthTrend = calc.growth(vvd7, vvd30);
   const capitalStuck = calc.capitalStuck(costPrice, currentStock);
-  const daysSinceLastSale = calc.daysSince(lastSaleDate);
-  // Cobertura e excesso conforme fórmulas solicitadas: vvdReal x (lead 15 + safety 5)
+  // Cobertura e excesso conforme fórmulas solicitadas
   const leadTime = settings?.leadTimeDays ?? CONSTANTS.DEFAULTS.LEAD_TIME;
   const safetyDays = settings?.safetyDays ?? CONSTANTS.DEFAULTS.SAFETY;
-  const idealStock = calculateEstimatedSalesCover(vvdReal, leadTime, safetyDays);
-  const excessUnits = calculateExcessUnitsFromCover(currentStock, idealStock);
-  const excessCapital = calculateExcessCapital(excessUnits, costPrice);
-  const excessPercentage = calculateExcessPercentage(excessUnits, idealStock);
+  const idealStock = vvdReal * (leadTime + safetyDays);
+  const excessUnits = Math.max(0, currentStock - idealStock);
+  const excessPercentage = idealStock > 0 ? (excessUnits / idealStock) * CONSTANTS.PERCENT : 0;
+  const excessCapital = excessUnits * costPrice;
 
   // Cálculos de liquidação
   const suggestedPrice = calculateSuggestedLiquidationPrice(
@@ -678,27 +715,18 @@ export function calculateAllMetrics(
     : 0;
 
   // Classificações
-  const risk = determineRiskLevel(daysRemaining, daysOutOfStock, {
-    criticalDaysRemainingThreshold:
-      settings?.criticalDaysRemainingThreshold ?? CONSTANTS.DEFAULTS.CRIT_DAYS,
-    highDaysRemainingThreshold:
-      settings?.highDaysRemainingThreshold ?? CONSTANTS.DEFAULTS.HIGH_DAYS,
-    mediumDaysRemainingThreshold:
-      settings?.mediumDaysRemainingThreshold ?? CONSTANTS.DEFAULTS.MEDIUM_DAYS,
-  });
-  const type = determineProductType(growthTrend, risk, capitalStuck, vvdReal, {
-    opportunityGrowthThresholdPct:
-      settings?.opportunityGrowthThresholdPct ?? CONSTANTS.DEFAULTS.GROWTH_THRESHOLD,
-    opportunityDemandVvd: settings?.opportunityDemandVvd ?? 1,
-    deadStockCapitalThreshold:
-      settings?.deadStockCapitalThreshold ?? CONSTANTS.DEFAULTS.DEAD_CAPITAL,
-    ruptureCapitalThreshold: settings?.ruptureCapitalThreshold ?? CONSTANTS.DEFAULTS.DEAD_CAPITAL,
-    currentStock,
-    reorderPoint,
-    idealStock,
+  const risk = determineRiskLevel(daysRemaining, daysOutOfStock, leadTime);
+  const type = determineProductType({
+    riskLevel: risk,
+    growthTrend,
     excessCapital,
-    liquidationExcessCapitalThreshold:
-      settings?.liquidationExcessCapitalThreshold ?? CONSTANTS.DEFAULTS.LIQUIDATION_EXCESS,
+    capitalStuck,
+    vvdReal,
+    daysSinceLastSale,
+    daysRemaining,
+    leadTime,
+    safetyDays,
+    excessPercentage,
   });
   const message = generateStatusMessage(risk, daysRemaining, daysOutOfStock, type);
   const recommendations = generateRecommendations(type, growthTrend, capitalStuck, {
@@ -709,9 +737,9 @@ export function calculateAllMetrics(
   });
 
   // Guards and integer casting for Prisma Int fields
-  const safeDaysRemaining = Number.isFinite(daysRemaining) ? Math.round(daysRemaining) : 0;
+  const safeDaysRemaining = Number.isFinite(daysRemaining) ? Math.floor(daysRemaining) : 0;
   const safeEstimatedDeadline = Number.isFinite(estimatedDeadline)
-    ? Math.round(estimatedDeadline)
+    ? Math.floor(estimatedDeadline)
     : 0;
   const safeDaysOutOfStock = Number.isFinite(daysOutOfStock) ? Math.round(daysOutOfStock) : 0;
   const safeEstimatedLostSales = Number.isFinite(estimatedLostSales)
