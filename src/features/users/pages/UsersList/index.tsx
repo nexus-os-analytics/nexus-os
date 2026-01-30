@@ -17,24 +17,28 @@ import { useModals } from '@mantine/modals';
 import { notifications } from '@mantine/notifications';
 import { IconSearch, IconTrash, IconUserEdit } from '@tabler/icons-react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
 import { deleteUserAction } from '@/features/users/actions/user.actions';
+// removed unused router
+import EditUserModal from '@/features/users/components/EditUserModal';
 import { PAGE_SIZE_DEFAULT } from '../../constants';
 import type { User } from '../../types/user';
 import InviteUserForm from './InviteUserForm';
 
 export default function UsersList() {
   const modals = useModals();
-  const router = useRouter();
   const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
   const [roleFilter, setRoleFilter] = useState<string | null>(null);
+  const [statusFilter, setStatusFilter] = useState<string | null>(null);
   const [page, setPage] = useState(1);
 
   const queryKey = useMemo(
-    () => ['users', { search, role: roleFilter, page, pageSize: PAGE_SIZE_DEFAULT }],
-    [search, roleFilter, page]
+    () => [
+      'users',
+      { search, role: roleFilter, status: statusFilter, page, pageSize: PAGE_SIZE_DEFAULT },
+    ],
+    [search, roleFilter, statusFilter, page]
   );
   const { data, isLoading, isError } = useQuery<{
     items: User[];
@@ -47,6 +51,7 @@ export default function UsersList() {
       const params = new URLSearchParams();
       if (search) params.set('search', search);
       if (roleFilter) params.set('role', roleFilter);
+      if (statusFilter) params.set('status', statusFilter);
       params.set('page', String(page));
       params.set('pageSize', String(PAGE_SIZE_DEFAULT));
       const res = await fetch(`/api/users?${params.toString()}`);
@@ -64,8 +69,11 @@ export default function UsersList() {
   const items = data?.items ?? [];
   const totalPages = Math.ceil((data?.total ?? 0) / (data?.pageSize ?? PAGE_SIZE_DEFAULT));
 
-  const onEdit = (id: string) => {
-    router.push(`/users/${id}`);
+  const onEdit = (user: User) => {
+    modals.openModal({
+      title: 'Editar usuário',
+      children: <EditUserModal user={user} onClose={() => modals.closeAll()} />,
+    });
   };
 
   const onDelete = (id: string, name: string) => {
@@ -137,6 +145,17 @@ export default function UsersList() {
             onChange={setRoleFilter}
             clearable
           />
+          <Select
+            label="Status"
+            placeholder="Todos"
+            data={[
+              { value: 'active', label: 'Ativo' },
+              { value: 'inactive', label: 'Inativo' },
+            ]}
+            value={statusFilter}
+            onChange={setStatusFilter}
+            clearable
+          />
         </Group>
 
         <Table striped highlightOnHover withTableBorder>
@@ -145,7 +164,7 @@ export default function UsersList() {
               <Table.Th>Usuário</Table.Th>
               <Table.Th>E-mail</Table.Th>
               <Table.Th>Função</Table.Th>
-              <Table.Th>2FA</Table.Th>
+              <Table.Th>Status</Table.Th>
               <Table.Th>Tentativas</Table.Th>
               <Table.Th>Criado em</Table.Th>
               <Table.Th></Table.Th>
@@ -188,7 +207,7 @@ export default function UsersList() {
                     <Badge color={user.role === 'ADMIN' ? 'blue' : 'gray'}>{user.role}</Badge>
                   </Table.Td>
                   <Table.Td>
-                    {user.isTwoFactorEnabled ? (
+                    {!user.deletedAt ? (
                       <Badge color="green">Ativo</Badge>
                     ) : (
                       <Badge color="gray">Inativo</Badge>
@@ -198,7 +217,7 @@ export default function UsersList() {
                   <Table.Td>{new Date(user.createdAt).toLocaleDateString('pt-BR')}</Table.Td>
                   <Table.Td>
                     <Group gap="xs">
-                      <ActionIcon color="blue" variant="subtle" onClick={() => onEdit(user.id)}>
+                      <ActionIcon color="blue" variant="subtle" onClick={() => onEdit(user)}>
                         <IconUserEdit size={16} />
                       </ActionIcon>
                       <ActionIcon

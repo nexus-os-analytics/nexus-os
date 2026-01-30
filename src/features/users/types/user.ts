@@ -10,4 +10,6 @@ export interface User {
   isTwoFactorEnabled: boolean;
   failedAttempts: number;
   lockedUntil?: string | null;
+  planTier?: 'FREE' | 'PRO';
+  deletedAt?: string | null;
 }

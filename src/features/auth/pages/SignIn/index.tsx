@@ -74,10 +74,22 @@ export function SignIn() {
   };
 
   useEffect(() => {
+    // Surface authentication errors forwarded by NextAuth (e.g., AccessDenied)
+    const err = getQueryParam('error');
+    if (err) {
+      if (err === 'AccessDenied') {
+        setErrorMessage('Conta desativada. Entre em contato com o suporte.');
+      } else if (err === 'invalid_credentials') {
+        setErrorMessage('E-mail ou senha inválidos');
+      } else {
+        setErrorMessage('Falha na autenticação. Tente novamente.');
+      }
+    }
+
     if (status === 'authenticated' && !required2FA) {
       router.push(redirect as string);
     }
-  }, [status, required2FA, router, redirect]);
+  }, [status, required2FA, router, redirect, getQueryParam]);
 
   if (required2FA)
     return (

@@ -71,6 +71,23 @@ export function useBlingIntegration() {
     }
   };
 
+  const sync = async (): Promise<void> => {
+    try {
+      setLoading(true);
+      const resp = await fetch('/api/integrations/bling/sync', { method: 'POST' });
+      if (!resp.ok) {
+        const err = await resp.json().catch(() => ({ error: 'Erro ao iniciar sync' }));
+        throw new Error(err.error ?? 'Erro ao iniciar sincronização');
+      }
+      await refresh();
+    } catch (error) {
+      console.error('Error triggering Bling sync:', error);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (session?.user?.id) {
       refresh();
@@ -84,5 +101,6 @@ export function useBlingIntegration() {
     connect,
     disconnect,
     refresh,
+    sync,
   };
 }

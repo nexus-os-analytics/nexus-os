@@ -26,7 +26,7 @@ export async function GET(req: Request) {
     | 'role'
     | undefined;
   const order = (searchParams.get('order') ?? undefined) as 'asc' | 'desc' | undefined;
-
-  const data = await listUsers({ search, role, page, pageSize, orderBy, order });
+  const status = (searchParams.get('status') ?? undefined) as 'active' | 'inactive' | undefined;
+  const data = await listUsers({ search, role, status, page, pageSize, orderBy, order });
   return NextResponse.json(data);
 }

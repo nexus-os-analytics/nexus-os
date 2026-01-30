@@ -3,6 +3,7 @@ import prisma from '@/lib/prisma';
 export interface ListUsersParams {
   search?: string;
   role?: 'USER' | 'ADMIN' | 'SUPER_ADMIN' | 'GUEST';
+  status?: 'active' | 'inactive';
   page?: number;
   pageSize?: number;
   orderBy?: 'createdAt' | 'name' | 'email' | 'role';
@@ -12,8 +13,7 @@ export interface ListUsersParams {
 export async function listUsers(params: ListUsersParams) {
   const page = params.page ?? 1;
   const pageSize = params.pageSize ?? 10;
-  const where = {
-    deletedAt: null,
+  const where: Record<string, unknown> = {
     ...(params.role ? { role: params.role } : {}),
     ...(params.search
       ? {
@@ -25,6 +25,13 @@ export async function listUsers(params: ListUsersParams) {
         }
       : {}),
   };
+
+  if (params.status === 'active') {
+    where.deletedAt = null;
+  } else if (params.status === 'inactive') {
+    // Prisma negation to find records where deletedAt is not null
+    Object.assign(where, { NOT: { deletedAt: null } });
+  }
 
   const [items, total] = await Promise.all([
     prisma.user.findMany({
@@ -44,6 +51,8 @@ export async function listUsers(params: ListUsersParams) {
         isTwoFactorEnabled: true,
         failedAttempts: true,
         lockedUntil: true,
+        planTier: true,
+        deletedAt: true,
       },
     }),
     prisma.user.count({ where }),
@@ -96,6 +105,8 @@ export async function updateUser(
     role?: 'USER' | 'ADMIN' | 'SUPER_ADMIN';
     phone?: string | null;
     image?: string | null;
+    email?: string;
+    planTier?: 'FREE' | 'PRO';
   }
 ) {
   return prisma.user.update({
