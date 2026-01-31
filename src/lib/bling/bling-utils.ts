@@ -333,11 +333,29 @@ export function calculateCapitalStuck(costPrice: number, currentStock: number): 
  * calculateDaysSinceLastSale(new Date('2025-11-19'), new Date('2025-11-29'))
  * // retorna 10
  */
+// Overloads: calculate days since last sale from sales array or a given date
+export function calculateDaysSinceLastSale(orders: BlingSalesHistoryType[]): number;
+export function calculateDaysSinceLastSale(lastSaleDate: Date | null, referenceDate?: Date): number;
 export function calculateDaysSinceLastSale(
-  lastSaleDate: Date | null,
+  ordersOrDate: BlingSalesHistoryType[] | Date | null,
   referenceDate: Date = new Date()
 ): number {
-  return calc.daysSince(lastSaleDate, referenceDate);
+  if (Array.isArray(ordersOrDate)) {
+    const orders = ordersOrDate;
+    if (orders.length === 0) return CONSTANTS.NEVER_SOLD_DAYS;
+    const sorted = [...orders].sort(
+      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+    );
+    const lastSale = new Date(sorted[0].date);
+    const diffTime = referenceDate.getTime() - lastSale.getTime();
+    const msPerDay =
+      CONSTANTS.MS_PER_SECOND *
+      CONSTANTS.SECONDS_PER_MINUTE *
+      CONSTANTS.MINUTES_PER_HOUR *
+      CONSTANTS.HOURS_PER_DAY;
+    return Math.floor(diffTime / msPerDay);
+  }
+  return calc.daysSince(ordersOrDate, referenceDate);
 }
 
 /**
@@ -468,11 +486,52 @@ export function calculateExcessPercentage(
  * calculateDaysOutOfStock(new Date('2025-11-10'), new Date('2025-11-29'))
  * // retorna 19
  */
+// Overloads: calculate stock-out days from orders or fallback to date-based
 export function calculateDaysOutOfStock(
-  lastSaleDate: Date,
-  referenceDate: Date = new Date()
+  orders: BlingSalesHistoryType[],
+  currentStock: number,
+  periodDays: number
+): number;
+export function calculateDaysOutOfStock(lastSaleDate: Date, referenceDate?: Date): number;
+export function calculateDaysOutOfStock(
+  ordersOrDate: BlingSalesHistoryType[] | Date,
+  currentStockOrRef: number | Date = new Date(),
+  periodDays?: number
 ): number {
-  return calculateDaysSinceLastSale(lastSaleDate, referenceDate);
+  // Array-based implementation per spec
+  if (Array.isArray(ordersOrDate)) {
+    const orders = ordersOrDate;
+    const currentStock = typeof currentStockOrRef === 'number' ? currentStockOrRef : 0;
+    const days = typeof periodDays === 'number' ? periodDays : CONSTANTS.DAYS_IN_30;
+    if (currentStock > 0 && orders.length > 0) {
+      return 0;
+    }
+    if (currentStock === 0 && orders.length > 0) {
+      const sorted = [...orders].sort(
+        (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+      );
+      const lastSaleDate = new Date(sorted[0].date);
+      const today = new Date();
+      const diffTime = today.getTime() - lastSaleDate.getTime();
+      const msPerDay =
+        CONSTANTS.MS_PER_SECOND *
+        CONSTANTS.SECONDS_PER_MINUTE *
+        CONSTANTS.MINUTES_PER_HOUR *
+        CONSTANTS.HOURS_PER_DAY;
+      const daysSinceLastSale = Math.floor(diffTime / msPerDay);
+      return Math.min(daysSinceLastSale, days);
+    }
+    if (currentStock === 0 && orders.length === 0) {
+      return days;
+    }
+    return 0;
+  }
+  // Date-based fallback
+  if (ordersOrDate instanceof Date) {
+    const referenceDate = currentStockOrRef instanceof Date ? currentStockOrRef : new Date();
+    return calculateDaysSinceLastSale(ordersOrDate, referenceDate);
+  }
+  return 0;
 }
 
 /**
@@ -794,7 +853,6 @@ export function calculateAllMetrics(
   recommendations: string[];
 } {
   const {
-    daysWithSales,
     totalLast30DaysSales,
     totalLast7DaysSales,
     currentStock,
@@ -803,8 +861,6 @@ export function calculateAllMetrics(
     lastSaleDate,
     hasStockOut,
     stockOutDate,
-    daysWithSalesWithinLast30,
-    daysWithSalesWithinLast7,
   } = productData;
 
   // Optional orders arrays for VVD v2 without changing types
@@ -819,36 +875,36 @@ export function calculateAllMetrics(
 
   let vvdReal: number;
   if (USE_VVD_V2 && hasOrders30 && pd.orders30) {
-    vvdReal = getVVD(pd.orders30, currentStock, CONSTANTS.DAYS_IN_30, daysWithSales);
+    vvdReal = getVVD(pd.orders30, currentStock, CONSTANTS.DAYS_IN_30);
   } else {
     vvdReal = calc.vvdPeriod(totalLast30DaysSales, CONSTANTS.DAYS_IN_30);
   }
 
   let vvd30: number;
   if (USE_VVD_V2 && hasOrders30 && pd.orders30) {
-    vvd30 = getVVD(pd.orders30, currentStock, CONSTANTS.DAYS_IN_30, daysWithSalesWithinLast30);
+    vvd30 = getVVD(pd.orders30, currentStock, CONSTANTS.DAYS_IN_30);
   } else {
     vvd30 = calc.vvdPeriod(totalLast30DaysSales, CONSTANTS.DAYS_IN_30);
   }
 
   let vvd7: number;
   if (USE_VVD_V2 && hasOrders7 && pd.orders7) {
-    vvd7 = getVVD(pd.orders7, currentStock, CONSTANTS.DAYS_IN_7, daysWithSalesWithinLast7);
+    vvd7 = getVVD(pd.orders7, currentStock, CONSTANTS.DAYS_IN_7);
   } else {
     vvd7 = calc.vvdPeriod(totalLast7DaysSales, CONSTANTS.DAYS_IN_7);
   }
+  const daysSinceLastSale = calc.daysSince(lastSaleDate);
   const daysRemaining = calc.daysRemaining(currentStock, vvdReal);
   const reorderPoint = calc.reorderPoint(vvdReal, settings?.leadTimeDays, settings?.safetyDays);
   const growthTrend = calculateGrowthTrend(vvd7, vvd30);
   const capitalStuck = calc.capitalStuck(costPrice, currentStock);
-  const daysSinceLastSale = calc.daysSince(lastSaleDate);
-  // Cobertura e excesso conforme fórmulas solicitadas: vvdReal x (lead 15 + safety 5)
+  // Cobertura e excesso conforme fórmulas solicitadas
   const leadTime = settings?.leadTimeDays ?? CONSTANTS.DEFAULTS.LEAD_TIME;
   const safetyDays = settings?.safetyDays ?? CONSTANTS.DEFAULTS.SAFETY;
-  const idealStock = calculateEstimatedSalesCover(vvdReal, leadTime, safetyDays);
-  const excessUnits = calculateExcessUnitsFromCover(currentStock, idealStock);
-  const excessCapital = calculateExcessCapital(excessUnits, costPrice);
-  const excessPercentage = calculateExcessPercentage(excessUnits, idealStock);
+  const idealStock = vvdReal * (leadTime + safetyDays);
+  const excessUnits = Math.max(0, currentStock - idealStock);
+  const excessPercentage = idealStock > 0 ? (excessUnits / idealStock) * CONSTANTS.PERCENT : 0;
+  const excessCapital = excessUnits * costPrice;
 
   // Prazo de esgotamento
   const estimatedDeadline = calc.daysRemaining(currentStock, vvdReal);
@@ -901,9 +957,9 @@ export function calculateAllMetrics(
   });
 
   // Guards and integer casting for Prisma Int fields
-  const safeDaysRemaining = Number.isFinite(daysRemaining) ? Math.round(daysRemaining) : 0;
+  const safeDaysRemaining = Number.isFinite(daysRemaining) ? Math.floor(daysRemaining) : 0;
   const safeEstimatedDeadline = Number.isFinite(estimatedDeadline)
-    ? Math.round(estimatedDeadline)
+    ? Math.floor(estimatedDeadline)
     : 0;
   const safeDaysOutOfStock = Number.isFinite(daysOutOfStock) ? Math.round(daysOutOfStock) : 0;
   const safeEstimatedLostSales = Number.isFinite(estimatedLostSales)

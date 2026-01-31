@@ -39,18 +39,18 @@ export default function SecurityForm() {
   async function handlePasswordChange() {
     // values: any
     // Call POST /api/user/change-password with currentPassword/newPassword
-    // console.log('change pwd', values);
+    // Removed console.log for production compliance
   }
 
   async function toggleTwoFactor() {
     // enabled: boolean
-    // console.log('toggle 2fa', enabled);
+    // Removed console.log for production compliance
     // Backend: generate TOTP secret, show QR only on enable
   }
 
   async function signOutAllSessions() {
     // POST /api/sessions/revoke-all
-    // console.log('sign out all sessions');
+    // Removed console.log for production compliance
   }
 
   useEffect(() => {
