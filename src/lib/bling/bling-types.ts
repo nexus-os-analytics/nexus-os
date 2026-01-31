@@ -37,6 +37,8 @@ export interface BlingProductAlertType {
   capitalStuck: number;
   daysSinceLastSale: number;
   suggestedPrice: number;
+  discount?: number;
+  discountAmount?: number;
   estimatedDeadline: number;
   recoverableAmount: number;
   daysOutOfStock: number;
@@ -130,6 +132,8 @@ export interface BlingProductMetrics {
   capitalStuck: number;
   daysSinceLastSale: number;
   suggestedPrice: number;
+  discount: number;
+  discountAmount: number;
   estimatedDeadline: number;
   recoverableAmount: number;
   daysOutOfStock: number;

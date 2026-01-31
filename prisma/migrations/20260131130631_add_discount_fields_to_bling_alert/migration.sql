@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "bling_alerts" ADD COLUMN     "discount" INTEGER NOT NULL DEFAULT 0,
+ADD COLUMN     "discountAmount" DOUBLE PRECISION NOT NULL DEFAULT 0;

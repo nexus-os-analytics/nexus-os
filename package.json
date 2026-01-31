@@ -12,6 +12,7 @@
     "format": "biome format --write ./src",
     "prepare": "husky",
     "typecheck": "tsc --noEmit --skipLibCheck",
+    "test": "vitest run",
     "preinstall": "npx only-allow pnpm",
     "postinstall": "npx prisma generate && npx prisma migrate deploy && npx prisma db seed",
     "seed": "npx prisma db seed",
@@ -87,7 +88,8 @@
     "postcss-simple-vars": "^7.0.1",
     "prisma": "^7.2.0",
     "tsx": "^4.21.0",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "vitest": "^1.6.0"
   },
   "lint-staged": {
     "*.{js,ts,jsx,tsx}": [

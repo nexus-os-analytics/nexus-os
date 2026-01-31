@@ -332,6 +332,8 @@ model BlingAlert {
   capitalStuck           Float            @default(0)
   daysSinceLastSale      Int              @default(0)
   suggestedPrice         Float            @default(0)
+  discount               Int              @default(0)
+  discountAmount         Float            @default(0)
   estimatedDeadline      Int              @default(0)
   recoverableAmount      Float            @default(0)
   daysOutOfStock         Int              @default(0)
