@@ -189,7 +189,7 @@ export function Dashboard() {
               await sync();
               await refresh();
             }}
-            disabled={loading || !status?.connected}
+            disabled={loading || !status?.connected || status.syncStatus === 'SYNCING'}
           >
             Atualizar
           </Button>
