@@ -7,22 +7,23 @@ on:
 
 jobs:
   deploy:
-    # Tags do seu self-hosted runner
     runs-on: [self-hosted, Linux, X64]
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          # Fetch mais commits pro docker cache funcionar na VPS
           fetch-depth: 0
 
-      - name: Prepare files for upload (git clean)
+      - name: Set image tag
+        id: meta
+        run: echo "tag=$(echo $GITHUB_SHA | cut -c1-8)" >> $GITHUB_OUTPUT
+
+      - name: Prepare files for upload
         run: |
-          # Remove arquivos desnecessários pro upload (node_modules, .git, etc.)
           git clean -fdx
-          rm -rf node_modules .git
-          echo "📦 Arquivos prontos para upload: $(du -sh .)"
+          rm -rf node_modules .git .next
+          echo "📦 Upload pronto: $(du -sh .)"
 
       - name: Upload project to VPS (RAW)
         uses: appleboy/scp-action@v0.1.7
@@ -37,47 +38,39 @@ jobs:
           strip_components: 0
           overwrite: true
           timeout: 120s
-          command_timeout: 300s  # Mais tempo pro upload
+          command_timeout: 300s
 
       - name: Configure and deploy via SSH
         uses: appleboy/ssh-action@v1.0.0
         env:
           PROD_ENV_FILE: ${{ secrets.PROD_ENV_FILE }}
+          IMAGE_TAG: ${{ steps.meta.outputs.tag }}  # ← ADICIONADO
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_KEY }}
           port: ${{ secrets.SSH_PORT || 22 }}
-          envs: PROD_ENV_FILE
+          envs: PROD_ENV_FILE,IMAGE_TAG  # ← ADICIONADO
           script_stop: true
-          timeout: 600s  # Tempo pra build na VPS
+          timeout: 600s
           script: |
             set -e
             cd /opt/nexus-os
 
-            # Debug upload
             ls -la
-            echo "Dockerfile existe? $(test -f Dockerfile && echo ✅ || echo ❌)"
-            echo "docker-compose.yml existe? $(test -f docker-compose.yml && echo ✅ || echo ❌)"
+            echo "Dockerfile: $(test -f Dockerfile && echo ✅ || echo ❌)"
+            echo "docker-compose.yml: $(test -f docker-compose.yml && echo ✅ || echo ❌)"
+            echo "IMAGE_TAG=${IMAGE_TAG:-undefined}"  # ← DEBUG
 
-            # Cria .env
             printf "%s" "$PROD_ENV_FILE" > .env
-            if [ ! -s .env ]; then
-              echo "❌ .env vazio" >&2
-              exit 1
-            fi
-            echo "✅ .env: $(wc -l < .env) linhas"
+            echo "IMAGE_TAG=${IMAGE_TAG}" >> .env  # ← GRAVA NO .env
 
-            # Para containers antigos
-            echo "🛑 Parando containers..."
+            echo "🛑 Parando..."
             docker compose down || true
 
-            # Build + deploy com cache e pull
             echo "🔨 Build + up..."
-            docker compose build --pull --no-cache=false  # Cache ativado
+            docker compose build --pull
             docker compose up -d
 
-            # Status final
             echo "📊 Status:"
             docker compose ps
-            docker compose logs --tail=20 app || true
