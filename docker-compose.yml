@@ -44,6 +44,10 @@ services:
       - internal
 
   migrate:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: builder
     image: nexus-os-migrate:${IMAGE_TAG}
     container_name: nexus_migrate
     command: sh -c "pnpm exec prisma migrate deploy && pnpm exec prisma db seed"
@@ -56,6 +60,9 @@ services:
       - internal
 
   app:
+    build:
+      context: .
+      dockerfile: Dockerfile
     image: nexus-os:${IMAGE_TAG}
     container_name: nexus_app
     restart: unless-stopped

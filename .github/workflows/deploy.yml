@@ -64,6 +64,9 @@ jobs:
 
             printf "%s" "$PROD_ENV_FILE" > .env
             echo "IMAGE_TAG=${IMAGE_TAG}" >> .env  # ← GRAVA NO .env
+            # Export IMAGE_TAG so Compose can substitute immediately even if .env isn't parsed
+            export IMAGE_TAG="${IMAGE_TAG}"
+            echo "Using IMAGE_TAG=${IMAGE_TAG}"
 
             echo "🛑 Parando..."
             docker compose down || true
