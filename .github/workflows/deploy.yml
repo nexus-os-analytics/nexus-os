@@ -12,15 +12,27 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Upload project to VPS
+      - name: Create source tarball
+        run: |
+          set -e
+          echo "Creating source tarball"
+          tar -czf nexus-os.tar.gz \
+            --exclude .git \
+            --exclude node_modules \
+            --exclude .next \
+            --exclude dist \
+            --exclude .pnpm-store \
+            .
+
+      - name: Upload tarball to VPS
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_KEY }}
           port: ${{ secrets.SSH_PORT || 22 }}
-          source: "./"
-          target: "/opt/nexus-os"
+          source: "nexus-os.tar.gz"
+          target: "/opt/nexus-os/nexus-os.tar.gz"
           rm: true
           strip_components: 0
           overwrite: true
@@ -46,6 +58,14 @@ jobs:
             WORKDIR=/opt/nexus-os
             mkdir -p "$WORKDIR"
             cd "$WORKDIR"
+
+            echo "Extraindo pacote nexus-os.tar.gz"
+            if [ -f nexus-os.tar.gz ]; then
+              tar -xzf nexus-os.tar.gz
+            else
+              echo "Pacote nexus-os.tar.gz não encontrado" >&2
+              exit 1
+            fi
 
             echo "Escrevendo .env a partir do secret PROD_ENV_FILE"
             # Grava o conteúdo completo do secret no arquivo .env
