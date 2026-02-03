@@ -15,6 +15,15 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Create .env
+        run: |
+          cat > .env << EOF
+          $(echo "${{ secrets.PROD_ENV_FILE }}" | sed 's/^/  /')
+          IMAGE_TAG=${{ steps.meta.outputs.tag }}
+          EOF
+          echo "✅ .env criado:"
+          cat .env
+
       - name: Set image tag
         id: meta
         run: echo "tag=$(echo $GITHUB_SHA | cut -c1-8)" >> $GITHUB_OUTPUT
@@ -23,9 +32,21 @@ jobs:
         run: |
           git clean -fdx
           rm -rf node_modules .git .next
-          echo "📦 Upload pronto: $(du -sh .)"
+          echo "📦 Upload: $(du -sh .)"
 
-      - name: Upload project to VPS (RAW)
+      - name: Upload .env FIRST
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          port: ${{ secrets.SSH_PORT || 22 }}
+          source: ".env"
+          target: "/opt/nexus-os/.env"
+          rm: true
+          overwrite: true
+
+      - name: Upload project to VPS
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.SSH_HOST }}
@@ -40,43 +61,31 @@ jobs:
           timeout: 120s
           command_timeout: 300s
 
-      - name: Configure and deploy via SSH
+      - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.0.0
-        env:
-          PROD_ENV_FILE: ${{ secrets.PROD_ENV_FILE }}
-          IMAGE_TAG: ${{ steps.meta.outputs.tag }}  # ← ADICIONADO
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_KEY }}
           port: ${{ secrets.SSH_PORT || 22 }}
-          envs: PROD_ENV_FILE,IMAGE_TAG  # ← ADICIONADO
           script_stop: true
           timeout: 600s
           script: |
             set -e
             cd /opt/nexus-os
 
-            ls -la
-            echo "Dockerfile: $(test -f Dockerfile && echo ✅ || echo ❌)"
-            echo "docker-compose.yml: $(test -f docker-compose.yml && echo ✅ || echo ❌)"
-            echo "IMAGE_TAG=${IMAGE_TAG:-undefined}"  # ← DEBUG
+            # Debug
+            ls -la .env*
+            echo "IMAGE_TAG from .env: $(grep IMAGE_TAG .env || echo 'not found')"
 
-            printf "%s" "${PROD_ENV_FILE}" > .env
-            echo "IMAGE_TAG=${IMAGE_TAG}" >> .env  # ← GRAVA NO .env
-            # Export IMAGE_TAG so Compose can substitute immediately even if .env isn't parsed
-            export IMAGE_TAG="${IMAGE_TAG}"
-            echo "Using IMAGE_TAG=${IMAGE_TAG}"
-            # Force Compose to use the project's docker-compose.yml, avoiding COMPOSE_FILE overrides from .env
-            export COMPOSE_FILE="docker-compose.yml"
-            echo "Using COMPOSE_FILE=${COMPOSE_FILE}"
-
-            echo "🛑 Parando..."
+            echo "🛑 Cleanup..."
             docker compose down || true
+            docker compose rm -f
 
-            echo "🔨 Build + up..."
-            docker compose build --pull
-            docker compose up -d --build
+            echo "🚀 Build + deploy..."
+            docker compose --env-file .env up -d --build --force-recreate --remove-orphans
 
+            sleep 15  # Next.js startup
             echo "📊 Status:"
             docker compose ps
+            docker compose logs --tail=20 app traefik
