@@ -14,15 +14,9 @@ jobs:
 
       - name: Create source tarball
         run: |
-          set -e
-          echo "Creating source tarball"
-          tar -czf nexus-os.tar.gz \
-            --exclude .git \
-            --exclude node_modules \
-            --exclude .next \
-            --exclude dist \
-            --exclude .pnpm-store \
-            .
+          echo "Creating source tarball from git HEAD"
+          git archive --format=tar HEAD | gzip > nexus-os.tar.gz
+          ls -lh nexus-os.tar.gz
 
       - name: Upload tarball to VPS
         uses: appleboy/scp-action@v0.1.7
