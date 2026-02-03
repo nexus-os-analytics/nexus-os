@@ -19,10 +19,11 @@ import {
   ThemeIcon,
   Title,
 } from '@mantine/core';
-import { AlertTriangle, ArrowRight, DollarSign, Sparkles, TrendingUp } from 'lucide-react';
+import { ArrowRight, Sparkles } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { useBlingIntegration } from '@/hooks/useBlingIntegration';
+import { ProductIndicators } from '../../components/ProductIndicators';
 import { useOverviewMetrics } from '../../hooks/use-overview-metrics';
 
 export function Overview() {
@@ -134,54 +135,7 @@ export function Overview() {
 
           {/* Summary Cards */}
           {status?.syncStatus === 'COMPLETED' && !error && data && (
-            <SimpleGrid cols={{ base: 1, sm: 3 }} spacing="lg">
-              <Card padding="xl" radius="md" withBorder shadow="md">
-                <Group justify="space-between" mb="md">
-                  <ThemeIcon size={48} radius="md" color="brand" variant="light">
-                    <DollarSign size={24} />
-                  </ThemeIcon>
-                </Group>
-                <Text size="sm" mb={4}>
-                  Capital Parado
-                </Text>
-                <Title order={2}>
-                  R$ {data.capitalStuck.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                </Title>
-                <Text size="xs" mt="xs">
-                  Isso está custando juros e armazenamento
-                </Text>
-              </Card>
-
-              <Card padding="xl" radius="md" withBorder shadow="md">
-                <Group justify="space-between" mb="md">
-                  <ThemeIcon size={48} radius="md" color="red" variant="light">
-                    <AlertTriangle size={24} />
-                  </ThemeIcon>
-                </Group>
-                <Text size="sm" mb={4}>
-                  Produtos em Risco
-                </Text>
-                <Title order={2}>{data.ruptureCount}</Title>
-                <Text size="xs" mt="xs">
-                  Podem zerar nos próximos dias
-                </Text>
-              </Card>
-
-              <Card padding="xl" radius="md" withBorder shadow="md">
-                <Group justify="space-between" mb="md">
-                  <ThemeIcon size={48} radius="md" color="teal" variant="light">
-                    <TrendingUp size={24} />
-                  </ThemeIcon>
-                </Group>
-                <Text size="sm" mb={4}>
-                  Oportunidades
-                </Text>
-                <Title order={2}>{data.opportunityCount}</Title>
-                <Text size="xs" mt="xs">
-                  Produtos vendendo acima da média
-                </Text>
-              </Card>
-            </SimpleGrid>
+            <ProductIndicators metrics={data} />
           )}
 
           {/* Top Actions */}

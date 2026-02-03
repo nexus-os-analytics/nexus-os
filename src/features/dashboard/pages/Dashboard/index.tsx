@@ -14,16 +14,19 @@ import {
   ThemeIcon,
   Title,
 } from '@mantine/core';
-import { AlertTriangle, BoxIcon, Download, Package, RotateCcw, Sparkles } from 'lucide-react';
+import { BoxIcon, Download, Package, RotateCcw } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { BlingConnectBanner } from '@/features/bling/components/BlingConnectBanner';
 import { ProductCard } from '@/features/products/components/ProductCard';
 import { useBlingIntegration } from '@/hooks/useBlingIntegration';
+import { ProductIndicators } from '../../components/ProductIndicators';
+import { useOverviewMetrics } from '../../hooks/use-overview-metrics';
 import { useProductAlerts } from '../../hooks/use-product-alerts';
 
 export function Dashboard() {
   const { status, loading, sync, refresh } = useBlingIntegration();
-  const [criticalCount, setCriticalCount] = useState(0);
+  // Overview metrics
+  const { data: overviewMetrics } = useOverviewMetrics();
   // Filters (URL-synced as comma-separated strings)
   const [search, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState<string>('');
@@ -41,20 +44,7 @@ export function Dashboard() {
     useProductAlerts(queryParams);
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
 
-  useEffect(() => {
-    if (data) {
-      const allAlerts = data.pages.flatMap((p) => p.data);
-      const OUT_OF_STOCK_THRESHOLD_DAYS = 30;
-      setCriticalCount(
-        allAlerts.filter(
-          (a) =>
-            a.alert?.type === 'RUPTURE' ||
-            (a.alert?.type === 'DEAD_STOCK' &&
-              (a.alert?.daysOutOfStock ?? 0) > OUT_OF_STOCK_THRESHOLD_DAYS)
-        ).length
-      );
-    }
-  }, [data]);
+  // No local computation for indicators; rely on overview API for consistency
 
   // Compute client-side search filtering (name/SKU)
   const flatProducts = useMemo(() => data?.pages.flatMap((p) => p.data) ?? [], [data]);
@@ -87,57 +77,23 @@ export function Dashboard() {
     <Stack gap="xl">
       {!loading && !status?.connected && <BlingConnectBanner />}
 
-      {/* Summary Cards */}
-      <SimpleGrid cols={{ base: 1, sm: 3 }}>
-        <Card padding="lg" radius="md" withBorder shadow="md">
-          <Group justify="space-between">
-            <Box>
-              <Text size="sm" fw={700}>
-                Total de Produtos
-              </Text>
-              <Title order={2} mt="xs" fw={800}>
-                {data?.pages.flatMap((p) => p.data).length ?? 0}
-              </Title>
-            </Box>
-            <ThemeIcon size={48} radius="md" color="brand" variant="light">
-              <Package size={24} />
-            </ThemeIcon>
-          </Group>
-        </Card>
-
-        <Card padding="lg" radius="md" withBorder shadow="md">
-          <Group justify="space-between">
-            <Box>
-              <Text size="sm" fw={700}>
-                Alertas Críticos
-              </Text>
-              <Title order={2} mt="xs" fw={800}>
-                {criticalCount}
-              </Title>
-            </Box>
-            <ThemeIcon size={48} radius="md" color="red" variant="light">
-              <AlertTriangle size={24} />
-            </ThemeIcon>
-          </Group>
-        </Card>
-
-        <Card padding="lg" radius="md" withBorder shadow="md">
-          <Group justify="space-between" align="center">
-            <Box>
-              <Text size="sm" fw={700}>
-                Oportunidades
-              </Text>
-              <Title order={2} mt="xs" fw={800}>
-                {data?.pages.flatMap((p) => p.data).filter((a) => a.alert?.type === 'OPPORTUNITY')
-                  .length ?? 0}
-              </Title>
-            </Box>
-            <ThemeIcon size={48} radius="md" color="teal" variant="light">
-              <Sparkles size={24} />
-            </ThemeIcon>
-          </Group>
-        </Card>
-      </SimpleGrid>
+      {/* Summary Cards aligned with Overview */}
+      {overviewMetrics ? (
+        <ProductIndicators metrics={overviewMetrics} />
+      ) : (
+        <SimpleGrid cols={{ base: 1, sm: 3 }} spacing="lg">
+          {[0, 1, 2].map((i) => (
+            <Card key={i} padding="xl" radius="md" withBorder shadow="sm">
+              <Group justify="space-between" mb="md">
+                <Skeleton height={48} width={48} radius="md" />
+              </Group>
+              <Skeleton height={16} width="60%" mb={8} />
+              <Skeleton height={28} width="50%" mb={8} />
+              <Skeleton height={12} width="80%" />
+            </Card>
+          ))}
+        </SimpleGrid>
+      )}
 
       {/* Filters */}
       <Group align="end" justify="space-between">
