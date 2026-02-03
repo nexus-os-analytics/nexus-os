@@ -1,6 +1,7 @@
 import '@mantine/core/styles.css';
 import '@mantine/notifications/styles.css';
 import { ColorSchemeScript, mantineHtmlProps } from '@mantine/core';
+import type { Viewport } from 'next';
 import { APP_DESCRIPTION, APP_HOMEPAGE_URL, APP_LANGUAGE, APP_NAME } from '@/lib/constants';
 import { Providers } from '@/providers';
 
@@ -45,6 +46,12 @@ export const metadata = {
     icon: { url: '/icon.svg', type: 'image/svg+xml' },
   },
 } as const;
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover',
+};
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
