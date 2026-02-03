@@ -65,6 +65,15 @@ jobs:
             sudo mkdir -p /opt/nexus-os
             sudo chown -R ${{ secrets.SSH_USER }}:${{ secrets.SSH_USER }} /opt/nexus-os
             chmod 755 /opt/nexus-os
+            # Remove any stale directory or file with the same tarball name
+            if [ -d /opt/nexus-os/nexus-images.tar.gz ]; then
+              echo "Found stale directory /opt/nexus-os/nexus-images.tar.gz; removing it"
+              rm -rf /opt/nexus-os/nexus-images.tar.gz
+            fi
+            if [ -f /opt/nexus-os/nexus-images.tar.gz ]; then
+              echo "Found stale file /opt/nexus-os/nexus-images.tar.gz; removing it"
+              rm -f /opt/nexus-os/nexus-images.tar.gz
+            fi
             ls -la /opt/
 
       - name: Upload image tarball to VPS
@@ -113,6 +122,17 @@ jobs:
             cd /opt/nexus-os
             printf "%s" "$PROD_ENV_FILE" > .env
             echo "IMAGE_TAG=${IMAGE_TAG}" >> .env
+            # Defensive checks to ensure tarball is a regular file
+            if [ -d nexus-images.tar.gz ]; then
+              echo "Erro: nexus-images.tar.gz é um diretório inesperado."
+              ls -la
+              exit 1
+            fi
+            if [ ! -f nexus-images.tar.gz ]; then
+              echo "Erro: arquivo nexus-images.tar.gz não encontrado após upload."
+              ls -la
+              exit 1
+            fi
             gunzip -c nexus-images.tar.gz | docker load
             docker compose down || true
             docker compose up -d
