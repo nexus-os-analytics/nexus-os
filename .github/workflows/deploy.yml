@@ -15,22 +15,21 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Create .env
-        run: |
-          cat > .env << EOF
-          $(echo "${{ secrets.PROD_ENV_FILE }}" | sed 's/^/  /')
-          IMAGE_TAG=${{ steps.meta.outputs.tag }}
-          EOF
-          echo "✅ .env criado:"
-          cat .env
-
       - name: Set image tag
         id: meta
         run: echo "tag=$(echo $GITHUB_SHA | cut -c1-8)" >> $GITHUB_OUTPUT
 
+      - name: Create .env
+        run: |
+          printf "%s\n" "${{ secrets.PROD_ENV_FILE }}" > .env
+          echo "IMAGE_TAG=${{ steps.meta.outputs.tag }}" >> .env
+          echo "✅ .env criado:"
+          wc -l .env || true
+          head -n 5 .env || true
+
       - name: Prepare files for upload
         run: |
-          git clean -fdx
+          git clean -fdx -e .env
           rm -rf node_modules .git .next
           echo "📦 Upload: $(du -sh .)"
 
