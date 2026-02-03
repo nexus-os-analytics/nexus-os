@@ -48,7 +48,7 @@ services:
       context: .
       dockerfile: Dockerfile
       target: builder
-    image: nexus-os-migrate:${IMAGE_TAG}
+    image: nexus-os:${IMAGE_TAG}
     container_name: nexus_migrate
     command: sh -c "pnpm exec prisma migrate deploy && pnpm exec prisma db seed"
     environment:
