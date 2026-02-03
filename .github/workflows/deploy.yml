@@ -81,6 +81,12 @@ jobs:
             docker compose down || true
             docker compose rm -f
 
+            echo "🔨 Building images (migrate, app)..."
+            docker compose --env-file .env build --pull migrate app
+            echo "🔎 Built images:"
+            docker images | grep nexus-os-migrate || true
+            docker images | grep nexus-os || true
+
             echo "🚀 Build + deploy..."
             docker compose --env-file .env up -d --build --force-recreate --remove-orphans
 
