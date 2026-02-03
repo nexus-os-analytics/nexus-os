@@ -62,7 +62,7 @@ jobs:
             echo "docker-compose.yml: $(test -f docker-compose.yml && echo ✅ || echo ❌)"
             echo "IMAGE_TAG=${IMAGE_TAG:-undefined}"  # ← DEBUG
 
-            printf "%s" "$PROD_ENV_FILE" > .env
+            printf "%s" "${PROD_ENV_FILE}" > .env
             echo "IMAGE_TAG=${IMAGE_TAG}" >> .env  # ← GRAVA NO .env
             # Export IMAGE_TAG so Compose can substitute immediately even if .env isn't parsed
             export IMAGE_TAG="${IMAGE_TAG}"
