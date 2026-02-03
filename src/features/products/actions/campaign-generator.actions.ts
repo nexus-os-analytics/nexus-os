@@ -43,7 +43,7 @@ export async function generateProductCampaignAction(input: unknown): Promise<Cam
   const user = [
     `Produto: ${product.name} (SKU: ${product.sku})`,
     product.categoryName ? `Categoria: ${product.categoryName}` : undefined,
-    `Preço de venda: R$ ${product.salePrice.toFixed(2)}`,
+    `Preço promocional: R$ ${product.salePrice.toFixed(2)}`,
     `Preço de custo: R$ ${product.costPrice.toFixed(2)}`,
     product.currentStock != null ? `Estoque atual: ${product.currentStock}` : undefined,
     `Estratégia: ${strategy}`,

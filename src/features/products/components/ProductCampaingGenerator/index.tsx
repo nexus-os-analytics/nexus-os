@@ -35,6 +35,10 @@ export function ProductCampaingGenerator({ product }: ProductCampaingGeneratorPr
   const [isGenerating, setIsGenerating] = useState(false);
   const [campaigns, setCampaigns] = useState<CampaignOutput | null>(null);
 
+  const promotionalPrice = product.alert?.suggestedPrice ?? product.salePrice;
+  const discountPct = product.alert?.discount;
+  const discountAmount = product.alert?.discountAmount;
+
   const handleGenerate = async () => {
     try {
       setIsGenerating(true);
@@ -43,7 +47,8 @@ export function ProductCampaingGenerator({ product }: ProductCampaingGeneratorPr
           name: product.name,
           sku: product.sku,
           categoryName: product.category?.name ?? null,
-          salePrice: product.salePrice,
+          // Use promotional/discounted price for campaign generation
+          salePrice: promotionalPrice,
           costPrice: product.costPrice,
           currentStock: product.currentStock,
           image: product.image ?? null,
@@ -135,8 +140,17 @@ export function ProductCampaingGenerator({ product }: ProductCampaingGeneratorPr
                 Custo: {formatCurrency(product.costPrice)}
               </Text>
               <Text size="sm" c="dimmed">
-                Venda: {formatCurrency(product.salePrice)}
+                Venda (promocional): {formatCurrency(promotionalPrice)}
               </Text>
+              {product.salePrice !== promotionalPrice && (
+                <Badge color="brand" variant="light">
+                  {discountPct != null
+                    ? `Desconto: ${Math.round(discountPct)}%`
+                    : discountAmount != null
+                      ? `- ${formatCurrency(discountAmount)}`
+                      : 'Preço ajustado'}
+                </Badge>
+              )}
             </Group>
           </Box>
         </Group>
