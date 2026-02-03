@@ -50,7 +50,7 @@ services:
       target: builder
     image: nexus-os:${IMAGE_TAG}
     container_name: nexus_migrate
-    command: sh -c "pnpm exec prisma migrate deploy && pnpm exec prisma db seed"
+    command: sh -c "pnpm exec prisma generate && pnpm exec prisma migrate deploy"
     environment:
       DATABASE_URL: ${DATABASE_URL}
     depends_on:
@@ -70,7 +70,7 @@ services:
       - .env
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.nexus.rule=Host(`${DOMAIN}`)"
+      - "traefik.http.routers.nexus.rule=Host(`app.nexusos.com.br`)"
       - "traefik.http.routers.nexus.entrypoints=websecure"
       - "traefik.http.routers.nexus.tls.certresolver=le"
       - "traefik.docker.network=web"
