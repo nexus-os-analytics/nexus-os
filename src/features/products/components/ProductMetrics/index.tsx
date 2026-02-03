@@ -7,6 +7,7 @@ import {
   TrendingDown,
   TrendingUp,
 } from 'lucide-react';
+import { getRecommendationText } from '@/features/dashboard/utils/get-recommendation-text';
 import type { BlingProductType } from '@/lib/bling';
 import { formatCurrency, formatDate } from '@/lib/utils';
 
@@ -24,6 +25,7 @@ export function ProductMetrics({ product }: ProductMetricsProps) {
   const recommendations = alert.recommendations
     ? (JSON.parse(alert.recommendations) as string[])
     : [];
+  const structured = getRecommendationText(alert, product);
 
   return (
     <Grid gutter="lg">
@@ -202,10 +204,55 @@ export function ProductMetrics({ product }: ProductMetricsProps) {
             <Title order={5}>Recomendações</Title>
           </Group>
           <Stack gap="md">
+            {structured ? (
+              <>
+                <Group gap={6}>
+                  <Text size="sm" fw={700}>
+                    {structured.title}
+                  </Text>
+                  {structured.subtitle ? (
+                    <Text size="sm" c="dimmed">
+                      {structured.subtitle}
+                    </Text>
+                  ) : null}
+                </Group>
+                {structured.description ? <Text size="sm">{structured.description}</Text> : null}
+                {structured.actions.map((action, idx) => (
+                  <Paper
+                    key={`action-${idx}`}
+                    p="sm"
+                    radius="md"
+                    style={{
+                      backgroundColor: action.primary
+                        ? 'rgba(199, 164, 70, 0.12)'
+                        : 'rgba(199, 164, 70, 0.06)',
+                      borderLeft: action.primary ? '3px solid #C7A446' : '3px solid #D8C48D',
+                    }}
+                  >
+                    <Text size="sm" fw={600}>
+                      {action.label}
+                    </Text>
+                    <Stack gap={4} mt={6}>
+                      {action.details.map((detail, i) => (
+                        <Text key={`detail-${idx}-${i}`} size="sm">
+                          • {detail}
+                        </Text>
+                      ))}
+                    </Stack>
+                  </Paper>
+                ))}
+                {structured.warning ? (
+                  <Text size="sm" c="red">
+                    {structured.warning}
+                  </Text>
+                ) : null}
+              </>
+            ) : null}
+
             {recommendations.length > 0 ? (
               recommendations.map((rec: string, index: number) => (
                 <Paper
-                  key={index}
+                  key={`rec-${index}`}
                   p="sm"
                   radius="md"
                   style={{
@@ -216,9 +263,9 @@ export function ProductMetrics({ product }: ProductMetricsProps) {
                   <Text size="sm">• {rec}</Text>
                 </Paper>
               ))
-            ) : (
+            ) : !structured ? (
               <Text size="sm">Nenhuma recomendação disponível</Text>
-            )}
+            ) : null}
           </Stack>
         </Card>
       </Grid.Col>
