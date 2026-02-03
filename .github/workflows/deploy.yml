@@ -8,6 +8,11 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    env:
+      SSH_HOST: ${{ secrets.SSH_HOST }}
+      SSH_USER: ${{ secrets.SSH_USER }}
+      SSH_KEY: ${{ secrets.SSH_KEY }}
+      SSH_PORT: ${{ secrets.SSH_PORT || 22 }}
 
     steps:
       - name: Checkout repository
@@ -53,14 +58,28 @@ jobs:
           docker save nexus-os:${TAG} nexus-os-migrate:${TAG} | gzip > nexus-images.tar.gz
           echo "Tarball size: $(du -h nexus-images.tar.gz)"
 
+      - name: Verify SSH connectivity
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ env.SSH_HOST }}
+          username: ${{ env.SSH_USER }}
+          key: ${{ env.SSH_KEY }}
+          port: ${{ env.SSH_PORT }}
+          script_stop: true
+          timeout: 60s
+          script: |
+            echo "SSH connected"
+            whoami
+            uname -a
+
       # NOVO: Corrige permissões na VPS
       - name: Prepare VPS directory
         uses: appleboy/ssh-action@v1.0.0
         with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_KEY }}
-          port: ${{ secrets.SSH_PORT || 22 }}
+          host: ${{ env.SSH_HOST }}
+          username: ${{ env.SSH_USER }}
+          key: ${{ env.SSH_KEY }}
+          port: ${{ env.SSH_PORT }}
           script: |
             sudo mkdir -p /opt/nexus-os
             sudo chown -R ${{ secrets.SSH_USER }}:${{ secrets.SSH_USER }} /opt/nexus-os
@@ -79,10 +98,10 @@ jobs:
       - name: Upload image tarball to VPS
         uses: appleboy/scp-action@v0.1.7
         with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_KEY }}
-          port: ${{ secrets.SSH_PORT || 22 }}
+          host: ${{ env.SSH_HOST }}
+          username: ${{ env.SSH_USER }}
+          key: ${{ env.SSH_KEY }}
+          port: ${{ env.SSH_PORT }}
           source: "nexus-images.tar.gz"
           target: "/opt/nexus-os/"
           rm: true
@@ -93,10 +112,10 @@ jobs:
       - name: Upload docker-compose.yml to VPS
         uses: appleboy/scp-action@v0.1.7
         with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_KEY }}
-          port: ${{ secrets.SSH_PORT || 22 }}
+          host: ${{ env.SSH_HOST }}
+          username: ${{ env.SSH_USER }}
+          key: ${{ env.SSH_KEY }}
+          port: ${{ env.SSH_PORT }}
           source: "docker-compose.yml"
           target: "/opt/nexus-os/"
           rm: false
@@ -110,10 +129,10 @@ jobs:
           PROD_ENV_FILE: ${{ secrets.PROD_ENV_FILE }}
           IMAGE_TAG: ${{ steps.meta.outputs.tag }}
         with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_KEY }}
-          port: ${{ secrets.SSH_PORT || 22 }}
+          host: ${{ env.SSH_HOST }}
+          username: ${{ env.SSH_USER }}
+          key: ${{ env.SSH_KEY }}
+          port: ${{ env.SSH_PORT }}
           envs: PROD_ENV_FILE,IMAGE_TAG
           script_stop: true
           timeout: 300s
