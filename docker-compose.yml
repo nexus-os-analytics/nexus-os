@@ -44,12 +44,7 @@ services:
       - internal
 
   migrate:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      target: builder
-      args:
-        DATABASE_URL: ${DATABASE_URL}
+    image: nexus-os-migrate:${IMAGE_TAG}
     container_name: nexus_migrate
     command: sh -c "pnpm exec prisma migrate deploy && pnpm exec prisma db seed"
     environment:
@@ -61,13 +56,7 @@ services:
       - internal
 
   app:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      target: runner
-      args:
-        DATABASE_URL: ${DATABASE_URL}
-    image: nexus-os:latest
+    image: nexus-os:${IMAGE_TAG}
     container_name: nexus_app
     restart: unless-stopped
     env_file:

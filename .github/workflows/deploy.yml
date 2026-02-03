@@ -12,22 +12,51 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Create source tarball
-        run: |
-          echo "Creating source tarball from git HEAD"
-          git archive --format=tar HEAD | gzip > nexus-os.tar.gz
-          ls -lh nexus-os.tar.gz
+      - name: Set image tag
+        id: meta
+        run: echo "tag=${GITHUB_SHA}" >> $GITHUB_OUTPUT
 
-      - name: Upload tarball to VPS
+      - name: Build Docker images
+        run: |
+          set -e
+          TAG=${{ steps.meta.outputs.tag }}
+          echo "Building images with tag: ${TAG}"
+          docker build --target runner -t nexus-os:${TAG} .
+          docker build --target builder -t nexus-os-migrate:${TAG} .
+
+      - name: Save Docker images to tarball
+        run: |
+          set -e
+          TAG=${{ steps.meta.outputs.tag }}
+          echo "Saving images nexus-os:${TAG} and nexus-os-migrate:${TAG}"
+          docker save nexus-os:${TAG} nexus-os-migrate:${TAG} | gzip > nexus-images.tar.gz
+          ls -lh nexus-images.tar.gz
+
+      - name: Upload image tarball to VPS
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_KEY }}
           port: ${{ secrets.SSH_PORT || 22 }}
-          source: "nexus-os.tar.gz"
-          target: "/opt/nexus-os/nexus-os.tar.gz"
+          source: "nexus-images.tar.gz"
+          target: "/opt/nexus-os/nexus-images.tar.gz"
           rm: true
+          strip_components: 0
+          overwrite: true
+          proxy_port: 0
+          timeout: 120s
+
+      - name: Upload docker-compose.yml to VPS
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          port: ${{ secrets.SSH_PORT || 22 }}
+          source: "docker-compose.yml"
+          target: "/opt/nexus-os/docker-compose.yml"
+          rm: false
           strip_components: 0
           overwrite: true
           proxy_port: 0
@@ -37,6 +66,7 @@ jobs:
         uses: appleboy/ssh-action@v1.0.0
         env:
           PROD_ENV_FILE: ${{ secrets.PROD_ENV_FILE }}
+          IMAGE_TAG: ${{ steps.meta.outputs.tag }}
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
@@ -44,7 +74,7 @@ jobs:
           # Optional: set port via secret; if unset, action defaults to 22
           port: ${{ secrets.SSH_PORT }}
           # Forward envs to remote for expansion in script
-          envs: PROD_ENV_FILE
+          envs: PROD_ENV_FILE, IMAGE_TAG
           script_stop: true
           timeout: 180s
           script: |
@@ -53,11 +83,11 @@ jobs:
             mkdir -p "$WORKDIR"
             cd "$WORKDIR"
 
-            echo "Extraindo pacote nexus-os.tar.gz"
-            if [ -f nexus-os.tar.gz ]; then
-              tar -xzf nexus-os.tar.gz
+            echo "Carregando imagens docker do tarball"
+            if [ -f nexus-images.tar.gz ]; then
+              gunzip -c nexus-images.tar.gz | docker load
             else
-              echo "Pacote nexus-os.tar.gz não encontrado" >&2
+              echo "Pacote nexus-images.tar.gz não encontrado" >&2
               exit 1
             fi
 
@@ -73,11 +103,14 @@ jobs:
             fi
             echo ".env criado com $(wc -l < .env) linhas"
 
+            echo "Definindo IMAGE_TAG no .env"
+            echo "IMAGE_TAG=${IMAGE_TAG}" >> .env
+
             echo "Parando containers antigos"
             docker compose down || true
 
-            echo "Subindo novos serviços"
-            docker compose up -d --build
+            echo "Subindo novos serviços com imagens pré-carregadas"
+            docker compose up -d
 
             echo "Status final dos containers"
             docker compose ps
