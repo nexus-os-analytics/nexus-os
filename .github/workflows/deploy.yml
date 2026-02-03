@@ -7,12 +7,24 @@ on:
 
 jobs:
   deploy:
-    runs-on: ubuntu-latest
+    # Tags do seu self-hosted runner
+    runs-on: [self-hosted, Linux, X64]
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          # Fetch mais commits pro docker cache funcionar na VPS
+          fetch-depth: 0
 
-      - name: Upload project to VPS
+      - name: Prepare files for upload (git clean)
+        run: |
+          # Remove arquivos desnecessários pro upload (node_modules, .git, etc.)
+          git clean -fdx
+          rm -rf node_modules .git
+          echo "📦 Arquivos prontos para upload: $(du -sh .)"
+
+      - name: Upload project to VPS (RAW)
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.SSH_HOST }}
@@ -24,8 +36,8 @@ jobs:
           rm: true
           strip_components: 0
           overwrite: true
-          proxy_port: 0
           timeout: 120s
+          command_timeout: 300s  # Mais tempo pro upload
 
       - name: Configure and deploy via SSH
         uses: appleboy/ssh-action@v1.0.0
@@ -35,35 +47,37 @@ jobs:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_KEY }}
-          # Optional: set port via secret; if unset, action defaults to 22
-          port: ${{ secrets.SSH_PORT }}
-          # Forward envs to remote for expansion in script
+          port: ${{ secrets.SSH_PORT || 22 }}
           envs: PROD_ENV_FILE
           script_stop: true
-          timeout: 180s
+          timeout: 600s  # Tempo pra build na VPS
           script: |
             set -e
-            WORKDIR=/opt/nexus-os
-            mkdir -p "$WORKDIR"
-            cd "$WORKDIR"
+            cd /opt/nexus-os
 
-            echo "Escrevendo .env a partir do secret PROD_ENV_FILE"
-            # Grava o conteúdo completo do secret no arquivo .env
-            # Usamos printf para preservar quebras de linha sem ecoar no log
+            # Debug upload
+            ls -la
+            echo "Dockerfile existe? $(test -f Dockerfile && echo ✅ || echo ❌)"
+            echo "docker-compose.yml existe? $(test -f docker-compose.yml && echo ✅ || echo ❌)"
+
+            # Cria .env
             printf "%s" "$PROD_ENV_FILE" > .env
-
-            # Validação básica sem expor segredos
             if [ ! -s .env ]; then
-              echo "Falha ao criar .env: arquivo vazio" >&2
+              echo "❌ .env vazio" >&2
               exit 1
             fi
-            echo ".env criado com $(wc -l < .env) linhas"
+            echo "✅ .env: $(wc -l < .env) linhas"
 
-            echo "Parando containers antigos"
+            # Para containers antigos
+            echo "🛑 Parando containers..."
             docker compose down || true
 
-            echo "Subindo novos serviços"
-            docker compose up -d --build
+            # Build + deploy com cache e pull
+            echo "🔨 Build + up..."
+            docker compose build --pull --no-cache=false  # Cache ativado
+            docker compose up -d
 
-            echo "Status final dos containers"
+            # Status final
+            echo "📊 Status:"
             docker compose ps
+            docker compose logs --tail=20 app || true
