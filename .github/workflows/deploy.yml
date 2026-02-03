@@ -67,13 +67,16 @@ jobs:
             # Export IMAGE_TAG so Compose can substitute immediately even if .env isn't parsed
             export IMAGE_TAG="${IMAGE_TAG}"
             echo "Using IMAGE_TAG=${IMAGE_TAG}"
+            # Force Compose to use the project's docker-compose.yml, avoiding COMPOSE_FILE overrides from .env
+            export COMPOSE_FILE="docker-compose.yml"
+            echo "Using COMPOSE_FILE=${COMPOSE_FILE}"
 
             echo "🛑 Parando..."
             docker compose down || true
 
             echo "🔨 Build + up..."
             docker compose build --pull
-            docker compose up -d
+            docker compose up -d --build
 
             echo "📊 Status:"
             docker compose ps
