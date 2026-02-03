@@ -8,151 +8,62 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    env:
-      SSH_HOST: ${{ secrets.SSH_HOST }}
-      SSH_USER: ${{ secrets.SSH_USER }}
-      SSH_KEY: ${{ secrets.SSH_KEY }}
-      SSH_PORT: ${{ secrets.SSH_PORT || 22 }}
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set image tag
-        id: meta
-        run: echo "tag=$(echo $GITHUB_SHA | cut -c1-8)" >> $GITHUB_OUTPUT
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Build nexus-os (runner) with cache
-        uses: docker/build-push-action@v5
-        id: runner
-        with:
-          context: .
-          file: ./Dockerfile
-          target: runner
-          outputs: type=docker
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-      - name: Build nexus-os-migrate (builder) with cache
-        uses: docker/build-push-action@v5
-        id: migrate
-        with:
-          context: .
-          file: ./Dockerfile
-          target: builder
-          outputs: type=docker
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-      - name: Save Docker images to tarball
-        run: |
-          TAG=${{ steps.meta.outputs.tag }}
-          docker tag $(docker images --format '{{.ID}}' | head -1) nexus-os:${TAG}
-          docker tag $(docker images --format '{{.ID}}' | head -2 | tail -1) nexus-os-migrate:${TAG}
-          docker save nexus-os:${TAG} nexus-os-migrate:${TAG} | gzip > nexus-images.tar.gz
-          echo "Tarball size: $(du -h nexus-images.tar.gz)"
-
-      - name: Verify SSH connectivity
-        uses: appleboy/ssh-action@v1.0.0
-        with:
-          host: ${{ env.SSH_HOST }}
-          username: ${{ env.SSH_USER }}
-          key: ${{ env.SSH_KEY }}
-          port: ${{ env.SSH_PORT }}
-          script_stop: true
-          timeout: 60s
-          script: |
-            echo "SSH connected"
-            whoami
-            uname -a
-
-      # NOVO: Corrige permissões na VPS
-      - name: Prepare VPS directory
-        uses: appleboy/ssh-action@v1.0.0
-        with:
-          host: ${{ env.SSH_HOST }}
-          username: ${{ env.SSH_USER }}
-          key: ${{ env.SSH_KEY }}
-          port: ${{ env.SSH_PORT }}
-          script: |
-            sudo mkdir -p /opt/nexus-os
-            sudo chown -R ${{ secrets.SSH_USER }}:${{ secrets.SSH_USER }} /opt/nexus-os
-            chmod 755 /opt/nexus-os
-            # Remove any stale directory or file with the same tarball name
-            if [ -d /opt/nexus-os/nexus-images.tar.gz ]; then
-              echo "Found stale directory /opt/nexus-os/nexus-images.tar.gz; removing it"
-              rm -rf /opt/nexus-os/nexus-images.tar.gz
-            fi
-            if [ -f /opt/nexus-os/nexus-images.tar.gz ]; then
-              echo "Found stale file /opt/nexus-os/nexus-images.tar.gz; removing it"
-              rm -f /opt/nexus-os/nexus-images.tar.gz
-            fi
-            ls -la /opt/
-
-      - name: Upload image tarball to VPS
+      - name: Upload project to VPS
         uses: appleboy/scp-action@v0.1.7
         with:
-          host: ${{ env.SSH_HOST }}
-          username: ${{ env.SSH_USER }}
-          key: ${{ env.SSH_KEY }}
-          port: ${{ env.SSH_PORT }}
-          source: "nexus-images.tar.gz"
-          target: "/opt/nexus-os/"
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          port: ${{ secrets.SSH_PORT || 22 }}
+          source: "./"
+          target: "/opt/nexus-os"
           rm: true
+          strip_components: 0
           overwrite: true
-          timeout: 60s
-          command_timeout: 600s
-
-      - name: Upload docker-compose.yml to VPS
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ env.SSH_HOST }}
-          username: ${{ env.SSH_USER }}
-          key: ${{ env.SSH_KEY }}
-          port: ${{ env.SSH_PORT }}
-          source: "docker-compose.yml"
-          target: "/opt/nexus-os/"
-          rm: false
-          overwrite: true
-          timeout: 60s
-          command_timeout: 60s
+          proxy_port: 0
+          timeout: 120s
 
       - name: Configure and deploy via SSH
         uses: appleboy/ssh-action@v1.0.0
         env:
           PROD_ENV_FILE: ${{ secrets.PROD_ENV_FILE }}
-          IMAGE_TAG: ${{ steps.meta.outputs.tag }}
         with:
-          host: ${{ env.SSH_HOST }}
-          username: ${{ env.SSH_USER }}
-          key: ${{ env.SSH_KEY }}
-          port: ${{ env.SSH_PORT }}
-          envs: PROD_ENV_FILE,IMAGE_TAG
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          # Optional: set port via secret; if unset, action defaults to 22
+          port: ${{ secrets.SSH_PORT }}
+          # Forward envs to remote for expansion in script
+          envs: PROD_ENV_FILE
           script_stop: true
-          timeout: 300s
+          timeout: 180s
           script: |
             set -e
-            cd /opt/nexus-os
+            WORKDIR=/opt/nexus-os
+            mkdir -p "$WORKDIR"
+            cd "$WORKDIR"
+
+            echo "Escrevendo .env a partir do secret PROD_ENV_FILE"
+            # Grava o conteúdo completo do secret no arquivo .env
+            # Usamos printf para preservar quebras de linha sem ecoar no log
             printf "%s" "$PROD_ENV_FILE" > .env
-            echo "IMAGE_TAG=${IMAGE_TAG}" >> .env
-            # Defensive checks to ensure tarball is a regular file
-            if [ -d nexus-images.tar.gz ]; then
-              echo "Erro: nexus-images.tar.gz é um diretório inesperado."
-              ls -la
+
+            # Validação básica sem expor segredos
+            if [ ! -s .env ]; then
+              echo "Falha ao criar .env: arquivo vazio" >&2
               exit 1
             fi
-            if [ ! -f nexus-images.tar.gz ]; then
-              echo "Erro: arquivo nexus-images.tar.gz não encontrado após upload."
-              ls -la
-              exit 1
-            fi
-            gunzip -c nexus-images.tar.gz | docker load
+            echo ".env criado com $(wc -l < .env) linhas"
+
+            echo "Parando containers antigos"
             docker compose down || true
-            docker compose up -d
+
+            echo "Subindo novos serviços"
+            docker compose up -d --build
+
+            echo "Status final dos containers"
             docker compose ps
