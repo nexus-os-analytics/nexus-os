@@ -7,9 +7,6 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write  # Para push no GHCR
 
     steps:
       - name: Checkout repository
@@ -17,7 +14,7 @@ jobs:
 
       - name: Set image tag
         id: meta
-        run: echo "tag=${GITHUB_SHA::8}" >> $GITHUB_OUTPUT  # Tag curta para simplicidade
+        run: echo "tag=${GITHUB_SHA::8}" >> $GITHUB_OUTPUT
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -25,44 +22,70 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Log in to GHCR
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      # Build e push da imagem runner (app)
-      - name: Build and push nexus-os (runner)
+      # Build runner com cache (app)
+      - name: Build nexus-os (runner) with cache
         uses: docker/build-push-action@v5
+        id: runner
         with:
           context: .
           file: ./Dockerfile
           target: runner
-          push: true
-          tags: |
-            ghcr.io/${{ github.repository_owner }}/nexus-os:${{ steps.meta.outputs.tag }}
-            ghcr.io/${{ github.repository_owner }}/nexus-os:latest
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-          build-args: |
-            DATABASE_URL=dummy  # Não precisa conectar no CI
-
-      # Build e push da imagem migrate (builder stage)
-      - name: Build and push nexus-os-migrate (builder)
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: ./Dockerfile
-          target: builder
-          push: true
-          tags: |
-            ghcr.io/${{ github.repository_owner }}/nexus-os-migrate:${{ steps.meta.outputs.tag }}
-            ghcr.io/${{ github.repository_owner }}/nexus-os-migrate:latest
+          # Não push, só build local
+          outputs: type=docker
           cache-from: type=gha
           cache-to: type=gha,mode=max
           build-args: |
             DATABASE_URL=dummy
+
+      # Build builder com cache (migrate)
+      - name: Build nexus-os-migrate (builder) with cache
+        uses: docker/build-push-action@v5
+        id: migrate
+        with:
+          context: .
+          file: ./Dockerfile
+          target: builder
+          # Não push, só build local
+          outputs: type=docker
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            DATABASE_URL=dummy
+
+      - name: Save Docker images to tarball
+        run: |
+          TAG=${{ steps.meta.outputs.tag }}
+          docker save nexus-os:${TAG} nexus-os-migrate:${TAG} | gzip > nexus-images.tar.gz
+          echo "Tamanho do tarball: $(ls -lh nexus-images.tar.gz | cut -d' ' -f5)"
+          echo "TAR_SIZE=$(du -b nexus-images.tar.gz | cut -f1)" >> $GITHUB_OUTPUT
+
+      - name: Upload image tarball to VPS
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          port: ${{ secrets.SSH_PORT || 22 }}
+          source: "nexus-images.tar.gz"
+          target: "/opt/nexus-os/nexus-images.tar.gz"
+          rm: true
+          overwrite: true
+          timeout: 60s
+          command_timeout: 600s  # 10min para upload
+
+      - name: Upload docker-compose.yml to VPS
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          port: ${{ secrets.SSH_PORT || 22 }}
+          source: "docker-compose.yml"
+          target: "/opt/nexus-os/docker-compose.yml"
+          rm: false
+          overwrite: true
+          timeout: 60s
+          command_timeout: 60s
 
       - name: Configure and deploy via SSH
         uses: appleboy/ssh-action@v1.0.0
@@ -76,24 +99,18 @@ jobs:
           port: ${{ secrets.SSH_PORT || 22 }}
           envs: PROD_ENV_FILE,IMAGE_TAG
           script_stop: true
-          timeout: 300s  # Tempo suficiente para pull + up
+          timeout: 300s
           script: |
             set -e
             cd /opt/nexus-os
 
-            # Cria .env do secret
             printf "%s" "$PROD_ENV_FILE" > .env
             echo "IMAGE_TAG=${IMAGE_TAG}" >> .env
 
-            # Pull das imagens do GHCR
-            echo "Pulling imagens do GHCR..."
-            docker compose pull
+            echo "Carregando imagens..."
+            gunzip -c nexus-images.tar.gz | docker load
 
-            # Deploy
-            echo "Recriando containers..."
+            echo "Deploy..."
             docker compose down || true
             docker compose up -d
-
-            echo "Status final:"
             docker compose ps
-            docker compose logs --tail=50 app migrate || true
