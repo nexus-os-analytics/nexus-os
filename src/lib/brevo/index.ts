@@ -1,4 +1,3 @@
-import { TransactionalEmailsApi, TransactionalEmailsApiApiKeys } from '@getbrevo/brevo';
 import pino from 'pino';
 import criticalAlertTemplate from './templates/critical-alert.template';
 import inviteTemplate from './templates/invite-user.template';
@@ -54,15 +53,24 @@ export async function sendEmail({
   };
 
   try {
-    const api = new TransactionalEmailsApi();
-    api.setApiKey(TransactionalEmailsApiApiKeys.apiKey, BREVO_API_KEY);
-    await api.sendTransacEmail(emailData);
+    const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+      method: 'POST',
+      headers: {
+        accept: 'application/json',
+        'api-key': BREVO_API_KEY,
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify(emailData),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      logger.error(`Failed to send email via Brevo: ${JSON.stringify(errorData)}`);
+      throw new Error(`Brevo API error: ${response.statusText}`);
+    }
   } catch (error) {
-    const err = error as { body?: unknown; message?: string };
-    const details = typeof err.body === 'string' ? err.body : JSON.stringify(err.body);
+    const err = error as { message?: string };
     logger.error(`Failed to send email via Brevo: ${error}`);
-    throw new Error(
-      `Brevo API error: ${err.message ?? 'Unknown error'}${details ? ` - ${details}` : ''}`
-    );
+    throw new Error(`Brevo API error: ${err.message ?? 'Unknown error'}`);
   }
 }
