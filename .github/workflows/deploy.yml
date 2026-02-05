@@ -21,7 +21,12 @@ jobs:
 
       - name: Create .env
         run: |
-          printf "%s\n" "${{ secrets.PROD_ENV_FILE }}" > .env
+          # Write multi-line secret using quoted heredoc to avoid shell expansion
+          cat > .env << 'EOF'
+          ${{ secrets.PROD_ENV_FILE }}
+          EOF
+          # Normalize CRLF to LF (in case secret was pasted from Windows)
+          sed -i 's/\r$//' .env || true
           echo "IMAGE_TAG=${{ steps.meta.outputs.tag }}" >> .env
           echo "✅ .env criado:"
           wc -l .env || true
