@@ -28,6 +28,10 @@ export function SignIn() {
   const [loading, setLoading] = useState(false);
   const { required2FA, status } = useAuth();
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [isUnverified, setIsUnverified] = useState(false);
+  const [resendLoading, setResendLoading] = useState(false);
+  const [resendMessage, setResendMessage] = useState<string | null>(null);
+  const [resendMessageColor, setResendMessageColor] = useState<'green' | 'yellow' | 'red'>('green');
   const { getQueryParam } = useQueryString();
   const nextPage = '/bling';
   const planParam = (getQueryParam('plan') || '').toUpperCase();
@@ -46,6 +50,8 @@ export function SignIn() {
   const handleSign = async (values: typeof form.values) => {
     setLoading(true);
     setErrorMessage(null);
+    setIsUnverified(false);
+    setResendMessage(null);
 
     const result = await signIn('credentials', {
       redirect: false,
@@ -57,6 +63,20 @@ export function SignIn() {
     setLoading(false);
 
     if (result?.error) {
+      // Verificar se a conta está não verificada para ajustar a mensagem
+      try {
+        const resp = await fetch(`/api/auth/is-verified?email=${encodeURIComponent(values.email)}`);
+        if (resp.ok) {
+          const data = (await resp.json()) as { verified: boolean };
+          if (!data.verified) {
+            setErrorMessage('Confirme seu e-mail para continuar.');
+            setIsUnverified(true);
+            return;
+          }
+        }
+      } catch (_e) {
+        // ignorar erros de verificação
+      }
       setErrorMessage('E-mail ou senha inválidos');
     }
   };
@@ -81,6 +101,9 @@ export function SignIn() {
         setErrorMessage('Conta desativada. Entre em contato com o suporte.');
       } else if (err === 'invalid_credentials') {
         setErrorMessage('E-mail ou senha inválidos');
+      } else if (err === 'unverified') {
+        setErrorMessage('Confirme seu e-mail para continuar.');
+        setIsUnverified(true);
       } else {
         setErrorMessage('Falha na autenticação. Tente novamente.');
       }
@@ -90,6 +113,40 @@ export function SignIn() {
       router.push(redirect as string);
     }
   }, [status, required2FA, router, redirect, getQueryParam]);
+
+  const handleResendVerification = async () => {
+    setResendMessage(null);
+    if (!form.values.email) {
+      setResendMessage('Informe seu e-mail acima e tente novamente.');
+      setResendMessageColor('yellow');
+      return;
+    }
+    setResendLoading(true);
+    try {
+      const resp = await fetch('/api/auth/resend-verification', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email: form.values.email }),
+      });
+      if (resp.status === 429) {
+        setResendMessage('Você solicitou recentemente. Aguarde 1 minuto para reenviar.');
+        setResendMessageColor('yellow');
+      } else if (resp.ok) {
+        setResendMessage('E-mail de verificação reenviado. Verifique sua caixa de entrada.');
+        setResendMessageColor('green');
+      } else {
+        setResendMessage('Não foi possível reenviar o e-mail de verificação.');
+        setResendMessageColor('red');
+      }
+    } catch {
+      setResendMessage('Erro ao reenviar. Tente novamente em instantes.');
+      setResendMessageColor('red');
+    } finally {
+      setResendLoading(false);
+    }
+  };
 
   if (required2FA)
     return (
@@ -115,6 +172,17 @@ export function SignIn() {
               {errorMessage}
             </Alert>
           )}
+          {isUnverified && (
+            <Group justify="space-between">
+              <Text c="dimmed" size="sm">
+                Não recebeu o e-mail?
+              </Text>
+              <Button variant="light" onClick={handleResendVerification} loading={resendLoading}>
+                Reenviar verificação
+              </Button>
+            </Group>
+          )}
+          {resendMessage && <Alert color={resendMessageColor}>{resendMessage}</Alert>}
           <Text ta="center" fz="lg" fw={500}>
             Acesse sua conta
           </Text>

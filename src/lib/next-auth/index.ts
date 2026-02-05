@@ -18,7 +18,7 @@ export const authOptions: AuthOptions = {
 
   pages: {
     signIn: '/login',
-    error: '/login?error=invalid_credentials',
+    error: '/login',
   },
 
   session: {
@@ -83,6 +83,19 @@ export const authOptions: AuthOptions = {
           });
 
           throw new Error('Credenciais inválidas');
+        }
+
+        // Bloquear login até verificação de e-mail (credenciais)
+        if (!user.emailVerified) {
+          // Registrar incidente para tentativa de login sem verificação
+          await prisma.securityIncident.create({
+            data: {
+              userId: user.id,
+              type: 'UNVERIFIED_LOGIN_ATTEMPT',
+              details: `Login attempt before email verification from IP ${req?.headers?.['x-forwarded-for'] || 'unknown'}`,
+            },
+          });
+          throw new Error('Conta não verificada');
         }
 
         // Se o usuário tem 2FA ativo, o código deve estar presente
@@ -223,7 +236,7 @@ export const authOptions: AuthOptions = {
         }
       }
 
-      // Para credentials, permitir login normalmente
+      // Para credentials, permitir login somente se verificado (checado em authorize)
       return true;
     },
 

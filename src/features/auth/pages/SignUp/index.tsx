@@ -8,6 +8,7 @@ import {
   Group,
   Paper,
   PasswordInput,
+  SegmentedControl,
   Stack,
   Text,
   TextInput,
@@ -19,6 +20,7 @@ import { signIn } from 'next-auth/react';
 import { useEffect, useState } from 'react';
 import { GoogleButton } from '@/components/commons/GoogleButton';
 import { useQueryString } from '@/hooks';
+import axiosInstance from '@/lib/api';
 import { SignUpSchema, useSignUp } from '../../services';
 
 export function SignUp() {
@@ -27,6 +29,7 @@ export function SignUp() {
   const { mutateAsync: signUp, isPending, error } = useSignUp();
   const { getQueryParam } = useQueryString();
   const planParam = (getQueryParam('plan') || '').toUpperCase();
+  const [planTier, setPlanTier] = useState<'FREE' | 'PRO'>(planParam === 'PRO' ? 'PRO' : 'FREE');
 
   const form = useForm({
     initialValues: {
@@ -35,6 +38,7 @@ export function SignUp() {
       password: '',
       confirmPassword: '',
       terms: false,
+      planTier,
     },
     validate: zod4Resolver(SignUpSchema),
   });
@@ -47,14 +51,18 @@ export function SignUp() {
         password: values.password,
         confirmPassword: values.confirmPassword,
         terms: values.terms as true,
+        planTier,
       });
-
-      await signIn('credentials', {
-        email: values.email,
-        password: values.password,
-        callbackUrl: planParam ? `/bling?plan=${planParam}` : '/bling',
-        redirect: true,
-      });
+      // Não autenticar automaticamente até verificação de e-mail
+      // Se plano PRO, iniciar checkout do Stripe anonimamente
+      if (planTier === 'PRO') {
+        const res = await axiosInstance.post('/stripe/checkout-anon', { email: values.email });
+        const url = res.data?.url as string | undefined;
+        if (url) {
+          window.location.href = url;
+          return;
+        }
+      }
     } catch (error) {
       console.error('Error during sign up:', error);
     }
@@ -90,6 +98,14 @@ export function SignUp() {
           <Text ta="center" fz="lg" fw={500}>
             Criar uma conta
           </Text>
+          <SegmentedControl
+            value={planTier}
+            onChange={(value) => setPlanTier(value as 'FREE' | 'PRO')}
+            data={[
+              { label: 'Plano FREE', value: 'FREE' },
+              { label: 'Plano PRO', value: 'PRO' },
+            ]}
+          />
           <TextInput
             label="Name"
             placeholder="Seu nome"

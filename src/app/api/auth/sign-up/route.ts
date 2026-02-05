@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { email, password, name, terms: acceptedTerms } = parsedBody.data;
+    const { email, password, name, terms: acceptedTerms, planTier } = parsedBody.data;
 
     const existingUser = await prisma.user.findUnique({
       where: { email },
@@ -39,6 +39,7 @@ export async function POST(req: NextRequest) {
         hashedPassword,
         acceptedTerms: acceptedTerms ?? false,
         role: 'USER',
+        planTier: planTier === 'PRO' ? 'PRO' : 'FREE',
       },
       select: {
         id: true,

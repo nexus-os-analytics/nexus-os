@@ -23,7 +23,7 @@ export async function GET(request: Request) {
     });
 
     const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
-    return NextResponse.redirect(`${appUrl}/login?activated=1`, { status: 302 });
+    return NextResponse.redirect(`${appUrl}/bling?activated=1`, { status: 302 });
   } catch (err) {
     console.error('Error activating account:', err);
     return NextResponse.json({ error: 'Erro interno do servidor' }, { status: 500 });
