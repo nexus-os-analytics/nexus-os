@@ -213,7 +213,7 @@ BLING_REDIRECT_URI=""
 # Recursos públicos Nexus OS
 NEXT_PUBLIC_APP_NAME="Nexus OS"
 NEXT_PUBLIC_APP_DESCRIPTION="Plataforma inteligente que conecta dados do Bling ERP para otimizar estoque, reduzir rupturas e destravar capital."
-NEXT_PUBLIC_APP_HOMEPAGE_URL="https://nexusos.app/"
+NEXT_PUBLIC_APP_URL="https://nexusos.app/"
 NEXT_PUBLIC_APP_MANUAL_URL="https://docs.nexusos.app/manual"
 NEXT_PUBLIC_APP_VIDEO_URL="https://youtu.be/nexus-os-demo"
 

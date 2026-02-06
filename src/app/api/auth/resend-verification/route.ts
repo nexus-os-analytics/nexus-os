@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createActivationToken, sendWelcomeActivationEmail } from '@/features/auth/services';
+import { APP_URL } from '@/lib/constants';
 import prisma from '@/lib/prisma';
 
 const lastSentMap = new Map<string, number>();
@@ -34,8 +35,7 @@ export async function POST(req: Request) {
     }
 
     const { token } = await createActivationToken(email);
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
-    const activationLink = `${appUrl}/api/activate?token=${encodeURIComponent(token)}`;
+    const activationLink = `${APP_URL}api/activate?token=${encodeURIComponent(token)}`;
 
     await sendWelcomeActivationEmail({ email, name: user.name, activationLink });
     lastSentMap.set(email, now);

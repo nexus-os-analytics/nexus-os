@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { consumeActivationToken } from '@/features/auth/services';
+import { APP_URL } from '@/lib/constants';
 import prisma from '@/lib/prisma';
 
 export async function GET(request: Request) {
@@ -22,8 +23,7 @@ export async function GET(request: Request) {
       data: { emailVerified: new Date() },
     });
 
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
-    return NextResponse.redirect(`${appUrl}/bling?activated=1`, { status: 302 });
+    return NextResponse.redirect(`${APP_URL}bling?activated=1`, { status: 302 });
   } catch (err) {
     console.error('Error activating account:', err);
     return NextResponse.json({ error: 'Erro interno do servidor' }, { status: 500 });
