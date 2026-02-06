@@ -15,6 +15,14 @@ export async function POST() {
       return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
     }
 
+    // Block manual sync for FREE plan
+    if (session?.user?.planTier === 'FREE') {
+      return NextResponse.json(
+        { error: 'Sincronização manual disponível apenas no plano PRO.' },
+        { status: 403 }
+      );
+    }
+
     const integration = await BlingIntegration.getBlingIntegration(userId);
     if (!integration) {
       return NextResponse.json({ error: 'Integração Bling não conectada' }, { status: 400 });

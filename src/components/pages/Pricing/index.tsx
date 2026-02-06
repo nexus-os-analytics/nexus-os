@@ -15,12 +15,7 @@ import {
 import type { PlanTier } from '@prisma/client';
 import Link from 'next/link';
 import { useState } from 'react';
-import {
-  FEATURE_DEFINITIONS,
-  FEATURE_LIST_ORDER,
-  getPlanLimits,
-  isFeatureAvailable,
-} from '@/features/billing/entitlements';
+import { getPlanFeatureStrings } from '@/features/billing/entitlements';
 
 interface TierCard {
   id: PlanTier | 'FREE' | 'PRO';
@@ -61,12 +56,12 @@ export function Pricing() {
         body: JSON.stringify({ plan: 'pro' }),
       });
       if (res.status === 401) {
-        window.location.href = '/login?plan=PRO';
+        globalThis.location.href = '/login?plan=PRO';
         return;
       }
       const data = await res.json();
       if (data.url) {
-        window.location.href = data.url as string;
+        globalThis.location.href = data.url as string;
       }
     } finally {
       setLoading(false);
@@ -107,26 +102,10 @@ export function Pricing() {
               </Text>
             </Stack>
             <List spacing="xs" size="sm">
-              {/* Limits */}
               {(() => {
-                const limits = getPlanLimits(t.plan);
-                const limitsList = [
-                  `Máximo de produtos: ${limits.products === 'unlimited' ? 'Ilimitado' : limits.products}`,
-                  `Máximo de alertas: ${limits.alerts === 'unlimited' ? 'Ilimitado' : limits.alerts}`,
-                  `Integrações: ${limits.integrations === 'unlimited' ? 'Ilimitado' : limits.integrations}`,
-                ];
-                return limitsList.map((f) => <List.Item key={f}>{f}</List.Item>);
+                const items = getPlanFeatureStrings(t.plan);
+                return items.map((f) => <List.Item key={f}>{f}</List.Item>);
               })()}
-              {/* Features */}
-              {FEATURE_LIST_ORDER.map((key) => {
-                const def = FEATURE_DEFINITIONS.find((d) => d.key === key)!;
-                const available = isFeatureAvailable(t.plan, key);
-                return (
-                  <List.Item key={key} c={available ? undefined : 'dimmed'}>
-                    {def.label}
-                  </List.Item>
-                );
-              })}
             </List>
             {t.plan === 'PRO' ? (
               <Button

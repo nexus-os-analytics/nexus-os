@@ -1,6 +1,7 @@
 import type { BlingSyncStatus } from '@prisma/client';
 import { useSession } from 'next-auth/react';
 import { useEffect, useState } from 'react';
+import { getPlanEntitlements } from '@/features/billing/entitlements';
 
 export interface BlingIntegrationStatus {
   connected: boolean;
@@ -98,6 +99,8 @@ export function useBlingIntegration() {
     status,
     connectionState,
     loading,
+    manualSyncAllowed: getPlanEntitlements(session?.user?.planTier === 'PRO' ? 'PRO' : 'FREE').sync
+      .manualAllowed,
     connect,
     disconnect,
     refresh,

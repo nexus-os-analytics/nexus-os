@@ -24,7 +24,7 @@ import { useOverviewMetrics } from '../../hooks/use-overview-metrics';
 import { useProductAlerts } from '../../hooks/use-product-alerts';
 
 export function Dashboard() {
-  const { status, loading, sync, refresh } = useBlingIntegration();
+  const { status, loading, sync, refresh, manualSyncAllowed } = useBlingIntegration();
   // Overview metrics
   const { data: overviewMetrics } = useOverviewMetrics();
   // Filters (URL-synced as comma-separated strings)
@@ -145,7 +145,9 @@ export function Dashboard() {
               await sync();
               await refresh();
             }}
-            disabled={loading || !status?.connected || status.syncStatus === 'SYNCING'}
+            disabled={
+              loading || !status?.connected || status.syncStatus === 'SYNCING' || !manualSyncAllowed
+            }
           >
             Atualizar
           </Button>
@@ -233,7 +235,7 @@ export function Dashboard() {
                 await sync();
                 await refresh();
               }}
-              disabled={loading || !status?.connected}
+              disabled={loading || !status?.connected || !manualSyncAllowed}
             >
               Atualizar
             </Button>
@@ -262,7 +264,7 @@ export function Dashboard() {
                 await sync();
                 await refresh();
               }}
-              disabled={loading}
+              disabled={loading || !manualSyncAllowed}
             >
               Atualizar
             </Button>
