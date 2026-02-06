@@ -38,7 +38,7 @@ export async function POST(req: NextRequest) {
   });
 
   const inviteLinkBase = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
-  const inviteLink = `${inviteLinkBase}/alterar-senha?invite=${invite.token}`;
+  const inviteLink = `${inviteLinkBase}/resetar-senha?token=${invite.token}&email=${encodeURIComponent(email)}`;
 
   await sendEmail({
     toEmail: email,

@@ -18,7 +18,6 @@ export const SignUpSchema = z
       .string()
       .min(MIN_PASSWORD_LENGTH, 'A confirmação de senha deve ter pelo menos 6 caracteres'),
     terms: z.literal(true, { message: 'Você deve aceitar os termos e condições' }),
-    planTier: z.enum(['FREE', 'PRO']).default('FREE'),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: 'As senhas não coincidem',

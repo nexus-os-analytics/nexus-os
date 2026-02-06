@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { email, password, name, terms: acceptedTerms, planTier } = parsedBody.data;
+    const { email, password, name, terms: acceptedTerms } = parsedBody.data;
 
     const existingUser = await prisma.user.findUnique({
       where: { email },
@@ -39,7 +39,7 @@ export async function POST(req: NextRequest) {
         hashedPassword,
         acceptedTerms: acceptedTerms ?? false,
         role: 'USER',
-        planTier: planTier === 'PRO' ? 'PRO' : 'FREE',
+        planTier: 'FREE',
       },
       select: {
         id: true,
@@ -59,7 +59,7 @@ export async function POST(req: NextRequest) {
     // Generate activation token and send welcome email
     const { token } = await createActivationToken(user.email);
     const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
-    const activationLink = `${appUrl}/api/auth/activate?token=${encodeURIComponent(token)}&email=${encodeURIComponent(user.email)}`;
+    const activationLink = `${appUrl}/api/activate?token=${encodeURIComponent(token)}`;
     await sendWelcomeActivationEmail({ email: user.email, name: user.name, activationLink });
 
     return NextResponse.json(
