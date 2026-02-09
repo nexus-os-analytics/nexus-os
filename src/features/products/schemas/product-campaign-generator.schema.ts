@@ -24,12 +24,34 @@ export const ProductInfoSchema = z
   })
   .strict();
 
+const AlertTypeEnum = z.enum(['FINE', 'RUPTURE', 'DEAD_STOCK', 'OPPORTUNITY', 'LIQUIDATION']);
+
+export const AlertContextSchema = z
+  .object({
+    type: AlertTypeEnum,
+    discountPct: z.number().int().nonnegative().optional(),
+    discountAmount: z.number().nonnegative().optional(),
+    daysRemaining: z.number().int().nonnegative().optional(),
+    estimatedDeadline: z.number().int().nonnegative().optional(),
+    growthTrend: z.number().optional(),
+    capitalStuck: z.number().optional(),
+    vvdReal: z.number().optional(),
+    vvd30: z.number().optional(),
+    vvd7: z.number().optional(),
+    daysSinceLastSale: z.number().int().optional(),
+    excessUnits: z.number().int().optional(),
+    excessPercentage: z.number().optional(),
+    excessCapital: z.number().optional(),
+  })
+  .strict();
+
 export const GenerateProductCampaignSchema = z
   .object({
     product: ProductInfoSchema,
     strategy: StrategyEnum,
     toneOfVoice: ToneEnum,
     customInstructions: z.string().max(CUSTOM_INSTRUCTIONS_MAX).optional(),
+    alert: AlertContextSchema.optional(),
   })
   .strict();
 

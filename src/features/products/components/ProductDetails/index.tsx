@@ -84,7 +84,8 @@ export function ProductDetails({ product }: ProductDetailsProps) {
   const currencyBRL = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
   const searchParams = useSearchParams();
   const tabParam = searchParams.get('tab');
-  const canGenerateCampaign = alert.type === 'LIQUIDATION' || alert.type === 'DEAD_STOCK';
+  const canGenerateCampaign =
+    alert.type === 'LIQUIDATION' || alert.type === 'DEAD_STOCK' || alert.type === 'OPPORTUNITY';
   const defaultTab = canGenerateCampaign && tabParam === 'campaign' ? 'campaign' : 'details';
 
   return (

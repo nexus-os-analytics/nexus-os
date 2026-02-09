@@ -35,9 +35,25 @@ export function ProductCampaingGenerator({ product }: ProductCampaingGeneratorPr
   const [isGenerating, setIsGenerating] = useState(false);
   const [campaigns, setCampaigns] = useState<CampaignOutput | null>(null);
 
-  const promotionalPrice = product.alert?.suggestedPrice ?? product.salePrice;
+  const alertType = product.alert?.type;
+  const baseSalePrice = product.salePrice;
   const discountPct = product.alert?.discount;
   const discountAmount = product.alert?.discountAmount;
+  const PERCENT_BASE = 100;
+  let promotionalPrice = product.alert?.suggestedPrice ?? baseSalePrice;
+
+  // Adjust price based on alert type
+  if (alertType === 'OPPORTUNITY') {
+    // Add 10% to incentivize immediate purchase
+    const INCREASE_PCT = 0.1;
+    promotionalPrice = Number((baseSalePrice * (1 + INCREASE_PCT)).toFixed(2));
+  } else if (alertType === 'LIQUIDATION' || alertType === 'DEAD_STOCK') {
+    if (typeof discountPct === 'number' && discountPct > 0) {
+      promotionalPrice = Number((baseSalePrice * (1 - discountPct / PERCENT_BASE)).toFixed(2));
+    } else if (typeof discountAmount === 'number' && discountAmount > 0) {
+      promotionalPrice = Number((baseSalePrice - discountAmount).toFixed(2));
+    }
+  }
 
   const handleGenerate = async () => {
     try {
@@ -57,6 +73,24 @@ export function ProductCampaingGenerator({ product }: ProductCampaingGeneratorPr
         strategy: selectedStrategy,
         toneOfVoice,
         customInstructions: customInstructions || undefined,
+        alert: product.alert
+          ? {
+              type: product.alert.type,
+              discountPct: product.alert.discount ?? undefined,
+              discountAmount: product.alert.discountAmount ?? undefined,
+              daysRemaining: product.alert.daysRemaining ?? undefined,
+              estimatedDeadline: product.alert.estimatedDeadline ?? undefined,
+              growthTrend: product.alert.growthTrend ?? undefined,
+              capitalStuck: product.alert.capitalStuck ?? undefined,
+              vvdReal: product.alert.vvdReal ?? undefined,
+              vvd30: product.alert.vvd30 ?? undefined,
+              vvd7: product.alert.vvd7 ?? undefined,
+              daysSinceLastSale: product.alert.daysSinceLastSale ?? undefined,
+              excessUnits: product.alert.excessUnits ?? undefined,
+              excessPercentage: product.alert.excessPercentage ?? undefined,
+              excessCapital: product.alert.excessCapital ?? undefined,
+            }
+          : undefined,
       };
       const result = await generateProductCampaignAction(input);
       setCampaigns(result);
@@ -144,11 +178,15 @@ export function ProductCampaingGenerator({ product }: ProductCampaingGeneratorPr
               </Text>
               {product.salePrice !== promotionalPrice && (
                 <Badge color="brand" variant="light">
-                  {discountPct != null
-                    ? `Desconto: ${Math.round(discountPct)}%`
-                    : discountAmount != null
-                      ? `- ${formatCurrency(discountAmount)}`
-                      : 'Preço ajustado'}
+                  {(() => {
+                    if (discountPct != null) {
+                      return `Desconto: ${Math.round(discountPct)}%`;
+                    }
+                    if (discountAmount != null) {
+                      return `- ${formatCurrency(discountAmount)}`;
+                    }
+                    return 'Preço ajustado';
+                  })()}
                 </Badge>
               )}
             </Group>
