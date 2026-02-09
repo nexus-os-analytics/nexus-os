@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { APP_URL } from '@/lib/constants';
 import prisma from '@/lib/prisma';
 import { getStripe } from '@/lib/stripe';
 
@@ -24,8 +25,8 @@ export async function POST(req: Request) {
       mode: 'subscription',
       customer_email: email,
       line_items: [{ price: priceId, quantity: 1 }],
-      success_url: `${process.env.NEXT_PUBLIC_APP_URL}/login?checkout=success`,
-      cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/precos`,
+      success_url: `${APP_URL}login?checkout=success`,
+      cancel_url: `${APP_URL}precos`,
       allow_promotion_codes: true,
       subscription_data: {
         metadata: { userId: user.id, planTier: 'PRO' },

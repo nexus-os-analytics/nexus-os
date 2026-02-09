@@ -1,6 +1,7 @@
 'use server';
 
 import { getServerSession } from 'next-auth';
+import { APP_URL } from '@/lib/constants';
 import { authOptions } from '@/lib/next-auth';
 import prisma from '@/lib/prisma';
 import { getStripe } from '@/lib/stripe';
@@ -30,8 +31,8 @@ export async function createCheckoutSession({ planTier }: CreateCheckoutInput) {
     mode: 'subscription',
     customer_email: user.email,
     line_items: [{ price: priceId, quantity: 1 }],
-    success_url: `${process.env.NEXT_PUBLIC_APP_URL}/stripe/success?session_id={CHECKOUT_SESSION_ID}`,
-    cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/precos`,
+    success_url: `${APP_URL}stripe/success?session_id={CHECKOUT_SESSION_ID}`,
+    cancel_url: `${APP_URL}precos`,
     allow_promotion_codes: true,
     subscription_data: {
       metadata: { userId: user.id, planTier: 'PRO' },

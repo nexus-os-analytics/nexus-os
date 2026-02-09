@@ -1,5 +1,6 @@
 import crypto from 'node:crypto';
 import { NextResponse } from 'next/server';
+import { APP_URL } from '@/lib/constants';
 import prisma from '@/lib/prisma';
 
 function hashToken(token: string): string {
@@ -43,8 +44,7 @@ export async function GET(req: Request) {
       });
     });
 
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
-    return NextResponse.redirect(`${appUrl}/bling?activated=1`);
+    return NextResponse.redirect(`${APP_URL}bling?activated=1`);
   } catch (error) {
     console.error('Erro em /api/activate:', error);
     return NextResponse.json({ error: 'Erro interno do servidor' }, { status: 500 });
