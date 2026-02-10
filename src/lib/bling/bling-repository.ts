@@ -745,7 +745,8 @@ export function createBlingRepository({ integrationId }: BlingRepositoryOptions)
       if (product.alert) {
         capitalStuck += product.alert.capitalStuck;
 
-        if (product.alert.type === 'DEAD_STOCK') {
+        // Contagem correta por tipo de alerta
+        if (product.alert.type === 'RUPTURE') {
           ruptureCount += 1;
         } else if (product.alert.type === 'OPPORTUNITY') {
           opportunityCount += 1;

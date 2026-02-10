@@ -49,26 +49,54 @@ export async function generateProductCampaignAction(input: unknown): Promise<Cam
         )
       : 0;
 
+  // Calculate suggested promotional price based on alert type and default rules
+  let suggestedPrice = product.salePrice;
+  let discountPct = 0;
+  let priceIncreasePct = 0;
+
+  if (alert?.type === 'OPPORTUNITY') {
+    // OPPORTUNITY: 10% above current sale price (unless custom instructions override)
+    priceIncreasePct = 10;
+    suggestedPrice = product.salePrice * 1.1;
+  } else if (alert?.type === 'LIQUIDATION') {
+    // LIQUIDATION: 10% discount (unless custom instructions override)
+    discountPct = typeof alert?.discountPct === 'number' ? alert.discountPct : 10;
+    suggestedPrice = product.salePrice * (1 - discountPct / PERCENT_BASE);
+  } else if (alert?.type === 'DEAD_STOCK') {
+    // DEAD_STOCK: 30-40% discount (use alert discount or default to 35%)
+    discountPct = typeof alert?.discountPct === 'number' ? alert.discountPct : 35;
+    suggestedPrice = product.salePrice * (1 - discountPct / PERCENT_BASE);
+  } else if (typeof alert?.discountPct === 'number') {
+    // Use alert discount if available for other types
+    discountPct = alert.discountPct;
+    suggestedPrice = product.salePrice * (1 - discountPct / PERCENT_BASE);
+  }
+
   const user = [
     `Produto: ${product.name} (SKU: ${product.sku})`,
     product.categoryName ? `Categoria: ${product.categoryName}` : undefined,
-    `Preço promocional: R$ ${product.salePrice.toFixed(2)}`,
+    `Preço atual: R$ ${product.salePrice.toFixed(2)}`,
     `Preço de custo: R$ ${product.costPrice.toFixed(2)}`,
     product.currentStock != null ? `Estoque atual: ${product.currentStock}` : undefined,
     `Margem estimada: ${marginPct}%`,
     alert?.type ? `Tipo de alerta: ${alert.type}` : undefined,
-    // Pricing intent based on alert type
+    // Pricing rules based on alert type
     alert?.type === 'OPPORTUNITY'
-      ? 'Objetivo: vender rápido (alta demanda, estoque baixo). Preço com acréscimo de 10%.'
+      ? `REGRA DE PREÇO: Aumentar 10% sobre o preço atual (R$ ${suggestedPrice.toFixed(2)}). Objetivo: maximizar margem com alta demanda.`
       : undefined,
-    alert && (alert.type === 'LIQUIDATION' || alert.type === 'DEAD_STOCK')
-      ? 'Objetivo: liquidar estoque (alto estoque, baixa demanda). Aplicar descontos do alerta.'
+    alert?.type === 'LIQUIDATION'
+      ? `REGRA DE PREÇO: Aplicar ${discountPct}% de desconto (R$ ${suggestedPrice.toFixed(2)}). Objetivo: liquidar excesso de estoque.`
       : undefined,
-    // Discounts / adjustments context
-    typeof alert?.discountPct === 'number' ? `Desconto aplicado: ${alert.discountPct}%` : undefined,
-    typeof alert?.discountAmount === 'number'
-      ? `Desconto em valor: R$ ${alert.discountAmount.toFixed(2)}`
+    alert?.type === 'DEAD_STOCK'
+      ? `REGRA DE PREÇO: Aplicar ${discountPct}% de desconto (30-40% recomendado: R$ ${suggestedPrice.toFixed(2)}). Objetivo: recuperar capital parado.`
       : undefined,
+    discountPct > 0 && alert?.type !== 'OPPORTUNITY'
+      ? `Desconto aplicado: ${discountPct}% (Economia de R$ ${(product.salePrice - suggestedPrice).toFixed(2)})`
+      : undefined,
+    priceIncreasePct > 0
+      ? `Acréscimo aplicado: ${priceIncreasePct}% (por alta demanda e baixo estoque)`
+      : undefined,
+    `Preço promocional sugerido: R$ ${suggestedPrice.toFixed(2)}`,
     // Urgency and performance signals
     typeof alert?.daysRemaining === 'number' ? `Dias restantes: ${alert.daysRemaining}` : undefined,
     typeof alert?.estimatedDeadline === 'number'
@@ -96,10 +124,22 @@ export async function generateProductCampaignAction(input: unknown): Promise<Cam
       : undefined,
     `Estratégia: ${strategy}`,
     `Tom de voz: ${toneOfVoice}`,
-    customInstructions ? `Instruções adicionais: ${customInstructions}` : undefined,
-    'Inclua números/percentuais quando fizer sentido. Evite informações falsas. Não use links reais.',
-    'Para OPPORTUNITY: destaque benefícios e urgência pela alta demanda e baixo estoque.',
-    'Para LIQUIDATION/DEAD_STOCK: destaque desconto e urgência para reduzir estoque.',
+    customInstructions
+      ? `INSTRUÇÕES PERSONALIZADAS (seguir obrigatoriamente): ${customInstructions}`
+      : undefined,
+    '',
+    'DIRETRIZES DE PREÇO (use o preço promocional sugerido, exceto se instruções personalizadas indicarem diferente):',
+    '- OPPORTUNITY: sempre mencione o aumento de 10% e destaque a alta demanda',
+    '- LIQUIDATION: sempre mencione o desconto de 10% e crie senso de urgência',
+    '- DEAD_STOCK (Capital Parado): sempre mencione desconto de 30-40% e urgência máxima para liquidar',
+    '',
+    'DIRETRIZES DE CONTEÚDO:',
+    '- Use o preço promocional sugerido nos textos (já calculado acima)',
+    '- Inclua números/percentuais quando fizer sentido',
+    '- Para OPPORTUNITY: destaque benefícios, qualidade, escassez e valorize o produto',
+    '- Para LIQUIDATION: destaque o desconto e crie urgência moderada',
+    '- Para DEAD_STOCK: destaque o grande desconto e crie urgência máxima ("últimas unidades", "queima de estoque")',
+    '- Evite informações falsas. Não use links reais.',
   ]
     .filter(Boolean)
     .join('\n');
