@@ -48,6 +48,8 @@ services:
       context: .
       dockerfile: Dockerfile
       target: builder
+      cache_from:
+        - nexus-os-migrate:latest
     image: nexus-os-migrate:${IMAGE_TAG}
     container_name: nexus_migrate
     command: sh -c "pnpm exec prisma generate && pnpm exec prisma migrate deploy"
@@ -63,6 +65,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      cache_from:
+        - nexus-os:latest
     image: nexus-os:${IMAGE_TAG}
     container_name: nexus_app
     restart: unless-stopped

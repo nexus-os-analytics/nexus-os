@@ -35,20 +35,7 @@ jobs:
       - name: Prepare files for upload
         run: |
           git clean -fdx -e .env
-          rm -rf node_modules .git .next
-          echo "📦 Upload: $(du -sh .)"
-
-      - name: Upload .env FIRST
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_KEY }}
-          port: ${{ secrets.SSH_PORT || 22 }}
-          source: ".env"
-          target: "/opt/nexus-os/.env"
-          rm: true
-          overwrite: true
+          echo "📦 Upload size: $(du -sh . | cut -f1)"
 
       - name: Upload project to VPS
         uses: appleboy/scp-action@v0.1.7
@@ -62,6 +49,7 @@ jobs:
           rm: true
           strip_components: 0
           overwrite: true
+          use_insecure_cipher: true
           timeout: 120s
           command_timeout: 300s
 
@@ -82,20 +70,22 @@ jobs:
             ls -la .env*
             echo "IMAGE_TAG from .env: $(grep IMAGE_TAG .env || echo 'not found')"
 
-            echo "🛑 Cleanup..."
-            docker compose down || true
-            docker compose rm -f
+            echo "🛑 Stopping containers..."
+            docker compose down --remove-orphans || true
 
-            echo "🔨 Building images (migrate, app)..."
-            docker compose --env-file .env build --pull migrate app
-            echo "🔎 Built images:"
-            docker images | grep nexus-os-migrate || true
-            docker images | grep nexus-os || true
+            echo "🔨 Building images with cache..."
+            DOCKER_BUILDKIT=1 docker compose --env-file .env build --parallel
 
-            echo "🚀 Build + deploy..."
-            docker compose --env-file .env up -d --build --force-recreate --remove-orphans
+            echo "🏷️  Tagging latest for cache..."
+            docker tag nexus-os:$(grep IMAGE_TAG .env | cut -d= -f2) nexus-os:latest || true
+            docker tag nexus-os-migrate:$(grep IMAGE_TAG .env | cut -d= -f2) nexus-os-migrate:latest || true
 
-            sleep 15  # Next.js startup
+            echo "🚀 Starting services..."
+            docker compose --env-file .env up -d --remove-orphans
+
+            echo "⏳ Waiting for app to be ready..."
+            timeout 60 sh -c 'until docker compose ps app | grep -q "healthy\|running"; do sleep 2; done' || true
+
             echo "📊 Status:"
             docker compose ps
-            docker compose logs --tail=20 app traefik
+            docker compose logs --tail=20 app
