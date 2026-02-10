@@ -9,7 +9,7 @@ interface ProductIndicatorsProps {
 
 export function ProductIndicators({ metrics }: ProductIndicatorsProps) {
   return (
-    <SimpleGrid cols={{ base: 1, sm: 3 }} spacing="lg">
+    <SimpleGrid cols={{ base: 1, sm: 3 }} spacing={{ base: 'md', sm: 'lg' }}>
       <Card padding="xl" radius="md" withBorder shadow="md">
         <Group justify="space-between" mb="md">
           <ThemeIcon size={48} radius="md" color="brand" variant="light">

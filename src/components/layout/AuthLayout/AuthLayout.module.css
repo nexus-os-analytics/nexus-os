@@ -7,7 +7,7 @@
   background-size: contain;
 
   /* Center content and add padding on smaller screens */
-  @media (max-width: $mantine-breakpoint-md) {
+  @media (max-width: 62em) {
     justify-content: center;
     padding: var(--mantine-spacing-md);
     background-size: cover;
@@ -26,7 +26,7 @@
   border-radius: 0;
 
   /* Full width and compact padding on mobile */
-  @media (max-width: $mantine-breakpoint-md) {
+  @media (max-width: 62em) {
     width: 100%;
     border-right: none;
     padding: var(--mantine-spacing-md);

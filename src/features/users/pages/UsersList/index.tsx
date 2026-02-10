@@ -125,13 +125,14 @@ export default function UsersList() {
       </Group>
 
       <Card withBorder radius="md" p="md">
-        <Group align="end" mb="md">
+        <Group align="end" mb="md" wrap="wrap" gap="md">
           <TextInput
             label="Buscar usuário"
             placeholder="Nome ou e-mail"
             leftSection={<IconSearch size={16} />}
             value={search}
             onChange={(e) => setSearch(e.currentTarget.value)}
+            style={{ flexGrow: 1, minWidth: 200 }}
           />
           <Select
             label="Filtrar por função"
@@ -144,6 +145,7 @@ export default function UsersList() {
             value={roleFilter}
             onChange={setRoleFilter}
             clearable
+            style={{ flexGrow: 1, minWidth: 150 }}
           />
           <Select
             label="Status"
@@ -155,84 +157,89 @@ export default function UsersList() {
             value={statusFilter}
             onChange={setStatusFilter}
             clearable
+            style={{ flexGrow: 1, minWidth: 120 }}
           />
         </Group>
 
-        <Table striped highlightOnHover withTableBorder>
-          <Table.Thead>
-            <Table.Tr>
-              <Table.Th>Usuário</Table.Th>
-              <Table.Th>E-mail</Table.Th>
-              <Table.Th>Função</Table.Th>
-              <Table.Th>Status</Table.Th>
-              <Table.Th>Tentativas</Table.Th>
-              <Table.Th>Criado em</Table.Th>
-              <Table.Th></Table.Th>
-            </Table.Tr>
-          </Table.Thead>
-          <Table.Tbody>
-            {isLoading && (
+        <Table.ScrollContainer minWidth={800}>
+          <Table striped highlightOnHover withTableBorder>
+            <Table.Thead>
               <Table.Tr>
-                <Table.Td colSpan={7}>
-                  <Text>Carregando...</Text>
-                </Table.Td>
+                <Table.Th>Usuário</Table.Th>
+                <Table.Th>E-mail</Table.Th>
+                <Table.Th>Função</Table.Th>
+                <Table.Th>Status</Table.Th>
+                <Table.Th hiddenFrom="sm">Tentativas</Table.Th>
+                <Table.Th hiddenFrom="sm">Criado em</Table.Th>
+                <Table.Th></Table.Th>
               </Table.Tr>
-            )}
-            {!isLoading && items.length === 0 && (
-              <Table.Tr>
-                <Table.Td colSpan={7}>
-                  <Text>Nenhum usuário encontrado</Text>
-                </Table.Td>
-              </Table.Tr>
-            )}
-            {!isLoading &&
-              items.length > 0 &&
-              items.map((user: User) => (
-                <Table.Tr key={user.id}>
-                  <Table.Td>
-                    <Group>
-                      <Avatar
-                        src={user.image ?? undefined}
-                        alt={user.name}
-                        radius="xl"
-                        color="green.7"
-                      >
-                        {user.name[0]}
-                      </Avatar>
-                      <Text fw={500}>{user.name}</Text>
-                    </Group>
-                  </Table.Td>
-                  <Table.Td>{user.email}</Table.Td>
-                  <Table.Td>
-                    <Badge color={user.role === 'ADMIN' ? 'blue' : 'gray'}>{user.role}</Badge>
-                  </Table.Td>
-                  <Table.Td>
-                    {!user.deletedAt ? (
-                      <Badge color="green">Ativo</Badge>
-                    ) : (
-                      <Badge color="gray">Inativo</Badge>
-                    )}
-                  </Table.Td>
-                  <Table.Td>{user.failedAttempts}</Table.Td>
-                  <Table.Td>{new Date(user.createdAt).toLocaleDateString('pt-BR')}</Table.Td>
-                  <Table.Td>
-                    <Group gap="xs">
-                      <ActionIcon color="blue" variant="subtle" onClick={() => onEdit(user)}>
-                        <IconUserEdit size={16} />
-                      </ActionIcon>
-                      <ActionIcon
-                        color="red"
-                        variant="subtle"
-                        onClick={() => onDelete(user.id, user.name)}
-                      >
-                        <IconTrash size={16} />
-                      </ActionIcon>
-                    </Group>
+            </Table.Thead>
+            <Table.Tbody>
+              {isLoading && (
+                <Table.Tr>
+                  <Table.Td colSpan={7}>
+                    <Text>Carregando...</Text>
                   </Table.Td>
                 </Table.Tr>
-              ))}
-          </Table.Tbody>
-        </Table>
+              )}
+              {!isLoading && items.length === 0 && (
+                <Table.Tr>
+                  <Table.Td colSpan={7}>
+                    <Text>Nenhum usuário encontrado</Text>
+                  </Table.Td>
+                </Table.Tr>
+              )}
+              {!isLoading &&
+                items.length > 0 &&
+                items.map((user: User) => (
+                  <Table.Tr key={user.id}>
+                    <Table.Td>
+                      <Group>
+                        <Avatar
+                          src={user.image ?? undefined}
+                          alt={user.name}
+                          radius="xl"
+                          color="green.7"
+                        >
+                          {user.name[0]}
+                        </Avatar>
+                        <Text fw={500}>{user.name}</Text>
+                      </Group>
+                    </Table.Td>
+                    <Table.Td>{user.email}</Table.Td>
+                    <Table.Td>
+                      <Badge color={user.role === 'ADMIN' ? 'blue' : 'gray'}>{user.role}</Badge>
+                    </Table.Td>
+                    <Table.Td>
+                      {!user.deletedAt ? (
+                        <Badge color="green">Ativo</Badge>
+                      ) : (
+                        <Badge color="gray">Inativo</Badge>
+                      )}
+                    </Table.Td>
+                    <Table.Td hiddenFrom="sm">{user.failedAttempts}</Table.Td>
+                    <Table.Td hiddenFrom="sm">
+                      {new Date(user.createdAt).toLocaleDateString('pt-BR')}
+                    </Table.Td>
+                    <Table.Td>
+                      <Group gap="xs">
+                        <ActionIcon color="blue" variant="subtle" onClick={() => onEdit(user)}>
+                          <IconUserEdit size={16} />
+                        </ActionIcon>
+                        <ActionIcon
+                          color="red"
+                          variant="subtle"
+                          onClick={() => onDelete(user.id, user.name)}
+                        >
+                          <IconTrash size={16} />
+                        </ActionIcon>
+                      </Group>
+                    </Table.Td>
+                  </Table.Tr>
+                ))}
+            </Table.Tbody>
+          </Table>
+        </Table.ScrollContainer>
 
         <Group justify="center" mt="md">
           <Pagination total={totalPages} value={page} onChange={setPage} color="green" />

@@ -251,7 +251,6 @@ export function Overview() {
                 identificamos oportunidades automaticamente.
               </Text>
               <Button
-                size="lg"
                 variant="white"
                 color="dark"
                 leftSection={<Sparkles size={20} />}

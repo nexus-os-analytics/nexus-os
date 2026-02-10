@@ -96,14 +96,14 @@ export function Dashboard() {
       )}
 
       {/* Filters */}
-      <Group align="end" justify="space-between">
+      <Stack gap="md">
         <Group align="end" gap="md" wrap="wrap">
           <TextInput
             label="Busca"
             placeholder="Nome ou SKU"
             value={search}
             onChange={(e) => setSearch(e.currentTarget.value)}
-            style={{ minWidth: 220 }}
+            style={{ flexGrow: 1, minWidth: 200 }}
           />
           <MultiSelect
             label="Tipo de alerta"
@@ -117,7 +117,7 @@ export function Dashboard() {
               { value: 'FINE', label: 'Observar' },
               { value: 'LIQUIDATION', label: 'Liquidação' },
             ]}
-            style={{ minWidth: 240 }}
+            style={{ flexGrow: 1, minWidth: 200 }}
             searchable
             clearable
           />
@@ -132,12 +132,12 @@ export function Dashboard() {
               { value: 'MEDIUM', label: 'Médio' },
               { value: 'LOW', label: 'Baixo' },
             ]}
-            style={{ minWidth: 200 }}
+            style={{ flexGrow: 1, minWidth: 180 }}
             searchable
             clearable
           />
         </Group>
-        <Group gap="sm">
+        <Group gap="sm" wrap="wrap">
           <Button
             variant="light"
             leftSection={<RotateCcw size={16} />}
@@ -170,7 +170,7 @@ export function Dashboard() {
             );
           })()}
         </Group>
-      </Group>
+      </Stack>
 
       {/* Product Cards Grid or Skeletons */}
       {isLoading ? (

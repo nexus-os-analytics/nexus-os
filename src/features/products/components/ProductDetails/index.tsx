@@ -136,15 +136,15 @@ export function ProductDetails({ product }: ProductDetailsProps) {
                 <Text size="sm" c="dimmed">
                   SKU: {product?.sku || 'N/A'}
                 </Text>
-                <Divider orientation="vertical" />
+                <Divider orientation="vertical" visibleFrom="sm" />
                 <Badge variant="light" color="gray">
                   {product?.category?.name ?? 'Sem categoria'}
                 </Badge>
-                <Divider orientation="vertical" />
+                <Divider orientation="vertical" visibleFrom="sm" />
                 <Text size="sm" c="dimmed">
                   Preço: {currencyBRL.format(product.salePrice)}
                 </Text>
-                <Divider orientation="vertical" />
+                <Divider orientation="vertical" visibleFrom="sm" />
                 <Text size="sm" c="dimmed">
                   Estoque: {product.currentStock}
                 </Text>
