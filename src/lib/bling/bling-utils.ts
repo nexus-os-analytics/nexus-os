@@ -24,12 +24,12 @@ const CONSTANTS = {
     CAPITAL_HIGH: 10000,
   },
   DISCOUNTS: {
-    DEAD_STOCK_30: 0.3,
-    DEAD_STOCK_60: 0.35,
-    DEAD_STOCK_90: 0.4,
-    LIQUIDATION_BASE: 0.2,
-    LIQUIDATION_MED: 0.23,
-    LIQUIDATION_HIGH: 0.25,
+    DEAD_STOCK_30: 0.1,
+    DEAD_STOCK_60: 0.15,
+    DEAD_STOCK_90: 0.2,
+    LIQUIDATION_BASE: 0.1,
+    LIQUIDATION_MED: 0.15,
+    LIQUIDATION_HIGH: 0.2,
   },
   DEFAULTS: {
     CRIT_DAYS: 7,
@@ -42,7 +42,7 @@ const CONSTANTS = {
     DEAD_CAPITAL: 5000,
     LIQUIDATION_EXCESS: 2000,
     CAPITAL_OPTIMIZATION: 10000,
-    LIQUIDATION_DISCOUNT: 0.3,
+    LIQUIDATION_DISCOUNT: 0.1,
     OPPORTUNITY_SECONDARY_GROWTH: 20,
   },
 } as const;
@@ -724,7 +724,7 @@ export function generateRecommendations(
   if (productType === 'OPPORTUNITY' && growthTrend > growthMinPct)
     rec.push(
       'Aumentar estoque urgentemente',
-      'Aumentar preço em até 15%',
+      'Aumentar preço entre 10% e 20%',
       'Criar campanha de anúncios'
     );
 
@@ -736,13 +736,16 @@ export function generateRecommendations(
     );
 
   if ((productType as unknown as string) === 'LIQUIDATION')
-    rec.push('Aplicar desconto de 20–30%', 'Criar campanha de liquidação', 'Evitar novas compras');
+    rec.push(
+      'Aplicar desconto de 10% à 20%',
+      'Criar campanha de liquidação',
+      'Evitar novas compras'
+    );
 
   const capOpt = thresholds?.capitalOptimizationThreshold ?? defaults.CAPITAL_OPTIMIZATION;
   if (productType === 'FINE' && capitalStuck > capOpt)
     rec.push('Reduzir estoque para liberar capital', 'Avaliar alinhamento com giro de vendas');
 
-  if (!rec.length) rec.push('Manter monitoramento regular');
   return rec;
 }
 
