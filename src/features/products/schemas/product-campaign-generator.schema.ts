@@ -17,6 +17,7 @@ export const ProductInfoSchema = z
     sku: z.string().min(1),
     categoryName: z.string().optional().nullable(),
     salePrice: z.number().nonnegative(),
+    suggestedPrice: z.number().nonnegative().optional(),
     costPrice: z.number().nonnegative(),
     currentStock: z.number().int().nonnegative().optional(),
     image: z.string().url().optional().nullable(),

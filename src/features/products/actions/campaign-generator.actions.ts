@@ -40,7 +40,7 @@ export async function generateProductCampaignAction(input: unknown): Promise<Cam
     'Responda APENAS com um objeto JSON com as chaves {"instagram","email","remarketing"}.',
   ].join('\n');
 
-  // Compute margin (approx.)
+  // Compute margin (approx.) based on original sale price
   const PERCENT_BASE = 100;
   const marginPct =
     product.salePrice > 0
@@ -49,33 +49,42 @@ export async function generateProductCampaignAction(input: unknown): Promise<Cam
         )
       : 0;
 
-  // Calculate suggested promotional price based on alert type and default rules
-  let suggestedPrice = product.salePrice;
-  let discountPct = 0;
+  // Use the suggestedPrice sent from the UI (single source of truth from alert.suggestedPrice)
+  // Fallback defaults aligned with calculateDynamicSuggestedPricing in bling-utils.ts:
+  //   LIQUIDATION: 20% (DISCOUNTS.LIQUIDATION_BASE)
+  //   DEAD_STOCK: 30% (DISCOUNTS.DEAD_STOCK_30)
+  const DEFAULT_LIQUIDATION_DISCOUNT = 20;
+  const DEFAULT_DEAD_STOCK_DISCOUNT = 30;
+  const OPPORTUNITY_INCREASE = 10;
+
+  let suggestedPrice = product.suggestedPrice ?? product.salePrice;
+  let discountPct = typeof alert?.discountPct === 'number' ? alert.discountPct : 0;
   let priceIncreasePct = 0;
 
   if (alert?.type === 'OPPORTUNITY') {
-    // OPPORTUNITY: 10% above current sale price (unless custom instructions override)
-    priceIncreasePct = 10;
-    suggestedPrice = product.salePrice * 1.1;
+    // OPPORTUNITY: 10% above current sale price
+    priceIncreasePct = OPPORTUNITY_INCREASE;
+    if (!product.suggestedPrice) {
+      suggestedPrice = product.salePrice * (1 + priceIncreasePct / PERCENT_BASE);
+    }
   } else if (alert?.type === 'LIQUIDATION') {
-    // LIQUIDATION: 10% discount (unless custom instructions override)
-    discountPct = typeof alert?.discountPct === 'number' ? alert.discountPct : 10;
-    suggestedPrice = product.salePrice * (1 - discountPct / PERCENT_BASE);
+    if (!discountPct) discountPct = DEFAULT_LIQUIDATION_DISCOUNT;
+    if (!product.suggestedPrice) {
+      suggestedPrice = product.salePrice * (1 - discountPct / PERCENT_BASE);
+    }
   } else if (alert?.type === 'DEAD_STOCK') {
-    // DEAD_STOCK: 30-40% discount (use alert discount or default to 35%)
-    discountPct = typeof alert?.discountPct === 'number' ? alert.discountPct : 35;
-    suggestedPrice = product.salePrice * (1 - discountPct / PERCENT_BASE);
-  } else if (typeof alert?.discountPct === 'number') {
-    // Use alert discount if available for other types
-    discountPct = alert.discountPct;
+    if (!discountPct) discountPct = DEFAULT_DEAD_STOCK_DISCOUNT;
+    if (!product.suggestedPrice) {
+      suggestedPrice = product.salePrice * (1 - discountPct / PERCENT_BASE);
+    }
+  } else if (discountPct > 0 && !product.suggestedPrice) {
     suggestedPrice = product.salePrice * (1 - discountPct / PERCENT_BASE);
   }
 
   const user = [
     `Produto: ${product.name} (SKU: ${product.sku})`,
     product.categoryName ? `Categoria: ${product.categoryName}` : undefined,
-    `Preço atual: R$ ${product.salePrice.toFixed(2)}`,
+    `Preço de venda: R$ ${product.salePrice.toFixed(2)}`,
     `Preço de custo: R$ ${product.costPrice.toFixed(2)}`,
     product.currentStock != null ? `Estoque atual: ${product.currentStock}` : undefined,
     `Margem estimada: ${marginPct}%`,
@@ -88,7 +97,7 @@ export async function generateProductCampaignAction(input: unknown): Promise<Cam
       ? `REGRA DE PREÇO: Aplicar ${discountPct}% de desconto (R$ ${suggestedPrice.toFixed(2)}). Objetivo: liquidar excesso de estoque.`
       : undefined,
     alert?.type === 'DEAD_STOCK'
-      ? `REGRA DE PREÇO: Aplicar ${discountPct}% de desconto (30-40% recomendado: R$ ${suggestedPrice.toFixed(2)}). Objetivo: recuperar capital parado.`
+      ? `REGRA DE PREÇO: Aplicar ${discountPct}% de desconto (R$ ${suggestedPrice.toFixed(2)}). Objetivo: recuperar capital parado.`
       : undefined,
     discountPct > 0 && alert?.type !== 'OPPORTUNITY'
       ? `Desconto aplicado: ${discountPct}% (Economia de R$ ${(product.salePrice - suggestedPrice).toFixed(2)})`
@@ -129,9 +138,9 @@ export async function generateProductCampaignAction(input: unknown): Promise<Cam
       : undefined,
     '',
     'DIRETRIZES DE PREÇO (use o preço promocional sugerido, exceto se instruções personalizadas indicarem diferente):',
-    '- OPPORTUNITY: sempre mencione o aumento de 10% e destaque a alta demanda',
-    '- LIQUIDATION: sempre mencione o desconto de 10% e crie senso de urgência',
-    '- DEAD_STOCK (Capital Parado): sempre mencione desconto de 30-40% e urgência máxima para liquidar',
+    '- OPPORTUNITY: sempre mencione o aumento de preço e destaque a alta demanda',
+    `- LIQUIDATION: sempre mencione o desconto de ${discountPct}% e crie senso de urgência`,
+    `- DEAD_STOCK (Capital Parado): sempre mencione o desconto de ${discountPct}% e crie urgência máxima para liquidar`,
     '',
     'DIRETRIZES DE CONTEÚDO:',
     '- Use o preço promocional sugerido nos textos (já calculado acima)',
