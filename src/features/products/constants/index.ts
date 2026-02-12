@@ -11,9 +11,8 @@ export const campaignStrategies = [
   {
     value: 'aggressive-liquidation' as const,
     label: 'Liquidação Agressiva',
-    description:
-      'Venda rápida a preço de custo ou com pequeno prejuízo para recuperar capital de giro',
-    pricingSuggestion: 'Preço de custo -10%',
+    description: 'Venda com descontos agressivos para recuperar capital de giro rapidamente',
+    pricingSuggestion: 'Desconto de 30-40%',
   },
   {
     value: 'strategic-combo' as const,

@@ -24,12 +24,12 @@ const CONSTANTS = {
     CAPITAL_HIGH: 10000,
   },
   DISCOUNTS: {
-    DEAD_STOCK_30: 0.1,
-    DEAD_STOCK_60: 0.15,
-    DEAD_STOCK_90: 0.2,
-    LIQUIDATION_BASE: 0.1,
-    LIQUIDATION_MED: 0.15,
-    LIQUIDATION_HIGH: 0.2,
+    DEAD_STOCK_30: 0.15,
+    DEAD_STOCK_60: 0.25,
+    DEAD_STOCK_90: 0.35,
+    LIQUIDATION_BASE: 0.3,
+    LIQUIDATION_MED: 0.35,
+    LIQUIDATION_HIGH: 0.4,
   },
   DEFAULTS: {
     CRIT_DAYS: 7,
@@ -42,7 +42,7 @@ const CONSTANTS = {
     DEAD_CAPITAL: 5000,
     LIQUIDATION_EXCESS: 2000,
     CAPITAL_OPTIMIZATION: 10000,
-    LIQUIDATION_DISCOUNT: 0.1,
+    LIQUIDATION_DISCOUNT: 0.3,
     OPPORTUNITY_SECONDARY_GROWTH: 20,
   },
 } as const;
@@ -709,7 +709,6 @@ export function generateStatusMessage(
  */
 export function generateRecommendations(
   productType: BlingAlertType,
-  growthTrend: number,
   capitalStuck: number,
   thresholds?: {
     opportunityGrowthThresholdPct: number;
@@ -718,15 +717,17 @@ export function generateRecommendations(
 ): string[] {
   const rec: string[] = [];
   const defaults = CONSTANTS.DEFAULTS;
-  const growthMinPct =
-    (thresholds?.opportunityGrowthThresholdPct ?? defaults.GROWTH_THRESHOLD) * CONSTANTS.PERCENT;
+  // const growthMinPct =
+  //   (thresholds?.opportunityGrowthThresholdPct ?? defaults.GROWTH_THRESHOLD) * CONSTANTS.PERCENT;
 
-  if (productType === 'OPPORTUNITY' && growthTrend > growthMinPct)
+  // OPPORTUNITY: Always recommend actions if type is OPPORTUNITY
+  if (productType === 'OPPORTUNITY') {
     rec.push(
       'Aumentar estoque urgentemente',
       'Aumentar preço entre 10% e 20%',
       'Criar campanha de anúncios'
     );
+  }
 
   if (productType === 'RUPTURE')
     rec.push(
@@ -737,14 +738,24 @@ export function generateRecommendations(
 
   if ((productType as unknown as string) === 'LIQUIDATION')
     rec.push(
-      'Aplicar desconto de 10% à 20%',
+      'Libere o produto com 30% a 40% de desconto para recuperar o capital investido',
       'Criar campanha de liquidação',
       'Evitar novas compras'
+    );
+
+  if ((productType as unknown as string) === 'DEAD_STOCK')
+    rec.push(
+      'Produto parado há muito tempo: considerar queima de estoque',
+      'Avaliar descontinuação',
+      'Criar kit ou bundle para saída rápida'
     );
 
   const capOpt = thresholds?.capitalOptimizationThreshold ?? defaults.CAPITAL_OPTIMIZATION;
   if (productType === 'FINE' && capitalStuck > capOpt)
     rec.push('Reduzir estoque para liberar capital', 'Avaliar alinhamento com giro de vendas');
+
+  // Universal fallback to ensure all alerts have an action
+  if (rec.length === 0) rec.push('Monitorar indicadores');
 
   return rec;
 }
@@ -952,7 +963,7 @@ export function calculateAllMetrics(
   const suggestedPrice = pricing.suggestedPrice;
   const recoverableAmount = calculateRecoverableAmount(currentStock, suggestedPrice);
   const message = generateStatusMessage(risk, daysRemaining, daysOutOfStock, type);
-  const recommendations = generateRecommendations(type, growthTrend, capitalStuck, {
+  const recommendations = generateRecommendations(type, capitalStuck, {
     opportunityGrowthThresholdPct:
       settings?.opportunityGrowthThresholdPct ?? CONSTANTS.DEFAULTS.GROWTH_THRESHOLD,
     capitalOptimizationThreshold:
