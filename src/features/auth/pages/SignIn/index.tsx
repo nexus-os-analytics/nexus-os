@@ -20,6 +20,7 @@ import { signIn } from 'next-auth/react';
 import { useEffect, useState } from 'react';
 import { GoogleButton } from '@/components/commons/GoogleButton';
 import { useQueryString } from '@/hooks';
+import { HTTP_STATUS } from '@/lib/constants/http-status';
 import { TwoFactorQRCode } from '../../components/TwoFactorQRCode';
 import { useAuth } from '../../context/AuthContext';
 import { SignInSchema } from '../../services';
@@ -130,7 +131,7 @@ export function SignIn() {
         },
         body: JSON.stringify({ email: form.values.email }),
       });
-      if (resp.status === 429) {
+      if (resp.status === HTTP_STATUS.TOO_MANY_REQUESTS) {
         setResendMessage('Você solicitou recentemente. Aguarde 1 minuto para reenviar.');
         setResendMessageColor('yellow');
       } else if (resp.ok) {

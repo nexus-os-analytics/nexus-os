@@ -11,25 +11,39 @@ export async function POST() {
     return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
   }
 
-  // Ensure we have a stripeCustomerId for the user
-  const user = await prisma.user.findUnique({ where: { id: session.user.id } });
-  if (!user) {
-    return NextResponse.json({ error: 'User not found' }, { status: 404 });
-  }
-
   const stripe = getStripe();
-  let customerId = user.stripeCustomerId || null;
-  if (!customerId) {
-    const customer = await stripe.customers.create({ email: session.user.email });
-    customerId = customer.id;
-    await prisma.user.update({
+
+  // Use transaction to prevent race condition when creating Stripe customer
+  const customerId = await prisma.$transaction(async (tx) => {
+    const user = await tx.user.findUnique({
       where: { id: session.user.id },
-      data: { stripeCustomerId: customerId },
+      select: { id: true, stripeCustomerId: true, email: true },
     });
-  }
+
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    // Return existing customer ID if available
+    if (user.stripeCustomerId) {
+      return user.stripeCustomerId;
+    }
+
+    // Create new Stripe customer and update user atomically
+    const customer = await stripe.customers.create({
+      email: user.email ?? session.user.email,
+    });
+
+    await tx.user.update({
+      where: { id: user.id },
+      data: { stripeCustomerId: customer.id },
+    });
+
+    return customer.id;
+  });
 
   const portal = await stripe.billingPortal.sessions.create({
-    customer: customerId as string,
+    customer: customerId,
     return_url: `${APP_URL}minha-conta`,
   });
 

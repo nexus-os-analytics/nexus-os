@@ -173,11 +173,11 @@ export function Dashboard() {
       </Stack>
 
       {/* Product Cards Grid or Skeletons */}
-      {isLoading ? (
+      {isLoading && (
         <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }} spacing="lg">
-          {Array.from({ length: 6 }).map((_, i) => (
+          {Array.from({ length: 6 }, (_, i) => i).map((index) => (
             <Card
-              key={`skeleton-${i}`}
+              key={`skeleton-${index}`}
               padding="lg"
               radius="md"
               withBorder
@@ -215,13 +215,17 @@ export function Dashboard() {
             </Card>
           ))}
         </SimpleGrid>
-      ) : visibleProducts.length > 0 ? (
+      )}
+
+      {!isLoading && visibleProducts.length > 0 && (
         <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }} spacing="lg">
           {visibleProducts.map((product) => (
             <ProductCard key={product.id} product={product} />
           ))}
         </SimpleGrid>
-      ) : (
+      )}
+
+      {!isLoading && visibleProducts.length === 0 && (
         <Center h={300}>
           <Stack align="center">
             <BoxIcon size={48} color="#999" />

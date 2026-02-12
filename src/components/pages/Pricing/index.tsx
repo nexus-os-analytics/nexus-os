@@ -16,6 +16,7 @@ import type { PlanTier } from '@prisma/client';
 import Link from 'next/link';
 import { useState } from 'react';
 import { getPlanFeatureStrings } from '@/features/billing/entitlements';
+import { HTTP_STATUS } from '@/lib/constants/http-status';
 
 interface TierCard {
   id: PlanTier | 'FREE' | 'PRO';
@@ -55,7 +56,7 @@ export function Pricing() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ plan: 'pro' }),
       });
-      if (res.status === 401) {
+      if (res.status === HTTP_STATUS.UNAUTHORIZED) {
         globalThis.location.href = '/login?plan=PRO';
         return;
       }

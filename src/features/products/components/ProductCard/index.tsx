@@ -651,8 +651,8 @@ export function ProductCard({ product }: ProductCardProps) {
                   Ações recomendadas
                 </Title>
                 <Stack gap={4}>
-                  {recs.map((r: string, i: number) => (
-                    <Text key={i} size="sm">
+                  {recs.map((r: string) => (
+                    <Text key={r} size="sm">
                       - {r}
                     </Text>
                   ))}

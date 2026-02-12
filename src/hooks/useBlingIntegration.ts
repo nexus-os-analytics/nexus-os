@@ -1,6 +1,6 @@
 import type { BlingSyncStatus } from '@prisma/client';
 import { useSession } from 'next-auth/react';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { getPlanEntitlements } from '@/features/billing/entitlements';
 
 export interface BlingIntegrationStatus {
@@ -50,7 +50,7 @@ export function useBlingIntegration() {
     }
   };
 
-  const refresh = async () => {
+  const refresh = useCallback(async () => {
     try {
       setLoading(true);
       const response = await fetch('/api/integrations/bling/status');
@@ -70,7 +70,7 @@ export function useBlingIntegration() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   const sync = async (): Promise<void> => {
     try {
@@ -93,7 +93,7 @@ export function useBlingIntegration() {
     if (session?.user?.id) {
       refresh();
     }
-  }, [session]);
+  }, [session, refresh]);
 
   return {
     status,

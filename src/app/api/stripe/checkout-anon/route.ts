@@ -1,7 +1,10 @@
 import { NextResponse } from 'next/server';
+import pino from 'pino';
 import { APP_URL } from '@/lib/constants';
 import prisma from '@/lib/prisma';
 import { getStripe } from '@/lib/stripe';
+
+const logger = pino();
 
 export async function POST(req: Request) {
   try {
@@ -35,7 +38,11 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ url: checkout.url });
   } catch (err) {
-    console.error('checkout-anon error', err);
+    const error = err instanceof Error ? err : new Error(String(err));
+    logger.error(
+      { err: error, email: (err as { email?: string }).email },
+      'Failed to create anonymous checkout session'
+    );
     return NextResponse.json({ error: 'Erro interno do servidor' }, { status: 500 });
   }
 }

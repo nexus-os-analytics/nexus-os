@@ -373,3 +373,17 @@ model BlingSyncJob {
   @@index([integrationId, status, createdAt])
   @@map("bling_sync_jobs")
 }
+
+// Webhook Event Tracking for Idempotency
+model WebhookEvent {
+  id          String   @id @default(uuid())
+  eventId     String   @unique
+  type        String
+  processed   Boolean  @default(true)
+  processedAt DateTime @default(now())
+  payload     Json
+  error       String?
+
+  @@index([eventId, type])
+  @@map("webhook_events")
+}

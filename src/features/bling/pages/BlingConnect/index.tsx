@@ -91,7 +91,7 @@ export function BlingConnect({ canConnect = false }: { canConnect?: boolean }) {
     return 'Conexão bem-sucedida! Seu dashboard estará pronto em breve. Você será notificado por e-mail.';
   };
 
-  const handleStripeCheckout = async () => {
+  const handleStripeCheckout = useCallback(async () => {
     try {
       const { url } = await stripeCheckout();
       if (url) {
@@ -100,7 +100,7 @@ export function BlingConnect({ canConnect = false }: { canConnect?: boolean }) {
     } catch (error) {
       console.error('Erro ao iniciar o checkout do Stripe:', error);
     }
-  };
+  }, [stripeCheckout]);
 
   useEffect(() => {
     if (planParam && planParam === 'PRO') {

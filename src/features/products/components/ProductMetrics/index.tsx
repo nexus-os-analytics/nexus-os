@@ -15,6 +15,8 @@ interface ProductMetricsProps {
   product: BlingProductType;
 }
 
+const CRITICAL_DAYS_THRESHOLD = 7;
+
 export function ProductMetrics({ product }: ProductMetricsProps) {
   const { alert } = product;
 
@@ -102,7 +104,7 @@ export function ProductMetrics({ product }: ProductMetricsProps) {
             </Group>
             <Group justify="space-between">
               <Text size="sm">Dias Restantes:</Text>
-              <Text size="sm" c={alert.daysRemaining < 7 ? 'red' : '#2E2E2E'}>
+              <Text size="sm" c={alert.daysRemaining < CRITICAL_DAYS_THRESHOLD ? 'red' : '#2E2E2E'}>
                 {alert.daysRemaining} dias
               </Text>
             </Group>
@@ -217,9 +219,9 @@ export function ProductMetrics({ product }: ProductMetricsProps) {
                   ) : null}
                 </Group>
                 {structured.description ? <Text size="sm">{structured.description}</Text> : null}
-                {structured.actions.map((action, idx) => (
+                {structured.actions.map((action) => (
                   <Paper
-                    key={`action-${idx}`}
+                    key={action.label}
                     p="sm"
                     radius="md"
                     style={{
@@ -233,8 +235,8 @@ export function ProductMetrics({ product }: ProductMetricsProps) {
                       {action.label}
                     </Text>
                     <Stack gap={4} mt={6}>
-                      {action.details.map((detail, i) => (
-                        <Text key={`detail-${idx}-${i}`} size="sm">
+                      {action.details.map((detail) => (
+                        <Text key={detail} size="sm">
                           • {detail}
                         </Text>
                       ))}
@@ -249,10 +251,10 @@ export function ProductMetrics({ product }: ProductMetricsProps) {
               </>
             ) : null}
 
-            {recommendations.length > 0 ? (
-              recommendations.map((rec: string, index: number) => (
+            {recommendations.length > 0 &&
+              recommendations.map((rec: string) => (
                 <Paper
-                  key={`rec-${index}`}
+                  key={rec}
                   p="sm"
                   radius="md"
                   style={{
@@ -262,10 +264,11 @@ export function ProductMetrics({ product }: ProductMetricsProps) {
                 >
                   <Text size="sm">• {rec}</Text>
                 </Paper>
-              ))
-            ) : !structured ? (
+              ))}
+
+            {recommendations.length === 0 && !structured && (
               <Text size="sm">Nenhuma recomendação disponível</Text>
-            ) : null}
+            )}
           </Stack>
         </Card>
       </Grid.Col>
