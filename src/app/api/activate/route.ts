@@ -44,7 +44,7 @@ export async function GET(req: Request) {
       });
     });
 
-    return NextResponse.redirect(`${APP_URL}bling?activated=1`);
+    return NextResponse.redirect(`${APP_URL}/bling?activated=1`);
   } catch (error) {
     console.error('Erro em /api/activate:', error);
     return NextResponse.json({ error: 'Erro interno do servidor' }, { status: 500 });

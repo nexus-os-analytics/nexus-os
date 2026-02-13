@@ -20,8 +20,8 @@ export async function POST() {
     mode: 'subscription',
     customer_email: session.user.email,
     line_items: [{ price: priceId, quantity: 1 }],
-    success_url: `${APP_URL}bling`,
-    cancel_url: `${APP_URL}precos`,
+    success_url: `${APP_URL}/stripe/success`,
+    cancel_url: `${APP_URL}/stripe/cancelado`,
     allow_promotion_codes: true,
     subscription_data: {
       metadata: { userId: session.user.id, planTier: 'PRO' },

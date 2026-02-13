@@ -38,7 +38,7 @@ export async function POST(req: NextRequest) {
     invitedByUserId: session.user.id as string,
   });
 
-  const inviteLink = `${APP_URL}resetar-senha?token=${invite.token}&email=${encodeURIComponent(email)}`;
+  const inviteLink = `${APP_URL}/resetar-senha?token=${invite.token}&email=${encodeURIComponent(email)}`;
 
   await sendEmail({
     toEmail: email,

@@ -11,6 +11,8 @@ declare module 'next-auth' {
       blingSyncStatus: BlingSyncStatus;
       hasBlingIntegration: boolean;
       planTier: PlanTier;
+      subscriptionStatus?: string | null;
+      cancelAtPeriodEnd?: boolean;
     } & DefaultSession['user'];
     required2FA?: boolean;
   }
@@ -23,6 +25,8 @@ declare module 'next-auth' {
     blingSyncStatus: BlingSyncStatus;
     hasBlingIntegration?: boolean;
     planTier?: PlanTier;
+    subscriptionStatus?: string | null;
+    cancelAtPeriodEnd?: boolean;
   }
 }
 
@@ -36,5 +40,7 @@ declare module 'next-auth/jwt' {
     hasBlingIntegration: boolean;
     auditCreated?: boolean;
     planTier?: PlanTier;
+    subscriptionStatus?: string | null;
+    cancelAtPeriodEnd?: boolean;
   }
 }

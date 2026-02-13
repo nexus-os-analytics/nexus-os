@@ -13,13 +13,15 @@ export function ProLockedState({
   description = 'Faça o upgrade para desbloquear este recurso e acelerar seus resultados.',
   ctaLabel = 'Desbloquear no PRO',
 }: ProLockedStateProps) {
-  const { mutateAsync: openCheckout } = useStripeCheckout();
+  const { mutate: openCheckout, isPending } = useStripeCheckout();
   return (
     <Paper withBorder radius="md" p="xl">
       <Stack gap="sm" align="start">
         <Title order={3}>{title}</Title>
         <Text c="dimmed">{description}</Text>
-        <Button onClick={() => openCheckout()}>{ctaLabel}</Button>
+        <Button onClick={() => openCheckout()} loading={isPending}>
+          {ctaLabel}
+        </Button>
       </Stack>
     </Paper>
   );

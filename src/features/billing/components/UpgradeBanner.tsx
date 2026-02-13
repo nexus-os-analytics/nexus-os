@@ -5,11 +5,12 @@ import { useSession } from 'next-auth/react';
 import { useStripeCheckout } from '../services';
 
 export function UpgradeBanner() {
-  const { data } = useSession();
-  const { mutateAsync: openCheckout } = useStripeCheckout();
+  const { data, status } = useSession();
+  const { mutate: openCheckout, isPending } = useStripeCheckout();
   const plan = data?.user?.planTier ?? 'FREE';
 
-  if (plan !== 'FREE') return null;
+  // Não renderizar durante carregamento ou se o plano não for FREE
+  if (status === 'loading' || plan !== 'FREE') return null;
 
   return (
     <Alert variant="light" color="yellow" radius="md" icon={<IconCrown size={18} />} mb="md">
@@ -27,7 +28,7 @@ export function UpgradeBanner() {
           </Text>
         </div>
         <Group gap="sm" wrap="nowrap" w="100%">
-          <Button size="sm" onClick={() => openCheckout()} flex={1}>
+          <Button size="sm" onClick={() => openCheckout()} flex={1} loading={isPending}>
             Fazer upgrade
           </Button>
           <Anchor href="/precos" size="sm">
@@ -43,7 +44,7 @@ export function UpgradeBanner() {
           </Text>
         </div>
         <Group gap="sm" wrap="nowrap">
-          <Button size="sm" onClick={() => openCheckout()}>
+          <Button size="sm" onClick={() => openCheckout()} loading={isPending}>
             Fazer upgrade
           </Button>
           <Anchor href="/precos" size="sm">

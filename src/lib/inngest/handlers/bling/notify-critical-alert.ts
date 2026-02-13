@@ -51,7 +51,7 @@ export const notifyCriticalAlert = inngest.createFunction(
         return { sent: false };
       }
 
-      const productLink = `${APP_URL}produto/${encodeURIComponent(blingProductId)}`;
+      const productLink = `${APP_URL}/produto/${encodeURIComponent(blingProductId)}`;
 
       const subject = `Alerta CRÍTICO: ${productSnapshot.name} (SKU ${productSnapshot.sku})`;
 

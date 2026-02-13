@@ -36,7 +36,7 @@ export async function POST(req: NextRequest) {
 
     const resetToken = crypto.randomBytes(PASSWORD_RESET_TOKEN_BYTES).toString('hex');
     const resetTokenExpiry = new Date(Date.now() + PASSWORD_RESET_TOKEN_EXPIRY);
-    const resetLink = `${APP_URL}resetar-senha?token=${resetToken}`;
+    const resetLink = `${APP_URL}/resetar-senha?token=${resetToken}`;
 
     await sendEmail({
       toName: user.name || 'Usuário',

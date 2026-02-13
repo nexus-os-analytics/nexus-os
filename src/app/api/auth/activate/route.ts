@@ -23,7 +23,7 @@ export async function GET(request: Request) {
       data: { emailVerified: new Date() },
     });
 
-    return NextResponse.redirect(`${APP_URL}bling?activated=1`, { status: 302 });
+    return NextResponse.redirect(`${APP_URL}/bling?activated=1`, { status: 302 });
   } catch (err) {
     console.error('Error activating account:', err);
     return NextResponse.json({ error: 'Erro interno do servidor' }, { status: 500 });

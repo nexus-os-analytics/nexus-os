@@ -35,7 +35,7 @@ export async function POST(req: Request) {
     }
 
     const { token } = await createActivationToken(email);
-    const activationLink = `${APP_URL}api/activate?token=${encodeURIComponent(token)}`;
+    const activationLink = `${APP_URL}/api/activate?token=${encodeURIComponent(token)}`;
 
     await sendWelcomeActivationEmail({ email, name: user.name, activationLink });
     lastSentMap.set(email, now);

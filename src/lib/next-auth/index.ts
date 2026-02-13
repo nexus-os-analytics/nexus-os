@@ -258,6 +258,8 @@ export const authOptions: AuthOptions = {
             token.blingSyncStatus = dbUser.blingSyncStatus;
             token.hasBlingIntegration = !!dbUser.blingIntegration;
             token.planTier = dbUser.planTier as PlanTier;
+            token.subscriptionStatus = dbUser.subscriptionStatus;
+            token.cancelAtPeriodEnd = dbUser.cancelAtPeriodEnd;
 
             // Criar audit log para novo usuário OAuth
             if (!token.auditCreated) {
@@ -296,6 +298,8 @@ export const authOptions: AuthOptions = {
           token.blingSyncStatus = dbUser.blingSyncStatus;
           token.hasBlingIntegration = !!dbUser.blingIntegration;
           token.planTier = dbUser.planTier as PlanTier;
+          token.subscriptionStatus = dbUser.subscriptionStatus;
+          token.cancelAtPeriodEnd = dbUser.cancelAtPeriodEnd;
         }
       }
 
@@ -314,6 +318,8 @@ export const authOptions: AuthOptions = {
           token.blingSyncStatus = updatedUser.blingSyncStatus;
           token.hasBlingIntegration = !!updatedUser.blingIntegration;
           token.planTier = updatedUser.planTier as PlanTier;
+          token.subscriptionStatus = updatedUser.subscriptionStatus;
+          token.cancelAtPeriodEnd = updatedUser.cancelAtPeriodEnd;
         }
       }
 
@@ -332,6 +338,8 @@ export const authOptions: AuthOptions = {
           blingSyncStatus: token.blingSyncStatus,
           hasBlingIntegration: token.hasBlingIntegration,
           planTier: (token.planTier as PlanTier) ?? 'FREE',
+          subscriptionStatus: token.subscriptionStatus as string | null | undefined,
+          cancelAtPeriodEnd: token.cancelAtPeriodEnd as boolean | undefined,
         };
         session.required2FA = token.required2FA as boolean;
       }

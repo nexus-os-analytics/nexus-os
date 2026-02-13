@@ -48,6 +48,7 @@ model User {
   subscriptionStatus   String?
   currentPeriodEnd     DateTime?
   trialEnd             DateTime?
+  cancelAtPeriodEnd    Boolean            @default(false)
   accounts             Account[] // Adicionado para NextAuth
   sessions             Session[] // Adicionado para NextAuth
   loginActivities      LoginActivity[]

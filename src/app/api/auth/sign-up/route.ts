@@ -59,7 +59,7 @@ export async function POST(req: NextRequest) {
 
     // Generate activation token and send welcome email
     const { token } = await createActivationToken(user.email);
-    const activationLink = `${APP_URL}api/activate?token=${encodeURIComponent(token)}`;
+    const activationLink = `${APP_URL}/api/activate?token=${encodeURIComponent(token)}`;
     await sendWelcomeActivationEmail({ email: user.email, name: user.name, activationLink });
 
     return NextResponse.json(
