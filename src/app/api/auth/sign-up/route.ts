@@ -23,8 +23,12 @@ export async function POST(req: NextRequest) {
 
     const { email, password, name, terms: acceptedTerms } = parsedBody.data;
 
-    const existingUser = await prisma.user.findUnique({
-      where: { email },
+    // Check if email is already in use by non-deleted users
+    const existingUser = await prisma.user.findFirst({
+      where: {
+        email,
+        deletedAt: null,
+      },
     });
 
     if (existingUser) {

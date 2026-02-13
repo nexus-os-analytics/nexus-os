@@ -23,7 +23,7 @@ enum UserRole {
 model User {
   id                   String             @id @default(uuid())
   name                 String
-  email                String             @unique
+  email                String
   hashedPassword       String? // Torne opcional para usuários OAuth
   role                 UserRole           @default(USER)
   image                String?
@@ -59,6 +59,7 @@ model User {
   blingSyncStatus      BlingSyncStatus    @default(IDLE)
   invitationsSent      UserInvitation[]
 
+  @@unique([email, deletedAt])
   @@index([email, createdAt, deletedAt])
   @@map("users")
 }

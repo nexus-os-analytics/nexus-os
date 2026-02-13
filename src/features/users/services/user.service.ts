@@ -26,11 +26,15 @@ export async function listUsers(params: ListUsersParams) {
       : {}),
   };
 
+  // Default behavior: only show non-deleted users unless status filter is specified
   if (params.status === 'active') {
     where.deletedAt = null;
   } else if (params.status === 'inactive') {
     // Prisma negation to find records where deletedAt is not null
     Object.assign(where, { NOT: { deletedAt: null } });
+  } else if (!params.status) {
+    // No status filter: show only active users by default
+    where.deletedAt = null;
   }
 
   const [items, total] = await Promise.all([
@@ -62,8 +66,8 @@ export async function listUsers(params: ListUsersParams) {
 }
 
 export async function getUserById(id: string) {
-  return prisma.user.findUnique({
-    where: { id },
+  return prisma.user.findFirst({
+    where: { id, deletedAt: null },
     select: {
       id: true,
       name: true,
@@ -77,6 +81,7 @@ export async function getUserById(id: string) {
       lockedUntil: true,
       createdAt: true,
       emailVerified: true,
+      deletedAt: true,
     },
   });
 }
@@ -87,6 +92,18 @@ export async function createUser(data: {
   role: 'USER' | 'ADMIN' | 'SUPER_ADMIN';
   phone?: string | null;
 }) {
+  // Check if email already exists for non-deleted users
+  const existingUser = await prisma.user.findFirst({
+    where: {
+      email: data.email,
+      deletedAt: null,
+    },
+  });
+
+  if (existingUser) {
+    throw new Error('O e-mail informado já está em uso.');
+  }
+
   return prisma.user.create({
     data: {
       name: data.name,
@@ -109,6 +126,21 @@ export async function updateUser(
     planTier?: 'FREE' | 'PRO';
   }
 ) {
+  // If updating email, check if it's already in use by non-deleted users
+  if (data.email) {
+    const existingUser = await prisma.user.findFirst({
+      where: {
+        email: data.email,
+        deletedAt: null,
+        NOT: { id },
+      },
+    });
+
+    if (existingUser) {
+      throw new Error('O e-mail informado já está em uso.');
+    }
+  }
+
   return prisma.user.update({
     where: { id },
     data,

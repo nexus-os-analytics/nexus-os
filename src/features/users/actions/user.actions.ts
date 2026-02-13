@@ -22,8 +22,8 @@ const CreateSchema = z.object({
 
 export async function createUserAction(input: z.infer<typeof CreateSchema>) {
   const session = await getServerSession(authOptions);
-  if (!session?.user || !['ADMIN', 'SUPER_ADMIN'].includes(session.user.role)) {
-    throw new Error('Not authorized');
+  if (!session?.user || session.user.role !== 'SUPER_ADMIN') {
+    throw new Error('Acesso negado. Apenas SUPER_ADMIN pode gerenciar usuários.');
   }
   const data = CreateSchema.parse(input);
   return createUser(data);
@@ -41,8 +41,8 @@ const UpdateSchema = z.object({
 
 export async function updateUserAction(input: z.infer<typeof UpdateSchema>) {
   const session = await getServerSession(authOptions);
-  if (!session?.user || !['ADMIN', 'SUPER_ADMIN'].includes(session.user.role)) {
-    throw new Error('Not authorized');
+  if (!session?.user || session.user.role !== 'SUPER_ADMIN') {
+    throw new Error('Acesso negado. Apenas SUPER_ADMIN pode gerenciar usuários.');
   }
   const data = UpdateSchema.parse(input);
   return updateUser(data.id, data);
@@ -50,16 +50,16 @@ export async function updateUserAction(input: z.infer<typeof UpdateSchema>) {
 
 export async function deleteUserAction(id: string) {
   const session = await getServerSession(authOptions);
-  if (!session?.user || !['ADMIN', 'SUPER_ADMIN'].includes(session.user.role)) {
-    throw new Error('Not authorized');
+  if (!session?.user || session.user.role !== 'SUPER_ADMIN') {
+    throw new Error('Acesso negado. Apenas SUPER_ADMIN pode gerenciar usuários.');
   }
   return deleteUser(id);
 }
 
 export async function toggleUserStatusAction(id: string, disabled: boolean) {
   const session = await getServerSession(authOptions);
-  if (!session?.user || !['ADMIN', 'SUPER_ADMIN'].includes(session.user.role)) {
-    throw new Error('Not authorized');
+  if (!session?.user || session.user.role !== 'SUPER_ADMIN') {
+    throw new Error('Acesso negado. Apenas SUPER_ADMIN pode gerenciar usuários.');
   }
   return toggleUserStatus(id, disabled);
 }

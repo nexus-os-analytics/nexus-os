@@ -25,7 +25,12 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: 'Token expirado' }, { status: 400 });
     }
 
-    const user = await prisma.user.findUnique({ where: { email: record.identifier } });
+    const user = await prisma.user.findFirst({
+      where: {
+        email: record.identifier,
+        deletedAt: null,
+      },
+    });
     if (!user) {
       await prisma.verificationToken.delete({ where: { token: record.token } });
       return NextResponse.json({ error: 'Usuário não encontrado' }, { status: 404 });

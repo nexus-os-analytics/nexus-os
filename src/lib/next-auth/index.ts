@@ -42,8 +42,11 @@ export const authOptions: AuthOptions = {
           throw new Error('Credenciais inválidas');
         }
 
-        const user = await prisma.user.findUnique({
-          where: { email: credentials.email },
+        const user = await prisma.user.findFirst({
+          where: {
+            email: credentials.email,
+            deletedAt: null,
+          },
         });
 
         if (!user || !user.hashedPassword) {
@@ -190,8 +193,11 @@ export const authOptions: AuthOptions = {
       // Para usuários OAuth (Google)
       if (account?.provider === 'google') {
         try {
-          const existingUser = await prisma.user.findUnique({
-            where: { email: user.email! },
+          const existingUser = await prisma.user.findFirst({
+            where: {
+              email: user.email!,
+              deletedAt: null,
+            },
           });
 
           // Verificar se usuário existe e está ativo
@@ -245,8 +251,11 @@ export const authOptions: AuthOptions = {
       if (account?.provider === 'google' && user) {
         try {
           // Buscar usuário completo (já criado pelo adapter)
-          const dbUser = await prisma.user.findUnique({
-            where: { email: user.email! },
+          const dbUser = await prisma.user.findFirst({
+            where: {
+              email: user.email!,
+              deletedAt: null,
+            },
             include: { blingIntegration: true },
           });
 

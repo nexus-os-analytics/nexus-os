@@ -9,6 +9,14 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
+  // Only SUPER_ADMIN can access user management
+  if (session.user.role !== 'SUPER_ADMIN') {
+    return NextResponse.json(
+      { error: 'Acesso negado. Apenas SUPER_ADMIN pode gerenciar usuários.' },
+      { status: 403 }
+    );
+  }
+
   const { searchParams } = new URL(req.url);
   const search = searchParams.get('search') ?? undefined;
   const role = (searchParams.get('role') ?? undefined) as

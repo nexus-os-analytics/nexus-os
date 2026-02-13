@@ -47,7 +47,13 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Convite inválido ou expirado.' }, { status: 400 });
     }
 
-    const existing = await prisma.user.findUnique({ where: { email: invite.email } });
+    // Check if email is already in use by non-deleted users
+    const existing = await prisma.user.findFirst({
+      where: {
+        email: invite.email,
+        deletedAt: null,
+      },
+    });
     if (existing) {
       return NextResponse.json(
         { error: 'Já existe uma conta com este e-mail. Faça login ou redefina a senha.' },

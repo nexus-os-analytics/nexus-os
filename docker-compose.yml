@@ -52,7 +52,7 @@ services:
         - nexus-os-migrate:latest
     image: nexus-os-migrate:${IMAGE_TAG}
     container_name: nexus_migrate
-    command: sh -c "pnpm exec prisma generate && pnpm exec prisma migrate deploy"
+    command: sh -c "pnpm exec prisma generate && pnpm exec prisma migrate deploy --auto-approve"
     environment:
       DATABASE_URL: ${DATABASE_URL}
     depends_on:

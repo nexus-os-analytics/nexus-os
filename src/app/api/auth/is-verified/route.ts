@@ -7,7 +7,12 @@ export async function GET(req: Request) {
   if (!email) {
     return NextResponse.json({ error: 'E-mail é obrigatório' }, { status: 400 });
   }
-  const user = await prisma.user.findUnique({ where: { email } });
+  const user = await prisma.user.findFirst({
+    where: {
+      email,
+      deletedAt: null,
+    },
+  });
   if (!user) {
     return NextResponse.json({ verified: false });
   }

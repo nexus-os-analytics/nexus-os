@@ -9,6 +9,14 @@ export async function GET(_req: Request, context: { params: Promise<{ id: string
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
+  // Only SUPER_ADMIN can access user management
+  if (session.user.role !== 'SUPER_ADMIN') {
+    return NextResponse.json(
+      { error: 'Acesso negado. Apenas SUPER_ADMIN pode gerenciar usuários.' },
+      { status: 403 }
+    );
+  }
+
   try {
     const { id } = await context.params;
     if (!id) {

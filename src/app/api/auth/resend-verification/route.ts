@@ -15,7 +15,12 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'E-mail é obrigatório' }, { status: 400 });
     }
 
-    const user = await prisma.user.findUnique({ where: { email } });
+    const user = await prisma.user.findFirst({
+      where: {
+        email,
+        deletedAt: null,
+      },
+    });
     if (!user) {
       return NextResponse.json({ error: 'Usuário não encontrado' }, { status: 404 });
     }
