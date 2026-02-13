@@ -29,6 +29,7 @@ export function SignIn() {
   const [loading, setLoading] = useState(false);
   const { required2FA, status } = useAuth();
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [isUnverified, setIsUnverified] = useState(false);
   const [resendLoading, setResendLoading] = useState(false);
   const [resendMessage, setResendMessage] = useState<string | null>(null);
@@ -95,6 +96,16 @@ export function SignIn() {
   };
 
   useEffect(() => {
+    // Check for account activation success
+    const activated = getQueryParam('activated');
+    if (activated === '1') {
+      setSuccessMessage('Conta ativada com sucesso! Faça login para acessar a plataforma.');
+      const emailParam = getQueryParam('email');
+      if (typeof emailParam === 'string' && emailParam) {
+        form.setFieldValue('email', emailParam);
+      }
+    }
+
     // Surface authentication errors forwarded by NextAuth (e.g., AccessDenied)
     const err = getQueryParam('error');
     if (err) {
@@ -113,6 +124,7 @@ export function SignIn() {
     if (status === 'authenticated' && !required2FA) {
       router.push(redirect as string);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status, required2FA, router, redirect, getQueryParam]);
 
   const handleResendVerification = async () => {
@@ -168,6 +180,11 @@ export function SignIn() {
     <Paper radius="md" p="lg" withBorder>
       <form onSubmit={form.onSubmit(handleSign)}>
         <Stack>
+          {successMessage && (
+            <Alert title="Sucesso!" color="green">
+              {successMessage}
+            </Alert>
+          )}
           {errorMessage && (
             <Alert title="Ops! Algo deu errado" color="red">
               {errorMessage}

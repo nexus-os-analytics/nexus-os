@@ -32,7 +32,12 @@ export async function GET(req: Request) {
     }
 
     await prisma.$transaction(async (tx) => {
-      await tx.user.update({ where: { id: user.id }, data: { emailVerified: new Date() } });
+      await tx.user.update({
+        where: { id: user.id },
+        data: {
+          emailVerified: new Date(),
+        },
+      });
       await tx.verificationToken.delete({ where: { token: record.token } });
       await tx.auditLog.create({
         data: {
@@ -44,7 +49,11 @@ export async function GET(req: Request) {
       });
     });
 
-    return NextResponse.redirect(`${APP_URL}/bling?activated=1`);
+    // Redirect to login with success message instead of protected route
+    const loginUrl = new URL('/login', APP_URL);
+    loginUrl.searchParams.set('activated', '1');
+    loginUrl.searchParams.set('email', user.email);
+    return NextResponse.redirect(loginUrl.toString());
   } catch (error) {
     console.error('Erro em /api/activate:', error);
     return NextResponse.json({ error: 'Erro interno do servidor' }, { status: 500 });

@@ -19,7 +19,7 @@ export const APP_DESCRIPTION =
   process.env.NEXT_PUBLIC_APP_DESCRIPTION ||
   'Plataforma inteligente que conecta dados do Bling ERP para otimizar estoque, reduzir rupturas e destravar capital.';
 export const APP_LANGUAGE = process.env.NEXT_PUBLIC_APP_LANGUAGE || 'pt-BR';
-export const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://app.nexusos.com.br/';
+export const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
 export const APP_MANUAL_URL =
   process.env.NEXT_PUBLIC_APP_MANUAL_URL || 'https://app.nexusos.com.br/manual';
 export const APP_VIDEO_URL =
