@@ -15,7 +15,7 @@ import {
 } from '@mantine/core';
 import { useModals } from '@mantine/modals';
 import { notifications } from '@mantine/notifications';
-import { IconSearch, IconTrash, IconUserEdit } from '@tabler/icons-react';
+import { IconCheck, IconSearch, IconTrash, IconUserEdit } from '@tabler/icons-react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useMemo, useState } from 'react';
 import { deleteUserAction } from '@/features/users/actions/user.actions';
@@ -212,9 +212,19 @@ export default function UsersList() {
                     </Table.Td>
                     <Table.Td>
                       {!user.deletedAt ? (
-                        <Badge color="green">Ativo</Badge>
+                        <Group gap="xs">
+                          <IconCheck size={18} color="green" />
+                          <Text size="sm" c="dimmed">
+                            Ativo
+                          </Text>
+                        </Group>
                       ) : (
-                        <Badge color="gray">Inativo</Badge>
+                        <Group gap="xs">
+                          <IconTrash size={18} color="gray" />
+                          <Text size="sm" c="dimmed">
+                            Deletado
+                          </Text>
+                        </Group>
                       )}
                     </Table.Td>
                     <Table.Td hiddenFrom="sm">{user.failedAttempts}</Table.Td>
