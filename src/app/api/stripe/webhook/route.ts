@@ -1,47 +1,24 @@
-import type { PlanTier } from '@prisma/client';
 import { headers } from 'next/headers';
 import { NextResponse } from 'next/server';
 import pino from 'pino';
-import type Stripe from 'stripe';
 import prisma from '@/lib/prisma';
 import { getStripe } from '@/lib/stripe';
+import {
+  handleCheckoutSessionCompleted,
+  handleInvoicePaymentActionRequired,
+  handleInvoicePaymentFailed,
+  handleInvoicePaymentSucceeded,
+  handlePaymentIntentFailed,
+  handleSubscriptionDeleted,
+  handleSubscriptionPaused,
+  handleSubscriptionResumed,
+  handleSubscriptionTrialWillEnd,
+  handleSubscriptionUpdated,
+} from '@/lib/stripe/webhook-handlers';
 
 const logger = pino();
 
 export const runtime = 'nodejs';
-
-// Constant for Unix timestamp conversion (seconds to milliseconds)
-const SECONDS_TO_MS = 1000;
-
-/**
- * Maps Stripe subscription status to PlanTier
- * Only active/trialing subscriptions grant PRO access
- *
- * Stripe subscription statuses:
- * - active: subscription is active and paid
- * - trialing: in trial period
- * - past_due: payment failed but subscription still active (grace period)
- * - canceled: subscription canceled
- * - incomplete: initial payment failed
- * - incomplete_expired: initial payment expired
- * - unpaid: payment failed and grace period expired
- * - paused: subscription paused (rare)
- */
-function getPlanTierFromStatus(status: string): PlanTier {
-  switch (status) {
-    case 'active':
-    case 'trialing':
-      return 'PRO';
-    case 'past_due':
-    case 'canceled':
-    case 'incomplete':
-    case 'incomplete_expired':
-    case 'unpaid':
-    case 'paused':
-    default:
-      return 'FREE';
-  }
-}
 
 export async function POST(req: Request) {
   const hdrs = await headers();
@@ -78,272 +55,45 @@ export async function POST(req: Request) {
     // Process event within transaction for atomicity
     await prisma.$transaction(async (tx) => {
       switch (event.type) {
-        case 'checkout.session.completed': {
-          const session = event.data.object as Stripe.Checkout.Session;
-          const subscriptionId =
-            typeof session.subscription === 'string'
-              ? (session.subscription as string)
-              : ((session.subscription as Stripe.Subscription | null)?.id ?? null);
-          const customerId =
-            typeof session.customer === 'string'
-              ? (session.customer as string)
-              : ((session.customer as Stripe.Customer | null)?.id ?? null);
-
-          if (subscriptionId && customerId) {
-            const subscriptionResp = await stripe.subscriptions.retrieve(subscriptionId);
-            const sub = subscriptionResp as unknown as {
-              current_period_end?: number;
-              status?: string;
-              metadata?: Record<string, string>;
-            };
-            const currentPeriodEnd = sub.current_period_end
-              ? new Date(sub.current_period_end * SECONDS_TO_MS)
-              : null;
-            const userId = sub.metadata?.userId;
-
-            if (!userId) {
-              logger.error(
-                { subscriptionId, eventId: event.id },
-                'Missing userId in subscription metadata'
-              );
-              throw new Error('Invalid subscription metadata');
-            }
-
-            // Verify user exists before updating
-            const user = await tx.user.findUnique({ where: { id: userId } });
-            if (!user) {
-              logger.error({ userId, subscriptionId, eventId: event.id }, 'User not found');
-              throw new Error('User not found for subscription');
-            }
-
-            // Update user with subscription details
-            await tx.user.update({
-              where: { id: userId },
-              data: {
-                stripeCustomerId: customerId,
-                stripeSubscriptionId: subscriptionId,
-                subscriptionStatus: sub.status,
-                planTier: getPlanTierFromStatus(sub.status ?? 'incomplete'),
-                currentPeriodEnd,
-              },
-            });
-
-            logger.info(
-              { userId, subscriptionId, status: sub.status },
-              'Checkout session completed'
-            );
-          }
+        case 'checkout.session.completed':
+          await handleCheckoutSessionCompleted(event, tx);
           break;
-        }
 
         case 'customer.subscription.updated':
-        case 'customer.subscription.deleted': {
-          const subscriptionObj = event.data.object as Stripe.Subscription;
-          const sub = subscriptionObj as unknown as {
-            current_period_end?: number;
-            cancel_at_period_end?: boolean;
-            canceled_at?: number;
-            status?: string;
-            customer?: string | { id: string };
-            id?: string;
-          };
-          const currentPeriodEnd = sub.current_period_end
-            ? new Date(sub.current_period_end * SECONDS_TO_MS)
-            : null;
-          const customerId = typeof sub.customer === 'string' ? (sub.customer as string) : null;
-
-          logger.info(
-            {
-              eventType: event.type,
-              customerId,
-              subscriptionId: sub.id,
-              status: sub.status,
-              cancel_at_period_end: sub.cancel_at_period_end,
-            },
-            'Processing subscription event'
-          );
-
-          if (!customerId) {
-            logger.error(
-              { eventType: event.type, eventId: event.id },
-              'Missing customerId in subscription event'
-            );
-            break;
-          }
-
-          // Find user by Stripe customer ID
-          const user = await tx.user.findFirst({
-            where: { stripeCustomerId: customerId },
-          });
-
-          if (!user) {
-            logger.warn(
-              { customerId, eventType: event.type, eventId: event.id },
-              'No user found with stripeCustomerId'
-            );
-            break;
-          }
-
-          // Determine new plan tier and status
-          let newPlanTier: PlanTier;
-          let newStatus: string;
-          let newSubscriptionId: string | null;
-          let cancelAtPeriodEnd: boolean;
-
-          if (event.type === 'customer.subscription.deleted') {
-            // Subscription fully deleted/expired
-            newPlanTier = 'FREE';
-            newStatus = 'canceled';
-            newSubscriptionId = null;
-            cancelAtPeriodEnd = false;
-          } else if (sub.cancel_at_period_end) {
-            // User canceled but subscription still active until period end
-            // Keep PRO access until end of billing period
-            newPlanTier = sub.status === 'active' || sub.status === 'trialing' ? 'PRO' : 'FREE';
-            newStatus = 'canceling';
-            newSubscriptionId = sub.id ?? null;
-            cancelAtPeriodEnd = true;
-          } else {
-            // Normal subscription update
-            newPlanTier = getPlanTierFromStatus(sub.status ?? 'incomplete');
-            newStatus = sub.status ?? 'incomplete';
-            newSubscriptionId = sub.id ?? null;
-            cancelAtPeriodEnd = false;
-          }
-
-          logger.info(
-            {
-              userId: user.id,
-              oldPlanTier: user.planTier,
-              newPlanTier,
-              oldStatus: user.subscriptionStatus,
-              newStatus,
-              eventType: event.type,
-              cancel_at_period_end: sub.cancel_at_period_end,
-              cancelAtPeriodEnd,
-            },
-            'Updating user subscription'
-          );
-
-          // Update subscription status
-          await tx.user.update({
-            where: { id: user.id },
-            data: {
-              subscriptionStatus: newStatus,
-              currentPeriodEnd:
-                event.type === 'customer.subscription.deleted' ? null : currentPeriodEnd,
-              planTier: newPlanTier,
-              stripeSubscriptionId: newSubscriptionId,
-              cancelAtPeriodEnd,
-            },
-          });
-
-          logger.info(
-            {
-              userId: user.id,
-              customerId,
-              planTier: newPlanTier,
-              status: newStatus,
-              cancelAtPeriodEnd,
-              eventType: event.type,
-            },
-            'Subscription updated successfully'
-          );
+          await handleSubscriptionUpdated(event, tx);
           break;
-        }
 
-        case 'invoice.payment_failed': {
-          const invoice = event.data.object as Stripe.Invoice;
-          const customerId =
-            typeof invoice.customer === 'string' ? invoice.customer : invoice.customer?.id;
-
-          if (customerId) {
-            const user = await tx.user.findFirst({
-              where: { stripeCustomerId: customerId },
-            });
-
-            if (user) {
-              // Downgrade user to FREE on payment failure
-              await tx.user.update({
-                where: { id: user.id },
-                data: {
-                  planTier: 'FREE',
-                  subscriptionStatus: 'past_due',
-                },
-              });
-
-              logger.warn(
-                { userId: user.id, customerId },
-                'Payment failed - user downgraded to FREE'
-              );
-            }
-          }
+        case 'customer.subscription.deleted':
+          await handleSubscriptionDeleted(event, tx);
           break;
-        }
 
-        case 'invoice.payment_succeeded': {
-          const invoice = event.data.object as Stripe.Invoice;
-          const customerId =
-            typeof invoice.customer === 'string' ? invoice.customer : invoice.customer?.id;
-          const invoiceObject = invoice as unknown as { subscription?: string | { id: string } };
-          const subscriptionId =
-            typeof invoiceObject.subscription === 'string'
-              ? invoiceObject.subscription
-              : invoiceObject.subscription?.id;
-
-          if (customerId && subscriptionId) {
-            const user = await tx.user.findFirst({
-              where: { stripeCustomerId: customerId },
-            });
-
-            if (user) {
-              // If user was downgraded due to payment failure, restore PRO access
-              if (user.planTier === 'FREE' && user.subscriptionStatus === 'past_due') {
-                // Fetch current subscription status from Stripe
-                const stripe = getStripe();
-                const subscription = await stripe.subscriptions.retrieve(subscriptionId);
-
-                if (subscription.status === 'active' || subscription.status === 'trialing') {
-                  await tx.user.update({
-                    where: { id: user.id },
-                    data: {
-                      planTier: 'PRO',
-                      subscriptionStatus: subscription.status,
-                      cancelAtPeriodEnd: subscription.cancel_at_period_end || false,
-                    },
-                  });
-
-                  logger.info(
-                    { userId: user.id, customerId },
-                    'Payment succeeded - user restored to PRO after payment recovery'
-                  );
-                } else {
-                  logger.info(
-                    { userId: user.id, customerId, subscriptionStatus: subscription.status },
-                    'Payment succeeded but subscription not active'
-                  );
-                }
-              } else {
-                logger.info(
-                  { userId: user.id, customerId },
-                  'Payment succeeded - subscription renewed'
-                );
-              }
-            }
-          }
+        case 'customer.subscription.trial_will_end':
+          await handleSubscriptionTrialWillEnd(event, tx);
           break;
-        }
 
-        case 'payment_intent.payment_failed': {
-          const paymentIntent = event.data.object as Stripe.PaymentIntent;
-          const customerId =
-            typeof paymentIntent.customer === 'string'
-              ? paymentIntent.customer
-              : paymentIntent.customer?.id;
-
-          logger.warn({ customerId, paymentIntentId: paymentIntent.id }, 'Payment intent failed');
+        case 'customer.subscription.paused':
+          await handleSubscriptionPaused(event, tx);
           break;
-        }
+
+        case 'customer.subscription.resumed':
+          await handleSubscriptionResumed(event, tx);
+          break;
+
+        case 'invoice.payment_failed':
+          await handleInvoicePaymentFailed(event, tx);
+          break;
+
+        case 'invoice.payment_succeeded':
+          await handleInvoicePaymentSucceeded(event, tx);
+          break;
+
+        case 'invoice.payment_action_required':
+          await handleInvoicePaymentActionRequired(event, tx);
+          break;
+
+        case 'payment_intent.payment_failed':
+          await handlePaymentIntentFailed(event, tx);
+          break;
 
         default:
           logger.info({ eventType: event.type }, 'Unhandled webhook event type');
