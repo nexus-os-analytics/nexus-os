@@ -1,37 +1,35 @@
 {
-  "biome.enabled": true,
-  "editor.defaultFormatter": "biomejs.biome",
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
   "editor.formatOnSave": true,
   "editor.codeActionsOnSave": {
-    "source.organizeImports.biome": "explicit",
-    "source.fixAll.biome": "explicit"
+    "source.fixAll.eslint": "explicit"
   },
-  "biome.lsp.bin": "npx --no -- biome",
-  "eslint.enable": false,
-  "prettier.enable": false,
+  "eslint.enable": true,
+  "eslint.experimental.useFlatConfig": true,
+  "prettier.enable": true,
   "[typescript]": {
-    "editor.defaultFormatter": "vscode.typescript-language-features"
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
   "[javascript]": {
-    "editor.defaultFormatter": "biomejs.biome"
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
   "[javascriptreact]": {
-    "editor.defaultFormatter": "biomejs.biome"
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
   "[typescriptreact]": {
-    "editor.defaultFormatter": "vscode.typescript-language-features"
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
   "[json]": {
-    "editor.defaultFormatter": "biomejs.biome"
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
   "[jsonc]": {
-    "editor.defaultFormatter": "biomejs.biome"
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
   "[yaml]": {
     "editor.defaultFormatter": "redhat.vscode-yaml"
   },
   "[jsx]": {
-    "editor.defaultFormatter": "biomejs.biome"
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
   "workbench.editor.customLabels.patterns": {
     "**/**/**/**": "${dirname} - ${filename}",
@@ -49,22 +47,11 @@
     "editor.defaultFormatter": "stylelint.vscode-stylelint"
   },
   "cSpell.language": "en,pt,pt-BR",
-  "prisma-smart-formatter.typescript.defaultFormatter": "vscode.typescript-language-features",
-  "prisma-smart-formatter.typescriptreact.defaultFormatter": "vscode.typescript-language-features",
-  "prisma-smart-formatter.prisma.defaultFormatter": "Prisma.prisma",
   "github.copilot.chat.codeGeneration.useInstructionFiles": true,
   "github.copilot.enable": {
     "*": true,
     "markdown": true,
     "plaintext": false
   },
-  "github.copilot.advanced": {
-    "includeCopilotInstructions": true
-  },
-  "cSpell.words": [
-    "homologacao"
-  ]
+  "cSpell.words": ["homologacao"]
 }
-
-
-

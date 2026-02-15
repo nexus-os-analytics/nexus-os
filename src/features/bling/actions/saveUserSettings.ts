@@ -31,7 +31,12 @@ export async function saveUserSettings(_: UserSettingsInput) {
 
   // Find user by email
   const user = await prisma.user.findUnique({
-    where: { email: session.user.email },
+    where: { 
+      email_deletedAt: {
+        email: session.user.email,
+        deletedAt: null
+      }
+    },
   });
 
   if (!user) {

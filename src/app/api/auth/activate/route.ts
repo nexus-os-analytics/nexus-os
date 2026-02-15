@@ -19,7 +19,12 @@ export async function GET(request: Request) {
     }
 
     await prisma.user.update({
-      where: { email },
+      where: { 
+        email_deletedAt: {
+          email,
+          deletedAt: null
+        }
+      },
       data: { emailVerified: new Date() },
     });
 
