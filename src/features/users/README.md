@@ -243,5 +243,5 @@ const email = generateDeletedEmail('a1b2c3d4-e5f6-7890-abcd-ef1234567890');
 
 ---
 
-**Última atualização:** 2026-02-15  
+**Última atualização:** 2026-02-15
 **Versão:** 1.0

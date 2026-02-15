@@ -202,7 +202,7 @@ export function generateDeletedEmail(userId: string): string {
 // src/features/users/services/user.service.ts
 export async function deleteUser(id: string) {
   const deletedEmail = generateDeletedEmail(id);
-  
+
   return prisma.$transaction(async (tx) => {
     // Buscar e-mail original para auditoria
     const user = await tx.user.findUnique({
@@ -213,7 +213,7 @@ export async function deleteUser(id: string) {
     // Soft delete com randomização
     const updated = await tx.user.update({
       where: { id },
-      data: { 
+      data: {
         deletedAt: new Date(),
         email: deletedEmail
       },
@@ -289,9 +289,9 @@ Se houver usuários já deletados (com `deletedAt` preenchido mas e-mail não ra
 
 ```sql
 -- Migration para dados históricos
-UPDATE users 
-SET email = CONCAT('deleted-', 
-                   EXTRACT(EPOCH FROM "deletedAt")::bigint * 1000, 
+UPDATE users
+SET email = CONCAT('deleted-',
+                   EXTRACT(EPOCH FROM "deletedAt")::bigint * 1000,
                    '-',
                    SUBSTRING(id, 1, 8),
                    '@removed.local')
@@ -316,7 +316,7 @@ describe('deleteUser', () => {
   it('should randomize email on soft delete', async () => {
     const user = await createTestUser({ email: 'test@example.com' });
     await deleteUser(user.id);
-    
+
     const deleted = await getUserById(user.id);
     expect(deleted.email).toMatch(/^deleted-\d+-[a-f0-9]{8}@removed\.local$/);
     expect(deleted.deletedAt).not.toBeNull();
@@ -325,7 +325,7 @@ describe('deleteUser', () => {
   it('should allow creating new user with previously deleted email', async () => {
     await createTestUser({ email: 'reuse@example.com' });
     await deleteUser(user1.id);
-    
+
     // Deve ser possível criar novo usuário com mesmo email
     const user2 = await createTestUser({ email: 'reuse@example.com' });
     expect(user2.id).not.toBe(user1.id);
@@ -417,6 +417,6 @@ describe('deleteUser', () => {
 
 ---
 
-**Autor**: GitHub Copilot  
-**Data**: 2026-02-15  
+**Autor**: GitHub Copilot
+**Data**: 2026-02-15
 **Versão**: 1.0

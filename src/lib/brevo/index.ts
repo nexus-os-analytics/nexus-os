@@ -72,7 +72,7 @@ export async function sendEmail({
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({})) as BrevoErrorResponse;
       const errorMessage = errorData.message || `HTTP ${response.status} ${response.statusText}`;
-      
+
       logger.error({
         status: response.status,
         statusText: response.statusText,
@@ -96,7 +96,7 @@ export async function sendEmail({
     if (error instanceof Error && error.message.includes('Brevo API error')) {
       throw error;
     }
-    
+
     logger.error({ error, toEmail, subject }, 'Failed to send email via Brevo');
     throw new Error(`Brevo API error: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }

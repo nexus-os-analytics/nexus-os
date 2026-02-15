@@ -21,12 +21,12 @@ export async function listUsers(params: ListUsersParams) {
     ...(params.role ? { role: params.role } : {}),
     ...(params.search
       ? {
-          OR: [
-            { name: { contains: params.search, mode: 'insensitive' as const } },
-            { email: { contains: params.search, mode: 'insensitive' as const } },
-            { phone: { contains: params.search, mode: 'insensitive' as const } },
-          ],
-        }
+        OR: [
+          { name: { contains: params.search, mode: 'insensitive' as const } },
+          { email: { contains: params.search, mode: 'insensitive' as const } },
+          { phone: { contains: params.search, mode: 'insensitive' as const } },
+        ],
+      }
       : {}),
   };
 
@@ -111,10 +111,10 @@ export async function updateUser(
 /**
  * Soft delete a user by setting deletedAt and randomizing their email.
  * This allows the original email to be reused by new users.
- * 
+ *
  * @param id - The UUID of the user to delete
  * @returns The updated user record
- * 
+ *
  * @example
  * ```typescript
  * await deleteUser('a1b2c3d4-e5f6-7890-abcd-ef1234567890');

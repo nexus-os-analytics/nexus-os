@@ -104,7 +104,7 @@ async function testBrevoConnection() {
     if (shouldSendTest) {
       console.log('Test 3: Sending test email...');
       const testEmail = process.argv[process.argv.indexOf('--send-test') + 1];
-      
+
       if (!testEmail || !testEmail.includes('@')) {
         console.error('❌ Please provide a valid test email: --send-test your@email.com');
         return;
@@ -154,7 +154,7 @@ async function testBrevoConnection() {
     console.log('   - If API key is invalid, generate a new one at: https://app.brevo.com/settings/keys/api');
     console.log('   - Make sure your sender email is verified at: https://app.brevo.com/settings/senders');
     console.log('   - Run with --send-test your@email.com to send a test email');
-    
+
   } catch (error: any) {
     console.error('\n❌ Diagnosis failed');
     console.error('Error:', error.message);
