@@ -1,5 +1,5 @@
 'use server';
-import crypto from 'crypto';
+import crypto from 'node:crypto';
 import { sendEmail } from '@/lib/brevo';
 import prisma from '@/lib/prisma';
 
@@ -20,11 +20,17 @@ function hashToken(token: string): string {
 
 export async function createActivationToken(
   email: string,
-  ttlHours = 24
+  ttlHours = 72
 ): Promise<CreateActivationTokenResult> {
-  const token = crypto.randomBytes(32).toString('hex');
+  const RANDOM_BYTES_LENGTH = 32;
+  const MS_IN_SECOND = 1000;
+  const SECONDS_IN_MINUTE = 60;
+  const MINUTES_IN_HOUR = 60;
+  const token = crypto.randomBytes(RANDOM_BYTES_LENGTH).toString('hex');
   const hashed = hashToken(token);
-  const expiresAt = new Date(Date.now() + ttlHours * 60 * 60 * 1000);
+  const expiresAt = new Date(
+    Date.now() + ttlHours * MINUTES_IN_HOUR * SECONDS_IN_MINUTE * MS_IN_SECOND
+  );
 
   // Ensure any previous tokens for this identifier are removed
   await prisma.verificationToken.deleteMany({ where: { identifier: email } });

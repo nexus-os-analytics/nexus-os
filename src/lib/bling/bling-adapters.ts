@@ -10,10 +10,11 @@ import type {
  * @param data - Raw Bling products array from the API
  * @returns `BlingProductType[]`
  */
-export function adaptProductsResponse(data: any[]): BlingProductType[] {
+export function adaptProductsResponse(data: unknown[]): BlingProductType[] {
   if (!Array.isArray(data)) return [];
 
-  return data.map((item) => ({
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return data.map((item: any) => ({
     id: item.id, // local DB id will be assigned by Prisma
     blingProductId: item.id,
     name: item.nome || '',
@@ -33,10 +34,11 @@ export function adaptProductsResponse(data: any[]): BlingProductType[] {
  * @param data - Raw Bling categories array from the API
  * @returns `BlingCategoryType[]`
  */
-export function adaptCategoryResponse(data: any): BlingCategoryType[] {
+export function adaptCategoryResponse(data: unknown): BlingCategoryType[] {
   if (!Array.isArray(data)) return [];
 
-  return data.map((item) => ({
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return data.map((item: any) => ({
     id: item.id, // local DB id will be assigned by Prisma
     blingCategoryId: item.id,
     name: item.descricao || 'Sem categoria',

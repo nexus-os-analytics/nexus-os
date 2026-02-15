@@ -154,6 +154,8 @@ export function createBlingRepository({ integrationId }: BlingRepositoryOptions)
               blingProductId: product.alert.blingProductId,
               type: product.alert.type,
               risk: product.alert.risk,
+              discount: product.alert.discount,
+              discountAmount: product.alert.discountAmount,
               vvdReal: product.alert.vvdReal,
               vvd30: product.alert.vvd30,
               vvd7: product.alert.vvd7,
@@ -682,6 +684,8 @@ export function createBlingRepository({ integrationId }: BlingRepositoryOptions)
               blingProductId: product.alert.blingProductId,
               type: product.alert.type,
               risk: product.alert.risk,
+              discount: product.alert.discount,
+              discountAmount: product.alert.discountAmount,
               vvdReal: product.alert.vvdReal,
               vvd30: product.alert.vvd30,
               vvd7: product.alert.vvd7,
@@ -741,7 +745,8 @@ export function createBlingRepository({ integrationId }: BlingRepositoryOptions)
       if (product.alert) {
         capitalStuck += product.alert.capitalStuck;
 
-        if (product.alert.type === 'DEAD_STOCK') {
+        // Contagem correta por tipo de alerta
+        if (product.alert.type === 'RUPTURE') {
           ruptureCount += 1;
         } else if (product.alert.type === 'OPPORTUNITY') {
           opportunityCount += 1;

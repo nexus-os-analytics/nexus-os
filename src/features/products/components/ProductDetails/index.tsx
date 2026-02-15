@@ -84,8 +84,9 @@ export function ProductDetails({ product }: ProductDetailsProps) {
   const currencyBRL = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
   const searchParams = useSearchParams();
   const tabParam = searchParams.get('tab');
-  const defaultTab =
-    alert.type === 'LIQUIDATION' && tabParam === 'campaign' ? 'campaign' : 'details';
+  const canGenerateCampaign =
+    alert.type === 'LIQUIDATION' || alert.type === 'DEAD_STOCK' || alert.type === 'OPPORTUNITY';
+  const defaultTab = canGenerateCampaign && tabParam === 'campaign' ? 'campaign' : 'details';
 
   return (
     <Container size="xl">
@@ -135,15 +136,15 @@ export function ProductDetails({ product }: ProductDetailsProps) {
                 <Text size="sm" c="dimmed">
                   SKU: {product?.sku || 'N/A'}
                 </Text>
-                <Divider orientation="vertical" />
+                <Divider orientation="vertical" visibleFrom="sm" />
                 <Badge variant="light" color="gray">
                   {product?.category?.name ?? 'Sem categoria'}
                 </Badge>
-                <Divider orientation="vertical" />
+                <Divider orientation="vertical" visibleFrom="sm" />
                 <Text size="sm" c="dimmed">
                   Preço: {currencyBRL.format(product.salePrice)}
                 </Text>
-                <Divider orientation="vertical" />
+                <Divider orientation="vertical" visibleFrom="sm" />
                 <Text size="sm" c="dimmed">
                   Estoque: {product.currentStock}
                 </Text>
@@ -193,7 +194,7 @@ export function ProductDetails({ product }: ProductDetailsProps) {
           <Tabs.Tab value="settings" leftSection={<Settings size={16} />}>
             Configurações
           </Tabs.Tab>
-          {alert.type === 'LIQUIDATION' && (
+          {canGenerateCampaign && (
             <Tabs.Tab
               value="campaign"
               leftSection={<Sparkles size={16} />}
@@ -222,7 +223,7 @@ export function ProductDetails({ product }: ProductDetailsProps) {
         </Tabs.Panel>
 
         {/* Campaign Generator Tab */}
-        {alert.type === 'LIQUIDATION' && (
+        {canGenerateCampaign && (
           <Tabs.Panel value="campaign" pt="lg">
             <ProductCampaingGenerator product={product} />
           </Tabs.Panel>

@@ -52,7 +52,7 @@ export default function ProfileForm() {
   async function handleProfileSubmit(values: ProfileFormValues) {
     // Validate / sanitize in backend
     // Call PATCH /api/user
-    // console.log('save profile', values);
+    // Removed console.log for production compliance
 
     // Upload avatar if exists
     if (values.avatar) {

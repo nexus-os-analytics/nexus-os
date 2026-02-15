@@ -2,8 +2,10 @@ import pino from 'pino';
 import criticalAlertTemplate from './templates/critical-alert.template';
 import inviteTemplate from './templates/invite-user.template';
 import paymentConfirmedTemplate from './templates/payment-confirmed.template';
+import paymentFailedTemplate from './templates/payment-failed.template';
 import resetPasswordTemplate from './templates/reset-password.template';
 import subscriptionCanceledTemplate from './templates/subscription-canceled.template';
+import subscriptionTrialEndingTemplate from './templates/subscription-trial-ending.template';
 import welcomeTemplate from './templates/welcome.template';
 
 const BREVO_API_KEY = process.env.BREVO_API_KEY;
@@ -19,6 +21,8 @@ const emailTemplates = {
   criticalAlert: criticalAlertTemplate,
   paymentConfirmed: paymentConfirmedTemplate,
   subscriptionCanceled: subscriptionCanceledTemplate,
+  paymentFailed: paymentFailedTemplate,
+  subscriptionTrialEnding: subscriptionTrialEndingTemplate,
 };
 
 interface BrevoErrorResponse {

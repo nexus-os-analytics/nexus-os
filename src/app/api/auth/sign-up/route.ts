@@ -6,6 +6,7 @@ import {
   SignUpSchema,
   sendWelcomeActivationEmail,
 } from '@/features/auth/services';
+import { APP_URL } from '@/lib/constants';
 import prisma from '@/lib/prisma';
 
 export async function POST(req: NextRequest) {
@@ -43,6 +44,7 @@ export async function POST(req: NextRequest) {
         hashedPassword,
         acceptedTerms: acceptedTerms ?? false,
         role: 'USER',
+        planTier: 'FREE',
       },
       select: {
         id: true,
@@ -61,8 +63,7 @@ export async function POST(req: NextRequest) {
 
     // Generate activation token and send welcome email
     const { token } = await createActivationToken(user.email);
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
-    const activationLink = `${appUrl}/api/auth/activate?token=${encodeURIComponent(token)}&email=${encodeURIComponent(user.email)}`;
+    const activationLink = `${APP_URL}/api/activate?token=${encodeURIComponent(token)}`;
     await sendWelcomeActivationEmail({ email: user.email, name: user.name, activationLink });
 
     return NextResponse.json(

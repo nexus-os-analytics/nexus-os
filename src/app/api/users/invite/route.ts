@@ -4,6 +4,7 @@ import { getServerSession } from 'next-auth';
 import { z } from 'zod';
 import { createInvitation } from '@/features/users/services/invitation.service';
 import { sendEmail } from '@/lib/brevo';
+import { APP_URL } from '@/lib/constants';
 import { authOptions } from '@/lib/next-auth';
 
 const NAME_MIN_LENGTH = 2;
@@ -37,8 +38,7 @@ export async function POST(req: NextRequest) {
     invitedByUserId: session.user.id as string,
   });
 
-  const inviteLinkBase = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
-  const inviteLink = `${inviteLinkBase}/alterar-senha?invite=${invite.token}`;
+  const inviteLink = `${APP_URL}/resetar-senha?token=${invite.token}&email=${encodeURIComponent(email)}`;
 
   await sendEmail({
     toEmail: email,

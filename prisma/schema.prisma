@@ -23,7 +23,7 @@ enum UserRole {
 model User {
   id                   String             @id @default(uuid())
   name                 String
-  email                String             @unique
+  email                String
   hashedPassword       String? // Torne opcional para usuários OAuth
   role                 UserRole           @default(USER)
   image                String?
@@ -48,6 +48,7 @@ model User {
   subscriptionStatus   String?
   currentPeriodEnd     DateTime?
   trialEnd             DateTime?
+  cancelAtPeriodEnd    Boolean            @default(false)
   accounts             Account[] // Adicionado para NextAuth
   sessions             Session[] // Adicionado para NextAuth
   loginActivities      LoginActivity[]
@@ -58,6 +59,7 @@ model User {
   blingSyncStatus      BlingSyncStatus    @default(IDLE)
   invitationsSent      UserInvitation[]
 
+  @@unique([email, deletedAt])
   @@index([email, createdAt, deletedAt])
   @@map("users")
 }
@@ -332,6 +334,8 @@ model BlingAlert {
   capitalStuck           Float            @default(0)
   daysSinceLastSale      Int              @default(0)
   suggestedPrice         Float            @default(0)
+  discount               Int              @default(0)
+  discountAmount         Float            @default(0)
   estimatedDeadline      Int              @default(0)
   recoverableAmount      Float            @default(0)
   daysOutOfStock         Int              @default(0)
@@ -370,4 +374,18 @@ model BlingSyncJob {
 
   @@index([integrationId, status, createdAt])
   @@map("bling_sync_jobs")
+}
+
+// Webhook Event Tracking for Idempotency
+model WebhookEvent {
+  id          String   @id @default(uuid())
+  eventId     String   @unique
+  type        String
+  processed   Boolean  @default(true)
+  processedAt DateTime @default(now())
+  payload     Json
+  error       String?
+
+  @@index([eventId, type])
+  @@map("webhook_events")
 }

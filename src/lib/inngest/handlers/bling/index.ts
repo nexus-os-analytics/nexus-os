@@ -1,5 +1,6 @@
 export * from './generate-alerts';
 export * from './notify-critical-alert';
+export * from './scheduled-sync';
 export * from './sync-categories';
 export * from './sync-products';
 export * from './sync-sales-batch';

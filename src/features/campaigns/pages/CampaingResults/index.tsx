@@ -94,7 +94,7 @@ export function CampaingResults() {
 
   const handleCopy = async (text: string, field: string) => {
     try {
-      if (navigator.clipboard && navigator.clipboard.writeText) {
+      if (navigator.clipboard?.writeText) {
         await navigator.clipboard.writeText(text);
       } else {
         const textArea = document.createElement('textarea');

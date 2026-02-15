@@ -1,6 +1,7 @@
 import pino from 'pino';
 import { createBlingRepository } from '@/lib/bling';
 import { sendEmail } from '@/lib/brevo';
+import { APP_URL } from '@/lib/constants';
 import prisma from '@/lib/prisma';
 import { inngest } from '../../client';
 
@@ -50,8 +51,7 @@ export const notifyCriticalAlert = inngest.createFunction(
         return { sent: false };
       }
 
-      const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
-      const productLink = `${appUrl}/produto/${encodeURIComponent(blingProductId)}`;
+      const productLink = `${APP_URL}/produto/${encodeURIComponent(blingProductId)}`;
 
       const subject = `Alerta CRÍTICO: ${productSnapshot.name} (SKU ${productSnapshot.sku})`;
 

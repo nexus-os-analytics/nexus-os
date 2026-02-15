@@ -176,7 +176,7 @@ export default function BlingIntegrationForm() {
                   </Table.Thead>
                   <Table.Tbody>
                     {(['get', 'post', 'put', 'patch', 'delete'] as const)
-                      .filter((m) => (result.steps ?? {})[m] !== undefined)
+                      .filter((m) => result.steps?.[m] !== undefined)
                       .map((m) => {
                         const steps = result.steps ?? {};
                         const r = steps[m];

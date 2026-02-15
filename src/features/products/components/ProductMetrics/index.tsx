@@ -7,12 +7,15 @@ import {
   TrendingDown,
   TrendingUp,
 } from 'lucide-react';
+import { getRecommendationText } from '@/features/dashboard/utils/get-recommendation-text';
 import type { BlingProductType } from '@/lib/bling';
 import { formatCurrency, formatDate } from '@/lib/utils';
 
 interface ProductMetricsProps {
   product: BlingProductType;
 }
+
+const CRITICAL_DAYS_THRESHOLD = 7;
 
 export function ProductMetrics({ product }: ProductMetricsProps) {
   const { alert } = product;
@@ -24,6 +27,7 @@ export function ProductMetrics({ product }: ProductMetricsProps) {
   const recommendations = alert.recommendations
     ? (JSON.parse(alert.recommendations) as string[])
     : [];
+  const structured = getRecommendationText(alert, product);
 
   return (
     <Grid gutter="lg">
@@ -100,7 +104,7 @@ export function ProductMetrics({ product }: ProductMetricsProps) {
             </Group>
             <Group justify="space-between">
               <Text size="sm">Dias Restantes:</Text>
-              <Text size="sm" c={alert.daysRemaining < 7 ? 'red' : '#2E2E2E'}>
+              <Text size="sm" c={alert.daysRemaining < CRITICAL_DAYS_THRESHOLD ? 'red' : '#2E2E2E'}>
                 {alert.daysRemaining} dias
               </Text>
             </Group>
@@ -202,10 +206,55 @@ export function ProductMetrics({ product }: ProductMetricsProps) {
             <Title order={5}>Recomendações</Title>
           </Group>
           <Stack gap="md">
-            {recommendations.length > 0 ? (
-              recommendations.map((rec: string, index: number) => (
+            {structured ? (
+              <>
+                <Group gap={6}>
+                  <Text size="sm" fw={700}>
+                    {structured.title}
+                  </Text>
+                  {structured.subtitle ? (
+                    <Text size="sm" c="dimmed">
+                      {structured.subtitle}
+                    </Text>
+                  ) : null}
+                </Group>
+                {structured.description ? <Text size="sm">{structured.description}</Text> : null}
+                {structured.actions.map((action) => (
+                  <Paper
+                    key={action.label}
+                    p="sm"
+                    radius="md"
+                    style={{
+                      backgroundColor: action.primary
+                        ? 'rgba(199, 164, 70, 0.12)'
+                        : 'rgba(199, 164, 70, 0.06)',
+                      borderLeft: action.primary ? '3px solid #C7A446' : '3px solid #D8C48D',
+                    }}
+                  >
+                    <Text size="sm" fw={600}>
+                      {action.label}
+                    </Text>
+                    <Stack gap={4} mt={6}>
+                      {action.details.map((detail) => (
+                        <Text key={detail} size="sm">
+                          • {detail}
+                        </Text>
+                      ))}
+                    </Stack>
+                  </Paper>
+                ))}
+                {structured.warning ? (
+                  <Text size="sm" c="red">
+                    {structured.warning}
+                  </Text>
+                ) : null}
+              </>
+            ) : null}
+
+            {recommendations.length > 0 &&
+              recommendations.map((rec: string) => (
                 <Paper
-                  key={index}
+                  key={rec}
                   p="sm"
                   radius="md"
                   style={{
@@ -215,8 +264,9 @@ export function ProductMetrics({ product }: ProductMetricsProps) {
                 >
                   <Text size="sm">• {rec}</Text>
                 </Paper>
-              ))
-            ) : (
+              ))}
+
+            {recommendations.length === 0 && !structured && (
               <Text size="sm">Nenhuma recomendação disponível</Text>
             )}
           </Stack>

@@ -13,7 +13,7 @@ type UseFiltersOptions<T extends object> = {
   onFiltersChange: React.Dispatch<React.SetStateAction<T>>;
 };
 
-export function useFilters<T extends Record<string, any>>({
+export function useFilters<T extends Record<string, unknown>>({
   initialFilters,
   debounceKey = 'search',
   hasFilterKeys = ['search'] as (keyof T)[],

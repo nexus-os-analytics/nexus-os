@@ -35,6 +35,13 @@ export function ProductCampaingGenerator({ product }: ProductCampaingGeneratorPr
   const [isGenerating, setIsGenerating] = useState(false);
   const [campaigns, setCampaigns] = useState<CampaignOutput | null>(null);
 
+  const baseSalePrice = product.salePrice;
+  const discountPct = product.alert?.discount;
+  const discountAmount = product.alert?.discountAmount;
+
+  // Use alert.suggestedPrice as single source of truth (computed by calculateDynamicSuggestedPricing)
+  const promotionalPrice = product.alert?.suggestedPrice ?? baseSalePrice;
+
   const handleGenerate = async () => {
     try {
       setIsGenerating(true);
@@ -43,7 +50,9 @@ export function ProductCampaingGenerator({ product }: ProductCampaingGeneratorPr
           name: product.name,
           sku: product.sku,
           categoryName: product.category?.name ?? null,
-          salePrice: product.salePrice,
+          // Send original sale price; suggestedPrice carries the promotional value
+          salePrice: baseSalePrice,
+          suggestedPrice: promotionalPrice,
           costPrice: product.costPrice,
           currentStock: product.currentStock,
           image: product.image ?? null,
@@ -52,6 +61,24 @@ export function ProductCampaingGenerator({ product }: ProductCampaingGeneratorPr
         strategy: selectedStrategy,
         toneOfVoice,
         customInstructions: customInstructions || undefined,
+        alert: product.alert
+          ? {
+              type: product.alert.type,
+              discountPct: product.alert.discount ?? undefined,
+              discountAmount: product.alert.discountAmount ?? undefined,
+              daysRemaining: product.alert.daysRemaining ?? undefined,
+              estimatedDeadline: product.alert.estimatedDeadline ?? undefined,
+              growthTrend: product.alert.growthTrend ?? undefined,
+              capitalStuck: product.alert.capitalStuck ?? undefined,
+              vvdReal: product.alert.vvdReal ?? undefined,
+              vvd30: product.alert.vvd30 ?? undefined,
+              vvd7: product.alert.vvd7 ?? undefined,
+              daysSinceLastSale: product.alert.daysSinceLastSale ?? undefined,
+              excessUnits: product.alert.excessUnits ?? undefined,
+              excessPercentage: product.alert.excessPercentage ?? undefined,
+              excessCapital: product.alert.excessCapital ?? undefined,
+            }
+          : undefined,
       };
       const result = await generateProductCampaignAction(input);
       setCampaigns(result);
@@ -135,8 +162,21 @@ export function ProductCampaingGenerator({ product }: ProductCampaingGeneratorPr
                 Custo: {formatCurrency(product.costPrice)}
               </Text>
               <Text size="sm" c="dimmed">
-                Venda: {formatCurrency(product.salePrice)}
+                Venda (promocional): {formatCurrency(promotionalPrice)}
               </Text>
+              {product.salePrice !== promotionalPrice && (
+                <Badge color="brand" variant="light">
+                  {(() => {
+                    if (discountPct != null) {
+                      return `Desconto: ${Math.round(discountPct)}%`;
+                    }
+                    if (discountAmount != null) {
+                      return `- ${formatCurrency(discountAmount)}`;
+                    }
+                    return 'Preço ajustado';
+                  })()}
+                </Badge>
+              )}
             </Group>
           </Box>
         </Group>

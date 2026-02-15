@@ -1,3 +1,4 @@
+import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import pino from 'pino';
@@ -6,7 +7,7 @@ import { authOptions } from '@/lib/next-auth';
 
 const logger = pino({ name: 'api/products/[id]' });
 
-export async function GET(_req: Request, ctx: RouteContext<'/api/products/[id]'>) {
+export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await getServerSession(authOptions);
     const userId = session?.user?.id;
@@ -24,7 +25,7 @@ export async function GET(_req: Request, ctx: RouteContext<'/api/products/[id]'>
       );
     }
 
-    const { id } = await ctx.params;
+    const { id } = await params;
     const blingRepository = createBlingRepository({ integrationId: integration.id });
     const product = await blingRepository.getProductById(id as string);
 

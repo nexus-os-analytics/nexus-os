@@ -1,72 +1,78 @@
 import type { PlanTier } from '@prisma/client';
 
-export type FeatureKey = 'bling_advanced' | 'alerts_advanced' | 'reports' | 'priority_support';
-
-export interface FeatureDescriptor {
-  key: FeatureKey;
-  label: string;
-  description?: string;
+export interface PlanEntitlements {
+  productLimit: number | 'unlimited';
+  sync: {
+    // null means no automatic sync
+    autoIntervalHours: number | null;
+    manualAllowed: boolean;
+    description: string;
+  };
+  alerts: {
+    criticalEmail: boolean;
+    description: string;
+  };
+  support: {
+    channel: 'email' | 'whatsapp';
+    priority: boolean;
+    description: string;
+  };
 }
 
-export interface PlanLimits {
-  products: number | 'unlimited';
-  alerts: number | 'unlimited';
-  integrations: number | 'unlimited';
-}
-
-export const FEATURE_DEFINITIONS: FeatureDescriptor[] = [
-  {
-    key: 'bling_advanced',
-    label: 'Integração avançada com Bling',
-    description: 'Sincronização completa e recursos premium de integração.',
-  },
-  {
-    key: 'alerts_advanced',
-    label: 'Alertas avançados',
-    description: 'Alertas por e-mail e regras inteligentes.',
-  },
-  {
-    key: 'reports',
-    label: 'Relatórios personalizados',
-    description: 'Exportação e relatórios sob demanda.',
-  },
-  {
-    key: 'priority_support',
-    label: 'Suporte prioritário',
-    description: 'Atendimento prioritário por e-mail.',
-  },
-];
-
-const PLAN_FEATURES: Record<PlanTier, Record<FeatureKey, boolean>> = {
+const ENTITLEMENTS: Record<PlanTier, PlanEntitlements> = {
   FREE: {
-    bling_advanced: false,
-    alerts_advanced: false,
-    reports: false,
-    priority_support: false,
+    productLimit: 30,
+    sync: {
+      autoIntervalHours: 24,
+      manualAllowed: false,
+      description: 'Sincronização somente uma vez por dia (automática)',
+    },
+    alerts: {
+      criticalEmail: true,
+      description: 'Envio de alertas críticos por e-mail durante a sincronização',
+    },
+    support: {
+      channel: 'email',
+      priority: false,
+      description: 'Suporte via e-mail',
+    },
   },
   PRO: {
-    bling_advanced: true,
-    alerts_advanced: true,
-    reports: true,
-    priority_support: true,
+    productLimit: 'unlimited',
+    sync: {
+      autoIntervalHours: 1,
+      manualAllowed: true,
+      description: 'Sincronização manual e automática a cada hora',
+    },
+    alerts: {
+      criticalEmail: true,
+      description: 'Envio de alertas críticos por e-mail durante a sincronização',
+    },
+    support: {
+      channel: 'whatsapp',
+      priority: true,
+      description: 'Suporte prioritário via WhatsApp',
+    },
   },
 };
 
-const PLAN_LIMITS: Record<PlanTier, PlanLimits> = {
-  FREE: { products: 30, alerts: 10, integrations: 1 },
-  PRO: { products: 'unlimited', alerts: 'unlimited', integrations: 'unlimited' },
-};
-
-export function isFeatureAvailable(plan: PlanTier, feature: FeatureKey): boolean {
-  return PLAN_FEATURES[plan][feature];
+export function getPlanEntitlements(plan: PlanTier): PlanEntitlements {
+  return ENTITLEMENTS[plan];
 }
 
-export function getPlanFeatures(plan: PlanTier): Array<FeatureDescriptor & { available: boolean }> {
-  return FEATURE_DEFINITIONS.map((f) => ({ ...f, available: PLAN_FEATURES[plan][f.key] }));
+export function getPlanFeatureStrings(plan: PlanTier): string[] {
+  const e = ENTITLEMENTS[plan];
+  const productDesc =
+    e.productLimit === 'unlimited' ? 'Produtos ilimitados' : `Até ${e.productLimit} produtos`;
+  return [productDesc, e.sync.description, e.alerts.description, e.support.description];
+}
+
+// Backwards-compatible simple limits API used in some screens
+export interface PlanLimits {
+  products: number | 'unlimited';
 }
 
 export function getPlanLimits(plan: PlanTier): PlanLimits {
-  return PLAN_LIMITS[plan];
+  const e = ENTITLEMENTS[plan];
+  return { products: e.productLimit };
 }
-
-export const FEATURE_LIST_ORDER: FeatureKey[] = FEATURE_DEFINITIONS.map((f) => f.key);

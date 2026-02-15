@@ -1,6 +1,7 @@
 import type { BlingSyncStatus } from '@prisma/client';
 import { useSession } from 'next-auth/react';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import { getPlanEntitlements } from '@/features/billing/entitlements';
 
 export interface BlingIntegrationStatus {
   connected: boolean;
@@ -49,7 +50,7 @@ export function useBlingIntegration() {
     }
   };
 
-  const refresh = async () => {
+  const refresh = useCallback(async () => {
     try {
       setLoading(true);
       const response = await fetch('/api/integrations/bling/status');
@@ -69,20 +70,40 @@ export function useBlingIntegration() {
     } finally {
       setLoading(false);
     }
+  }, []);
+
+  const sync = async (): Promise<void> => {
+    try {
+      setLoading(true);
+      const resp = await fetch('/api/integrations/bling/sync', { method: 'POST' });
+      if (!resp.ok) {
+        const err = await resp.json().catch(() => ({ error: 'Erro ao iniciar sync' }));
+        throw new Error(err.error ?? 'Erro ao iniciar sincronização');
+      }
+      await refresh();
+    } catch (error) {
+      console.error('Error triggering Bling sync:', error);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
     if (session?.user?.id) {
       refresh();
     }
-  }, [session]);
+  }, [session, refresh]);
 
   return {
     status,
     connectionState,
     loading,
+    manualSyncAllowed: getPlanEntitlements(session?.user?.planTier === 'PRO' ? 'PRO' : 'FREE').sync
+      .manualAllowed,
     connect,
     disconnect,
     refresh,
+    sync,
   };
 }

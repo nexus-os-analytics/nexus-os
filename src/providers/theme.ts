@@ -6,6 +6,13 @@ export const theme = createTheme({
   defaultRadius: 'md',
   focusRing: 'always',
   fontFamily: 'Segoe UI, Roboto, system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif',
+  breakpoints: {
+    xs: '36em',
+    sm: '48em',
+    md: '62em',
+    lg: '75em',
+    xl: '88em',
+  },
   headings: {
     fontFamily: 'Segoe UI, Roboto, system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif',
     sizes: {

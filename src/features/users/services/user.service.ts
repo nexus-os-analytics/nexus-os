@@ -7,6 +7,7 @@ const logger = pino();
 export interface ListUsersParams {
   search?: string;
   role?: 'USER' | 'ADMIN' | 'SUPER_ADMIN' | 'GUEST';
+  status?: 'active' | 'inactive';
   page?: number;
   pageSize?: number;
   orderBy?: 'createdAt' | 'name' | 'email' | 'role';
@@ -16,8 +17,7 @@ export interface ListUsersParams {
 export async function listUsers(params: ListUsersParams) {
   const page = params.page ?? 1;
   const pageSize = params.pageSize ?? 10;
-  const where = {
-    deletedAt: null,
+  const where: Record<string, unknown> = {
     ...(params.role ? { role: params.role } : {}),
     ...(params.search
       ? {
@@ -29,6 +29,17 @@ export async function listUsers(params: ListUsersParams) {
       }
       : {}),
   };
+
+  // Default behavior: only show non-deleted users unless status filter is specified
+  if (params.status === 'active') {
+    where.deletedAt = null;
+  } else if (params.status === 'inactive') {
+    // Prisma negation to find records where deletedAt is not null
+    Object.assign(where, { NOT: { deletedAt: null } });
+  } else if (!params.status) {
+    // No status filter: show only active users by default
+    where.deletedAt = null;
+  }
 
   const [items, total] = await Promise.all([
     prisma.user.findMany({
@@ -48,6 +59,8 @@ export async function listUsers(params: ListUsersParams) {
         isTwoFactorEnabled: true,
         failedAttempts: true,
         lockedUntil: true,
+        planTier: true,
+        deletedAt: true,
       },
     }),
     prisma.user.count({ where }),
@@ -57,8 +70,8 @@ export async function listUsers(params: ListUsersParams) {
 }
 
 export async function getUserById(id: string) {
-  return prisma.user.findUnique({
-    where: { id },
+  return prisma.user.findFirst({
+    where: { id, deletedAt: null },
     select: {
       id: true,
       name: true,
@@ -72,6 +85,7 @@ export async function getUserById(id: string) {
       lockedUntil: true,
       createdAt: true,
       emailVerified: true,
+      deletedAt: true,
     },
   });
 }
@@ -82,6 +96,18 @@ export async function createUser(data: {
   role: 'USER' | 'ADMIN' | 'SUPER_ADMIN';
   phone?: string | null;
 }) {
+  // Check if email already exists for non-deleted users
+  const existingUser = await prisma.user.findFirst({
+    where: {
+      email: data.email,
+      deletedAt: null,
+    },
+  });
+
+  if (existingUser) {
+    throw new Error('O e-mail informado já está em uso.');
+  }
+
   return prisma.user.create({
     data: {
       name: data.name,
@@ -100,8 +126,25 @@ export async function updateUser(
     role?: 'USER' | 'ADMIN' | 'SUPER_ADMIN';
     phone?: string | null;
     image?: string | null;
+    email?: string;
+    planTier?: 'FREE' | 'PRO';
   }
 ) {
+  // If updating email, check if it's already in use by non-deleted users
+  if (data.email) {
+    const existingUser = await prisma.user.findFirst({
+      where: {
+        email: data.email,
+        deletedAt: null,
+        NOT: { id },
+      },
+    });
+
+    if (existingUser) {
+      throw new Error('O e-mail informado já está em uso.');
+    }
+  }
+
   return prisma.user.update({
     where: { id },
     data,

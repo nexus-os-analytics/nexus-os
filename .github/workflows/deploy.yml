@@ -7,10 +7,35 @@ on:
 
 jobs:
   deploy:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, Linux, X64]
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set image tag
+        id: meta
+        run: echo "tag=$(echo $GITHUB_SHA | cut -c1-8)" >> $GITHUB_OUTPUT
+
+      - name: Create .env
+        run: |
+          # Write multi-line secret using quoted heredoc to avoid shell expansion
+          cat > .env << 'EOF'
+          ${{ secrets.PROD_ENV_FILE }}
+          EOF
+          # Normalize CRLF to LF (in case secret was pasted from Windows)
+          sed -i 's/\r$//' .env || true
+          echo "IMAGE_TAG=${{ steps.meta.outputs.tag }}" >> .env
+          echo "✅ .env criado:"
+          wc -l .env || true
+          head -n 5 .env || true
+
+      - name: Prepare files for upload
+        run: |
+          git clean -fdx -e .env
+          echo "📦 Upload size: $(du -sh . | cut -f1)"
 
       - name: Upload project to VPS
         uses: appleboy/scp-action@v0.1.7
@@ -24,46 +49,43 @@ jobs:
           rm: true
           strip_components: 0
           overwrite: true
-          proxy_port: 0
+          use_insecure_cipher: true
           timeout: 120s
+          command_timeout: 300s
 
-      - name: Configure and deploy via SSH
+      - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.0.0
-        env:
-          PROD_ENV_FILE: ${{ secrets.PROD_ENV_FILE }}
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_KEY }}
-          # Optional: set port via secret; if unset, action defaults to 22
-          port: ${{ secrets.SSH_PORT }}
-          # Forward envs to remote for expansion in script
-          envs: PROD_ENV_FILE
+          port: ${{ secrets.SSH_PORT || 22 }}
           script_stop: true
-          timeout: 180s
+          timeout: 600s
           script: |
             set -e
-            WORKDIR=/opt/nexus-os
-            mkdir -p "$WORKDIR"
-            cd "$WORKDIR"
+            cd /opt/nexus-os
 
-            echo "Escrevendo .env a partir do secret PROD_ENV_FILE"
-            # Grava o conteúdo completo do secret no arquivo .env
-            # Usamos printf para preservar quebras de linha sem ecoar no log
-            printf "%s" "$PROD_ENV_FILE" > .env
+            # Debug
+            ls -la .env*
+            echo "IMAGE_TAG from .env: $(grep IMAGE_TAG .env || echo 'not found')"
 
-            # Validação básica sem expor segredos
-            if [ ! -s .env ]; then
-              echo "Falha ao criar .env: arquivo vazio" >&2
-              exit 1
-            fi
-            echo ".env criado com $(wc -l < .env) linhas"
+            echo "🛑 Stopping containers..."
+            docker compose down --remove-orphans || true
 
-            echo "Parando containers antigos"
-            docker compose down || true
+            echo "🔨 Building images with cache..."
+            DOCKER_BUILDKIT=1 docker compose --env-file .env build --parallel
 
-            echo "Subindo novos serviços"
-            docker compose up -d --build
+            echo "🏷️  Tagging latest for cache..."
+            docker tag nexus-os:$(grep IMAGE_TAG .env | cut -d= -f2) nexus-os:latest || true
+            docker tag nexus-os-migrate:$(grep IMAGE_TAG .env | cut -d= -f2) nexus-os-migrate:latest || true
 
-            echo "Status final dos containers"
+            echo "🚀 Starting services..."
+            docker compose --env-file .env up -d --remove-orphans
+
+            echo "⏳ Waiting for app to be ready..."
+            timeout 60 sh -c 'until docker compose ps app | grep -q "healthy\|running"; do sleep 2; done' || true
+
+            echo "📊 Status:"
             docker compose ps
+            docker compose logs --tail=20 app

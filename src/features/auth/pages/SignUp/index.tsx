@@ -15,18 +15,17 @@ import {
 import { useForm } from '@mantine/form';
 import { zod4Resolver } from 'mantine-form-zod-resolver';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { signIn } from 'next-auth/react';
 import { useEffect, useState } from 'react';
 import { GoogleButton } from '@/components/commons/GoogleButton';
-import { useQueryString } from '@/hooks';
 import { SignUpSchema, useSignUp } from '../../services';
 
 export function SignUp() {
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const { mutateAsync: signUp, isPending, error } = useSignUp();
-  const { getQueryParam } = useQueryString();
-  const planParam = (getQueryParam('plan') || '').toUpperCase();
+  const router = useRouter();
 
   const form = useForm({
     initialValues: {
@@ -48,13 +47,8 @@ export function SignUp() {
         confirmPassword: values.confirmPassword,
         terms: values.terms as true,
       });
-
-      await signIn('credentials', {
-        email: values.email,
-        password: values.password,
-        callbackUrl: planParam ? `/bling?plan=${planParam}` : '/bling',
-        redirect: true,
-      });
+      // Após cadastro, voltar para login
+      router.push('/login');
     } catch (error) {
       console.error('Error during sign up:', error);
     }
@@ -63,7 +57,7 @@ export function SignUp() {
   const handleGoogleSignIn = async () => {
     try {
       setLoading(true);
-      await signIn('google', { callbackUrl: planParam ? `/bling?plan=${planParam}` : '/bling' });
+      await signIn('google', { callbackUrl: '/bling' });
     } catch (error) {
       console.error('Erro ao autenticar com o Google:', error);
       setErrorMessage('Erro ao autenticar com o Google. Tente novamente.');

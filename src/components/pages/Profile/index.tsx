@@ -1,9 +1,9 @@
 'use client';
 import { Badge, Box, Button, Card, Container, Group, Stack, Text, Title } from '@mantine/core';
 import { ArrowLeft } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
-import { lazy } from 'react';
+import { lazy, useEffect, useState } from 'react';
 import { openCheckout, openPortal } from '@/features/billing/services/stripeClient';
 
 const ProfileForm = lazy(() => import('./ProfileForm'));
@@ -15,9 +15,32 @@ const SecurityForm = lazy(() => import('./SecurityForm'));
 
 export default function Profile() {
   const router = useRouter();
-  const { data } = useSession();
+  const searchParams = useSearchParams();
+  const { data, update } = useSession();
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const plan = data?.user?.planTier ?? 'FREE';
   const isPro = plan === 'PRO';
+
+  // Refresh session after returning from Stripe Portal
+  useEffect(() => {
+    const shouldRefresh = searchParams.get('refresh') === 'true';
+    if (shouldRefresh && !isRefreshing) {
+      setIsRefreshing(true);
+      update()
+        .then(() => {
+          // Remove refresh parameter from URL
+          const newParams = new URLSearchParams(searchParams.toString());
+          newParams.delete('refresh');
+          const newUrl = newParams.toString()
+            ? `${window.location.pathname}?${newParams.toString()}`
+            : window.location.pathname;
+          router.replace(newUrl);
+        })
+        .finally(() => {
+          setIsRefreshing(false);
+        });
+    }
+  }, [searchParams, update, router, isRefreshing]);
 
   return (
     <Container size="md">
@@ -49,11 +72,11 @@ export default function Profile() {
               </Group>
               <Group gap="sm">
                 {!isPro && (
-                  <Button onClick={openCheckout} color="brand">
+                  <Button onClick={openCheckout} color="brand" disabled={isRefreshing}>
                     Fazer upgrade para PRO
                   </Button>
                 )}
-                <Button variant="light" onClick={openPortal}>
+                <Button variant="light" onClick={openPortal} loading={isRefreshing}>
                   Gerenciar assinatura
                 </Button>
               </Group>

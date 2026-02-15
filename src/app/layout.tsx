@@ -1,11 +1,12 @@
 import '@mantine/core/styles.css';
 import '@mantine/notifications/styles.css';
 import { ColorSchemeScript, mantineHtmlProps } from '@mantine/core';
-import { APP_DESCRIPTION, APP_HOMEPAGE_URL, APP_LANGUAGE, APP_NAME } from '@/lib/constants';
+import type { Viewport } from 'next';
+import { APP_DESCRIPTION, APP_LANGUAGE, APP_NAME, APP_URL } from '@/lib/constants';
 import { Providers } from '@/providers';
 
 export const metadata = {
-  metadataBase: new URL(APP_HOMEPAGE_URL),
+  metadataBase: new URL(APP_URL),
   applicationName: APP_NAME,
   title: {
     default: APP_NAME,
@@ -45,6 +46,12 @@ export const metadata = {
     icon: { url: '/icon.svg', type: 'image/svg+xml' },
   },
 } as const;
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover',
+};
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (

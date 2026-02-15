@@ -1,0 +1,36 @@
+# Build outputs
+.next/
+out/
+build/
+dist/
+
+# Dependencies
+node_modules/
+
+# Prisma
+prisma/migrations/
+
+# Generated files
+next-env.d.ts
+*.config.compiled.js
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Lock files
+pnpm-lock.yaml
+package-lock.json
+yarn.lock
+
+# Coverage
+coverage/
+
+# Deployment
+.vercel/
+
+# Environment
+.env*.local

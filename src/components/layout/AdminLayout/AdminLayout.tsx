@@ -16,7 +16,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
         <AdminHeader />
       </AppShell.Header>
       <AppShell.Main>
-        <Container size="xl">
+        <Container size="xl" px={0}>
           <UpgradeBanner />
           {children}
         </Container>

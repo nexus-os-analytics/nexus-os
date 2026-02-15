@@ -1,10 +1,12 @@
 import pino from 'pino';
+import { getPlanEntitlements } from '@/features/billing/entitlements';
 import {
   BlingIntegration,
   createBlingClient,
   createBlingRepository,
   type BlingProductType as Product,
 } from '@/lib/bling';
+import prisma from '@/lib/prisma';
 import { daysAgo } from '@/lib/utils';
 import { inngest } from '../../client';
 
@@ -31,8 +33,24 @@ export const syncProducts = inngest.createFunction(
     }
     logger.info(`[bling/sync:products] fetched ${allProducts.length} products`);
 
+    // Enforce plan product limits (e.g., FREE: 30, PRO: unlimited)
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { planTier: true },
+    });
+    const entitlements = getPlanEntitlements(user?.planTier === 'PRO' ? 'PRO' : 'FREE');
+    const limitedProducts: Product[] =
+      entitlements.productLimit === 'unlimited'
+        ? allProducts
+        : allProducts.slice(0, entitlements.productLimit);
+    if (limitedProducts.length !== allProducts.length) {
+      logger.info(
+        `[bling/sync:products] applying plan limit: ${limitedProducts.length}/${allProducts.length}`
+      );
+    }
+
     // upsert através do repository
-    await blingRepository.upsertProducts(allProducts);
+    await blingRepository.upsertProducts(limitedProducts);
     logger.info(`[bling/sync:products] finished sync products for user ${userId}`);
 
     // emit categories sync (product categories)
@@ -42,7 +60,7 @@ export const syncProducts = inngest.createFunction(
     });
 
     // emit stock sync (product external ids)
-    const externalIds = allProducts.map((p) => String(p.blingProductId));
+    const externalIds = limitedProducts.map((p) => String(p.blingProductId));
     await step.sendEvent('bling/sync:stock', {
       name: 'bling/sync:stock',
       data: { userId, integrationId, productExternalIds: externalIds },

@@ -2,7 +2,7 @@ import crypto from 'node:crypto';
 import { type NextRequest, NextResponse } from 'next/server';
 import { type ForgotPasswordRequest, ForgotPasswordSchema } from '@/features/auth/services';
 import { sendEmail } from '@/lib/brevo';
-import { PASSWORD_RESET_TOKEN_BYTES, PASSWORD_RESET_TOKEN_EXPIRY } from '@/lib/constants';
+import { APP_URL, PASSWORD_RESET_TOKEN_BYTES, PASSWORD_RESET_TOKEN_EXPIRY } from '@/lib/constants';
 import prisma from '@/lib/prisma';
 
 export async function POST(req: NextRequest) {
@@ -22,8 +22,11 @@ export async function POST(req: NextRequest) {
 
     const { email } = parsedBody.data;
 
-    const user = await prisma.user.findUnique({
-      where: { email },
+    const user = await prisma.user.findFirst({
+      where: {
+        email,
+        deletedAt: null,
+      },
       select: { id: true, email: true, name: true, deletedAt: true },
     });
 
@@ -36,7 +39,7 @@ export async function POST(req: NextRequest) {
 
     const resetToken = crypto.randomBytes(PASSWORD_RESET_TOKEN_BYTES).toString('hex');
     const resetTokenExpiry = new Date(Date.now() + PASSWORD_RESET_TOKEN_EXPIRY);
-    const resetLink = `${process.env.NEXT_PUBLIC_APP_URL}/alterar-senha?token=${resetToken}`;
+    const resetLink = `${APP_URL}/resetar-senha?token=${resetToken}`;
 
     await sendEmail({
       toName: user.name || 'Usuário',

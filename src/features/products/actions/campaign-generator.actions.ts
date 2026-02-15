@@ -29,7 +29,7 @@ function extractJson(content: string): Record<string, unknown> {
 export async function generateProductCampaignAction(input: unknown): Promise<CampaignOutput> {
   const data = GenerateProductCampaignSchema.parse(input as GenerateProductCampaignInput);
 
-  const { product, strategy, toneOfVoice, customInstructions } = data;
+  const { product, strategy, toneOfVoice, customInstructions, alert } = data;
 
   const system = [
     'Você é um assistente de marketing especializado em varejo brasileiro.',
@@ -40,16 +40,115 @@ export async function generateProductCampaignAction(input: unknown): Promise<Cam
     'Responda APENAS com um objeto JSON com as chaves {"instagram","email","remarketing"}.',
   ].join('\n');
 
+  // Compute margin (approx.) based on original sale price
+  const PERCENT_BASE = 100;
+  const marginPct =
+    product.salePrice > 0
+      ? Number(
+          (((product.salePrice - product.costPrice) / product.salePrice) * PERCENT_BASE).toFixed(2)
+        )
+      : 0;
+
+  // Use the suggestedPrice sent from the UI (single source of truth from alert.suggestedPrice)
+  // Fallback defaults aligned with calculateDynamicSuggestedPricing in bling-utils.ts:
+  //   LIQUIDATION: 20% (DISCOUNTS.LIQUIDATION_BASE)
+  //   DEAD_STOCK: 30% (DISCOUNTS.DEAD_STOCK_30)
+  const DEFAULT_LIQUIDATION_DISCOUNT = 20;
+  const DEFAULT_DEAD_STOCK_DISCOUNT = 30;
+  const OPPORTUNITY_INCREASE = 10;
+
+  let suggestedPrice = product.suggestedPrice ?? product.salePrice;
+  let discountPct = typeof alert?.discountPct === 'number' ? alert.discountPct : 0;
+  let priceIncreasePct = 0;
+
+  if (alert?.type === 'OPPORTUNITY') {
+    // OPPORTUNITY: 10% above current sale price
+    priceIncreasePct = OPPORTUNITY_INCREASE;
+    if (!product.suggestedPrice) {
+      suggestedPrice = product.salePrice * (1 + priceIncreasePct / PERCENT_BASE);
+    }
+  } else if (alert?.type === 'LIQUIDATION') {
+    if (!discountPct) discountPct = DEFAULT_LIQUIDATION_DISCOUNT;
+    if (!product.suggestedPrice) {
+      suggestedPrice = product.salePrice * (1 - discountPct / PERCENT_BASE);
+    }
+  } else if (alert?.type === 'DEAD_STOCK') {
+    if (!discountPct) discountPct = DEFAULT_DEAD_STOCK_DISCOUNT;
+    if (!product.suggestedPrice) {
+      suggestedPrice = product.salePrice * (1 - discountPct / PERCENT_BASE);
+    }
+  } else if (discountPct > 0 && !product.suggestedPrice) {
+    suggestedPrice = product.salePrice * (1 - discountPct / PERCENT_BASE);
+  }
+
   const user = [
     `Produto: ${product.name} (SKU: ${product.sku})`,
     product.categoryName ? `Categoria: ${product.categoryName}` : undefined,
     `Preço de venda: R$ ${product.salePrice.toFixed(2)}`,
     `Preço de custo: R$ ${product.costPrice.toFixed(2)}`,
     product.currentStock != null ? `Estoque atual: ${product.currentStock}` : undefined,
+    `Margem estimada: ${marginPct}%`,
+    alert?.type ? `Tipo de alerta: ${alert.type}` : undefined,
+    // Pricing rules based on alert type
+    alert?.type === 'OPPORTUNITY'
+      ? `REGRA DE PREÇO: Aumentar 10% sobre o preço atual (R$ ${suggestedPrice.toFixed(2)}). Objetivo: maximizar margem com alta demanda.`
+      : undefined,
+    alert?.type === 'LIQUIDATION'
+      ? `REGRA DE PREÇO: Aplicar ${discountPct}% de desconto (R$ ${suggestedPrice.toFixed(2)}). Objetivo: liquidar excesso de estoque.`
+      : undefined,
+    alert?.type === 'DEAD_STOCK'
+      ? `REGRA DE PREÇO: Aplicar ${discountPct}% de desconto (R$ ${suggestedPrice.toFixed(2)}). Objetivo: recuperar capital parado.`
+      : undefined,
+    discountPct > 0 && alert?.type !== 'OPPORTUNITY'
+      ? `Desconto aplicado: ${discountPct}% (Economia de R$ ${(product.salePrice - suggestedPrice).toFixed(2)})`
+      : undefined,
+    priceIncreasePct > 0
+      ? `Acréscimo aplicado: ${priceIncreasePct}% (por alta demanda e baixo estoque)`
+      : undefined,
+    `Preço promocional sugerido: R$ ${suggestedPrice.toFixed(2)}`,
+    // Urgency and performance signals
+    typeof alert?.daysRemaining === 'number' ? `Dias restantes: ${alert.daysRemaining}` : undefined,
+    typeof alert?.estimatedDeadline === 'number'
+      ? `Prazo estimado (dias): ${alert.estimatedDeadline}`
+      : undefined,
+    typeof alert?.growthTrend === 'number'
+      ? `Tendência de crescimento: ${alert.growthTrend}`
+      : undefined,
+    typeof alert?.vvd7 === 'number' ? `VVD7: ${alert.vvd7}` : undefined,
+    typeof alert?.vvd30 === 'number' ? `VVD30: ${alert.vvd30}` : undefined,
+    typeof alert?.daysSinceLastSale === 'number'
+      ? `Dias sem venda: ${alert.daysSinceLastSale}`
+      : undefined,
+    typeof alert?.capitalStuck === 'number'
+      ? `Capital parado (R$): ${alert.capitalStuck}`
+      : undefined,
+    typeof alert?.excessUnits === 'number'
+      ? `Excesso de unidades: ${alert.excessUnits}`
+      : undefined,
+    typeof alert?.excessPercentage === 'number'
+      ? `Excesso (%): ${alert.excessPercentage}`
+      : undefined,
+    typeof alert?.excessCapital === 'number'
+      ? `Excesso de capital (R$): ${alert.excessCapital}`
+      : undefined,
     `Estratégia: ${strategy}`,
     `Tom de voz: ${toneOfVoice}`,
-    customInstructions ? `Instruções adicionais: ${customInstructions}` : undefined,
-    'Inclua números/percentuais quando fizer sentido. Evite informações falsas. Não use links reais.',
+    customInstructions
+      ? `INSTRUÇÕES PERSONALIZADAS (seguir obrigatoriamente): ${customInstructions}`
+      : undefined,
+    '',
+    'DIRETRIZES DE PREÇO (use o preço promocional sugerido, exceto se instruções personalizadas indicarem diferente):',
+    '- OPPORTUNITY: sempre mencione o aumento de preço e destaque a alta demanda',
+    `- LIQUIDATION: sempre mencione o desconto de ${discountPct}% e crie senso de urgência`,
+    `- DEAD_STOCK (Capital Parado): sempre mencione o desconto de ${discountPct}% e crie urgência máxima para liquidar`,
+    '',
+    'DIRETRIZES DE CONTEÚDO:',
+    '- Use o preço promocional sugerido nos textos (já calculado acima)',
+    '- Inclua números/percentuais quando fizer sentido',
+    '- Para OPPORTUNITY: destaque benefícios, qualidade, escassez e valorize o produto',
+    '- Para LIQUIDATION: destaque o desconto e crie urgência moderada',
+    '- Para DEAD_STOCK: destaque o grande desconto e crie urgência máxima ("últimas unidades", "queima de estoque")',
+    '- Evite informações falsas. Não use links reais.',
   ]
     .filter(Boolean)
     .join('\n');

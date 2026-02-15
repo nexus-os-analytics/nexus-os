@@ -18,7 +18,7 @@ export const authOptions: AuthOptions = {
 
   pages: {
     signIn: '/login',
-    error: '/login?error=invalid_credentials',
+    error: '/login',
   },
 
   session: {
@@ -83,6 +83,19 @@ export const authOptions: AuthOptions = {
           });
 
           throw new Error('Credenciais inválidas');
+        }
+
+        // Bloquear login até verificação de e-mail (credenciais)
+        if (!user.emailVerified) {
+          // Registrar incidente para tentativa de login sem verificação
+          await prisma.securityIncident.create({
+            data: {
+              userId: user.id,
+              type: 'UNVERIFIED_LOGIN_ATTEMPT',
+              details: `Login attempt before email verification from IP ${req?.headers?.['x-forwarded-for'] || 'unknown'}`,
+            },
+          });
+          throw new Error('Conta não verificada');
         }
 
         // Se o usuário tem 2FA ativo, o código deve estar presente
@@ -223,7 +236,7 @@ export const authOptions: AuthOptions = {
         }
       }
 
-      // Para credentials, permitir login normalmente
+      // Para credentials, permitir login somente se verificado (checado em authorize)
       return true;
     },
 
@@ -232,8 +245,11 @@ export const authOptions: AuthOptions = {
       if (account?.provider === 'google' && user) {
         try {
           // Buscar usuário completo (já criado pelo adapter)
-          const dbUser = await prisma.user.findUnique({
-            where: { email: user.email! },
+          const dbUser = await prisma.user.findFirst({
+            where: {
+              email: user.email!,
+              deletedAt: null,
+            },
             include: { blingIntegration: true },
           });
 
@@ -245,6 +261,8 @@ export const authOptions: AuthOptions = {
             token.blingSyncStatus = dbUser.blingSyncStatus;
             token.hasBlingIntegration = !!dbUser.blingIntegration;
             token.planTier = dbUser.planTier as PlanTier;
+            token.subscriptionStatus = dbUser.subscriptionStatus;
+            token.cancelAtPeriodEnd = dbUser.cancelAtPeriodEnd;
 
             // Criar audit log para novo usuário OAuth
             if (!token.auditCreated) {
@@ -283,6 +301,8 @@ export const authOptions: AuthOptions = {
           token.blingSyncStatus = dbUser.blingSyncStatus;
           token.hasBlingIntegration = !!dbUser.blingIntegration;
           token.planTier = dbUser.planTier as PlanTier;
+          token.subscriptionStatus = dbUser.subscriptionStatus;
+          token.cancelAtPeriodEnd = dbUser.cancelAtPeriodEnd;
         }
       }
 
@@ -301,6 +321,8 @@ export const authOptions: AuthOptions = {
           token.blingSyncStatus = updatedUser.blingSyncStatus;
           token.hasBlingIntegration = !!updatedUser.blingIntegration;
           token.planTier = updatedUser.planTier as PlanTier;
+          token.subscriptionStatus = updatedUser.subscriptionStatus;
+          token.cancelAtPeriodEnd = updatedUser.cancelAtPeriodEnd;
         }
       }
 
@@ -319,6 +341,8 @@ export const authOptions: AuthOptions = {
           blingSyncStatus: token.blingSyncStatus,
           hasBlingIntegration: token.hasBlingIntegration,
           planTier: (token.planTier as PlanTier) ?? 'FREE',
+          subscriptionStatus: token.subscriptionStatus as string | null | undefined,
+          cancelAtPeriodEnd: token.cancelAtPeriodEnd as boolean | undefined,
         };
         session.required2FA = token.required2FA as boolean;
       }

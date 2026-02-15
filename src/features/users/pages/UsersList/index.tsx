@@ -15,26 +15,30 @@ import {
 } from '@mantine/core';
 import { useModals } from '@mantine/modals';
 import { notifications } from '@mantine/notifications';
-import { IconSearch, IconTrash, IconUserEdit } from '@tabler/icons-react';
+import { IconCheck, IconSearch, IconTrash, IconUserEdit } from '@tabler/icons-react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
 import { deleteUserAction } from '@/features/users/actions/user.actions';
+// removed unused router
+import EditUserModal from '@/features/users/components/EditUserModal';
 import { PAGE_SIZE_DEFAULT } from '../../constants';
 import type { User } from '../../types/user';
 import InviteUserForm from './InviteUserForm';
 
 export default function UsersList() {
   const modals = useModals();
-  const router = useRouter();
   const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
   const [roleFilter, setRoleFilter] = useState<string | null>(null);
+  const [statusFilter, setStatusFilter] = useState<string | null>(null);
   const [page, setPage] = useState(1);
 
   const queryKey = useMemo(
-    () => ['users', { search, role: roleFilter, page, pageSize: PAGE_SIZE_DEFAULT }],
-    [search, roleFilter, page]
+    () => [
+      'users',
+      { search, role: roleFilter, status: statusFilter, page, pageSize: PAGE_SIZE_DEFAULT },
+    ],
+    [search, roleFilter, statusFilter, page]
   );
   const { data, isLoading, isError } = useQuery<{
     items: User[];
@@ -47,6 +51,7 @@ export default function UsersList() {
       const params = new URLSearchParams();
       if (search) params.set('search', search);
       if (roleFilter) params.set('role', roleFilter);
+      if (statusFilter) params.set('status', statusFilter);
       params.set('page', String(page));
       params.set('pageSize', String(PAGE_SIZE_DEFAULT));
       const res = await fetch(`/api/users?${params.toString()}`);
@@ -64,8 +69,11 @@ export default function UsersList() {
   const items = data?.items ?? [];
   const totalPages = Math.ceil((data?.total ?? 0) / (data?.pageSize ?? PAGE_SIZE_DEFAULT));
 
-  const onEdit = (id: string) => {
-    router.push(`/users/${id}`);
+  const onEdit = (user: User) => {
+    modals.openModal({
+      title: 'Editar usuário',
+      children: <EditUserModal user={user} onClose={() => modals.closeAll()} />,
+    });
   };
 
   const onDelete = (id: string, name: string) => {
@@ -117,13 +125,14 @@ export default function UsersList() {
       </Group>
 
       <Card withBorder radius="md" p="md">
-        <Group align="end" mb="md">
+        <Group align="end" mb="md" wrap="wrap" gap="md">
           <TextInput
             label="Buscar usuário"
             placeholder="Nome ou e-mail"
             leftSection={<IconSearch size={16} />}
             value={search}
             onChange={(e) => setSearch(e.currentTarget.value)}
+            style={{ flexGrow: 1, minWidth: 200 }}
           />
           <Select
             label="Filtrar por função"
@@ -136,84 +145,111 @@ export default function UsersList() {
             value={roleFilter}
             onChange={setRoleFilter}
             clearable
+            style={{ flexGrow: 1, minWidth: 150 }}
+          />
+          <Select
+            label="Status"
+            placeholder="Todos"
+            data={[
+              { value: 'active', label: 'Ativo' },
+              { value: 'inactive', label: 'Inativo' },
+            ]}
+            value={statusFilter}
+            onChange={setStatusFilter}
+            clearable
+            style={{ flexGrow: 1, minWidth: 120 }}
           />
         </Group>
 
-        <Table striped highlightOnHover withTableBorder>
-          <Table.Thead>
-            <Table.Tr>
-              <Table.Th>Usuário</Table.Th>
-              <Table.Th>E-mail</Table.Th>
-              <Table.Th>Função</Table.Th>
-              <Table.Th>2FA</Table.Th>
-              <Table.Th>Tentativas</Table.Th>
-              <Table.Th>Criado em</Table.Th>
-              <Table.Th></Table.Th>
-            </Table.Tr>
-          </Table.Thead>
-          <Table.Tbody>
-            {isLoading && (
+        <Table.ScrollContainer minWidth={800}>
+          <Table striped highlightOnHover withTableBorder>
+            <Table.Thead>
               <Table.Tr>
-                <Table.Td colSpan={7}>
-                  <Text>Carregando...</Text>
-                </Table.Td>
+                <Table.Th>Usuário</Table.Th>
+                <Table.Th>E-mail</Table.Th>
+                <Table.Th>Função</Table.Th>
+                <Table.Th>Status</Table.Th>
+                <Table.Th hiddenFrom="sm">Tentativas</Table.Th>
+                <Table.Th hiddenFrom="sm">Criado em</Table.Th>
+                <Table.Th></Table.Th>
               </Table.Tr>
-            )}
-            {!isLoading && items.length === 0 && (
-              <Table.Tr>
-                <Table.Td colSpan={7}>
-                  <Text>Nenhum usuário encontrado</Text>
-                </Table.Td>
-              </Table.Tr>
-            )}
-            {!isLoading &&
-              items.length > 0 &&
-              items.map((user: User) => (
-                <Table.Tr key={user.id}>
-                  <Table.Td>
-                    <Group>
-                      <Avatar
-                        src={user.image ?? undefined}
-                        alt={user.name}
-                        radius="xl"
-                        color="green.7"
-                      >
-                        {user.name[0]}
-                      </Avatar>
-                      <Text fw={500}>{user.name}</Text>
-                    </Group>
-                  </Table.Td>
-                  <Table.Td>{user.email}</Table.Td>
-                  <Table.Td>
-                    <Badge color={user.role === 'ADMIN' ? 'blue' : 'gray'}>{user.role}</Badge>
-                  </Table.Td>
-                  <Table.Td>
-                    {user.isTwoFactorEnabled ? (
-                      <Badge color="green">Ativo</Badge>
-                    ) : (
-                      <Badge color="gray">Inativo</Badge>
-                    )}
-                  </Table.Td>
-                  <Table.Td>{user.failedAttempts}</Table.Td>
-                  <Table.Td>{new Date(user.createdAt).toLocaleDateString('pt-BR')}</Table.Td>
-                  <Table.Td>
-                    <Group gap="xs">
-                      <ActionIcon color="blue" variant="subtle" onClick={() => onEdit(user.id)}>
-                        <IconUserEdit size={16} />
-                      </ActionIcon>
-                      <ActionIcon
-                        color="red"
-                        variant="subtle"
-                        onClick={() => onDelete(user.id, user.name)}
-                      >
-                        <IconTrash size={16} />
-                      </ActionIcon>
-                    </Group>
+            </Table.Thead>
+            <Table.Tbody>
+              {isLoading && (
+                <Table.Tr>
+                  <Table.Td colSpan={7}>
+                    <Text>Carregando...</Text>
                   </Table.Td>
                 </Table.Tr>
-              ))}
-          </Table.Tbody>
-        </Table>
+              )}
+              {!isLoading && items.length === 0 && (
+                <Table.Tr>
+                  <Table.Td colSpan={7}>
+                    <Text>Nenhum usuário encontrado</Text>
+                  </Table.Td>
+                </Table.Tr>
+              )}
+              {!isLoading &&
+                items.length > 0 &&
+                items.map((user: User) => (
+                  <Table.Tr key={user.id}>
+                    <Table.Td>
+                      <Group>
+                        <Avatar
+                          src={user.image ?? undefined}
+                          alt={user.name}
+                          radius="xl"
+                          color="green.7"
+                        >
+                          {user.name[0]}
+                        </Avatar>
+                        <Text fw={500}>{user.name}</Text>
+                      </Group>
+                    </Table.Td>
+                    <Table.Td>{user.email}</Table.Td>
+                    <Table.Td>
+                      <Badge color={user.role === 'ADMIN' ? 'blue' : 'gray'}>{user.role}</Badge>
+                    </Table.Td>
+                    <Table.Td>
+                      {!user.deletedAt ? (
+                        <Group gap="xs">
+                          <IconCheck size={18} color="green" />
+                          <Text size="sm" c="dimmed">
+                            Ativo
+                          </Text>
+                        </Group>
+                      ) : (
+                        <Group gap="xs">
+                          <IconTrash size={18} color="gray" />
+                          <Text size="sm" c="dimmed">
+                            Deletado
+                          </Text>
+                        </Group>
+                      )}
+                    </Table.Td>
+                    <Table.Td hiddenFrom="sm">{user.failedAttempts}</Table.Td>
+                    <Table.Td hiddenFrom="sm">
+                      {new Date(user.createdAt).toLocaleDateString('pt-BR')}
+                    </Table.Td>
+                    <Table.Td>
+                      <Group gap="xs">
+                        <ActionIcon color="blue" variant="subtle" onClick={() => onEdit(user)}>
+                          <IconUserEdit size={16} />
+                        </ActionIcon>
+                        <ActionIcon
+                          color="red"
+                          variant="subtle"
+                          onClick={() => onDelete(user.id, user.name)}
+                        >
+                          <IconTrash size={16} />
+                        </ActionIcon>
+                      </Group>
+                    </Table.Td>
+                  </Table.Tr>
+                ))}
+            </Table.Tbody>
+          </Table>
+        </Table.ScrollContainer>
 
         <Group justify="center" mt="md">
           <Pagination total={totalPages} value={page} onChange={setPage} color="green" />

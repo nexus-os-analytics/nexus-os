@@ -1,5 +1,5 @@
 import type { MetadataRoute } from 'next';
-import { APP_HOMEPAGE_URL } from '@/lib/constants';
+import { APP_URL } from '@/lib/constants';
 
 export default function robots(): MetadataRoute.Robots {
   return {
@@ -7,6 +7,6 @@ export default function robots(): MetadataRoute.Robots {
       userAgent: '*',
       allow: '/',
     },
-    sitemap: new URL('/sitemap.xml', APP_HOMEPAGE_URL).toString(),
+    sitemap: new URL('/sitemap.xml', APP_URL).toString(),
   };
 }

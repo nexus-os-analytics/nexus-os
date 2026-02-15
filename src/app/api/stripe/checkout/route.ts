@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
+import { APP_URL } from '@/lib/constants';
 import { authOptions } from '@/lib/next-auth';
 import { getStripe } from '@/lib/stripe';
 
@@ -19,8 +20,8 @@ export async function POST() {
     mode: 'subscription',
     customer_email: session.user.email,
     line_items: [{ price: priceId, quantity: 1 }],
-    success_url: `${process.env.NEXT_PUBLIC_APP_URL}/bling`,
-    cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/precos`,
+    success_url: `${APP_URL}/stripe/success`,
+    cancel_url: `${APP_URL}/stripe/cancelado`,
     allow_promotion_codes: true,
     subscription_data: {
       metadata: { userId: session.user.id, planTier: 'PRO' },

@@ -4,7 +4,8 @@ WORKDIR /app
 RUN corepack enable && corepack prepare pnpm@10.27.0 --activate
 COPY package.json pnpm-lock.yaml ./
 
-RUN pnpm install --frozen-lockfile --ignore-scripts
+RUN --mount=type=cache,id=pnpm,target=/root/.local/share/pnpm/store \
+    pnpm install --frozen-lockfile --ignore-scripts
 
 FROM node:20-alpine AS builder
 WORKDIR /app
@@ -21,7 +22,8 @@ COPY . .
 RUN pnpm exec prisma generate
 
 # Build Next.js with standalone output (configured in next.config.ts)
-RUN pnpm build
+RUN --mount=type=cache,id=nextjs,target=/app/.next/cache \
+    pnpm build
 
 FROM node:20-alpine AS runner
 WORKDIR /app
@@ -36,6 +38,9 @@ RUN addgroup -g 1001 -S nodejs && adduser -S nextjs -u 1001
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/public ./public
+
+# Ensure Next.js cache directory exists and is writable by the runtime user
+RUN mkdir -p /app/.next/cache && chown -R nextjs:nodejs /app
 
 USER 1001
 EXPOSE 3000

@@ -1,7 +1,12 @@
 'use server';
 import { getServerSession } from 'next-auth';
 import { z } from 'zod';
-import { createUser, deleteUser, updateUser } from '@/features/users/services/user.service';
+import {
+  createUser,
+  deleteUser,
+  toggleUserStatus,
+  updateUser,
+} from '@/features/users/services/user.service';
 import { authOptions } from '@/lib/next-auth';
 
 const NAME_MIN_LENGTH = 2;
@@ -17,8 +22,8 @@ const CreateSchema = z.object({
 
 export async function createUserAction(input: z.infer<typeof CreateSchema>) {
   const session = await getServerSession(authOptions);
-  if (!session?.user || !['ADMIN', 'SUPER_ADMIN'].includes(session.user.role)) {
-    throw new Error('Not authorized');
+  if (!session?.user || session.user.role !== 'SUPER_ADMIN') {
+    throw new Error('Acesso negado. Apenas SUPER_ADMIN pode gerenciar usuários.');
   }
   const data = CreateSchema.parse(input);
   return createUser(data);
@@ -30,12 +35,14 @@ const UpdateSchema = z.object({
   role: z.enum(['USER', 'ADMIN', 'SUPER_ADMIN']).optional(),
   phone: z.string().min(PHONE_MIN_LENGTH).max(PHONE_MAX_LENGTH).nullable().optional(),
   image: z.string().url({ message: 'URL inválida' }).nullable().optional(),
+  email: z.string().email({ message: 'E-mail inválido' }).optional(),
+  planTier: z.enum(['FREE', 'PRO']).optional(),
 });
 
 export async function updateUserAction(input: z.infer<typeof UpdateSchema>) {
   const session = await getServerSession(authOptions);
-  if (!session?.user || !['ADMIN', 'SUPER_ADMIN'].includes(session.user.role)) {
-    throw new Error('Not authorized');
+  if (!session?.user || session.user.role !== 'SUPER_ADMIN') {
+    throw new Error('Acesso negado. Apenas SUPER_ADMIN pode gerenciar usuários.');
   }
   const data = UpdateSchema.parse(input);
   return updateUser(data.id, data);
@@ -43,8 +50,16 @@ export async function updateUserAction(input: z.infer<typeof UpdateSchema>) {
 
 export async function deleteUserAction(id: string) {
   const session = await getServerSession(authOptions);
-  if (!session?.user || !['ADMIN', 'SUPER_ADMIN'].includes(session.user.role)) {
-    throw new Error('Not authorized');
+  if (!session?.user || session.user.role !== 'SUPER_ADMIN') {
+    throw new Error('Acesso negado. Apenas SUPER_ADMIN pode gerenciar usuários.');
   }
   return deleteUser(id);
+}
+
+export async function toggleUserStatusAction(id: string, disabled: boolean) {
+  const session = await getServerSession(authOptions);
+  if (!session?.user || session.user.role !== 'SUPER_ADMIN') {
+    throw new Error('Acesso negado. Apenas SUPER_ADMIN pode gerenciar usuários.');
+  }
+  return toggleUserStatus(id, disabled);
 }

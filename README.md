@@ -53,6 +53,18 @@ pnpm dev
 - Homepage: https://nexusos.app/
 - Manual do usuário: https://docs.nexusos.app/manual
 - Vídeo demonstrativo: https://youtu.be/nexus-os-demo
+
+## 🧭 Suporte a Navegadores
+
+- Compatível com Safari 15.4+ (segundo Mantine).
+- Configurado `browserslist` para incluir `Safari >= 15.4`.
+- PostCSS com `postcss-preset-mantine` e `autoprefixer` habilitado.
+- `viewport` do Next.js exportado com `viewportFit: 'cover'` para iOS.
+
+Recomendações de teste no Safari/iOS:
+- Verifique layout com safe areas (iPhone com notch).
+- Valide componentes com scroll (ScrollArea, Modals) e inputs.
+- Teste `dvh/vh` em páginas com 100% de altura.
 ```
 
 ## 🏗️ Arquitetura
@@ -201,7 +213,7 @@ BLING_REDIRECT_URI=""
 # Recursos públicos Nexus OS
 NEXT_PUBLIC_APP_NAME="Nexus OS"
 NEXT_PUBLIC_APP_DESCRIPTION="Plataforma inteligente que conecta dados do Bling ERP para otimizar estoque, reduzir rupturas e destravar capital."
-NEXT_PUBLIC_APP_HOMEPAGE_URL="https://nexusos.app/"
+NEXT_PUBLIC_APP_URL="https://nexusos.app/"
 NEXT_PUBLIC_APP_MANUAL_URL="https://docs.nexusos.app/manual"
 NEXT_PUBLIC_APP_VIDEO_URL="https://youtu.be/nexus-os-demo"
 

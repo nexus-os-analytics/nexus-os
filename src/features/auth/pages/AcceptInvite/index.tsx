@@ -25,7 +25,7 @@ const AcceptInviteSchema = z
 
 export function AcceptInvite() {
   const { getQueryParam } = useQueryString();
-  const token = getQueryParam('invite');
+  const token = getQueryParam('invite') || getQueryParam('token');
   const router = useRouter();
   const { data: verifyData, isLoading, error } = useVerifyInvitation(token);
   const { mutateAsync: acceptInvitation, isPending } = useAcceptInvitation();

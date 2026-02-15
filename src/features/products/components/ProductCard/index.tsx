@@ -18,6 +18,7 @@ import {
   ThemeIcon,
   Title,
 } from '@mantine/core';
+import { useMediaQuery } from '@mantine/hooks';
 
 type ThemeWithScheme = MantineTheme & { colorScheme?: 'dark' | 'light' };
 const BORDER_SHADE = 6 as const;
@@ -47,6 +48,7 @@ interface ProductCardProps {
 export function ProductCard({ product }: ProductCardProps) {
   const { alert } = product;
   const router = useRouter();
+  const isMobile = useMediaQuery('(max-width: 36em)');
 
   if (!alert) {
     throw new Error('Alert data is required for ProductCard component.');
@@ -129,7 +131,7 @@ export function ProductCard({ product }: ProductCardProps) {
 
         {/* Product Media + Summary */}
         <Flex gap="md" align="stretch" wrap="wrap">
-          <Box style={{ flex: '0 0 120px' }}>
+          <Box style={{ flex: isMobile ? '1 1 100%' : '0 0 120px' }}>
             <AspectRatio ratio={1} style={{ width: '100%' }}>
               <Image
                 src={product.image || undefined}
@@ -140,14 +142,16 @@ export function ProductCard({ product }: ProductCardProps) {
               />
             </AspectRatio>
           </Box>
-          <Stack gap={6} style={{ flex: 1 }}>
-            <Title order={5} style={{ lineHeight: 1.2 }}>
+          <Stack gap={6} style={{ flex: 1, minWidth: 200 }}>
+            <Title order={5} lineClamp={2} style={{ lineHeight: 1.2 }}>
               {product.name}
             </Title>
             <Group gap="xs" c="dimmed">
               <Text size="xs">SKU: {product.sku}</Text>
               <Text size="xs">•</Text>
-              <Text size="xs">Categoria: {product.category?.name ?? '—'}</Text>
+              <Text size="xs" lineClamp={1}>
+                Categoria: {product.category?.name ?? '—'}
+              </Text>
             </Group>
             <Group justify="space-between" align="center" mt="xs">
               <Title order={4}>{formatCurrency(product.salePrice || 0)}</Title>
@@ -647,8 +651,8 @@ export function ProductCard({ product }: ProductCardProps) {
                   Ações recomendadas
                 </Title>
                 <Stack gap={4}>
-                  {recs.map((r: string, i: number) => (
-                    <Text key={i} size="sm">
+                  {recs.map((r: string) => (
+                    <Text key={r} size="sm">
                       - {r}
                     </Text>
                   ))}

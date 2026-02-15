@@ -36,7 +36,7 @@ const PRODUCTS_CAP = 127;
 const SALES_RANDOM_MAX = 40;
 const SALES_CAP = 847;
 
-export function BlingConnect() {
+export function BlingConnect({ canConnect = false }: { canConnect?: boolean }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { status, loading, connect } = useBlingIntegration();
@@ -54,6 +54,10 @@ export function BlingConnect() {
 
   const handleConnect = async () => {
     try {
+      if (!canConnect && searchParams.get('activated') !== '1') {
+        setError('Confirme seu e-mail para conectar ao Bling. Verifique sua caixa de entrada.');
+        return;
+      }
       setState('connecting');
       setError(null);
       setProgress(PROGRESS_CONNECTING);
@@ -87,7 +91,7 @@ export function BlingConnect() {
     return 'Conexão bem-sucedida! Seu dashboard estará pronto em breve. Você será notificado por e-mail.';
   };
 
-  const handleStripeCheckout = async () => {
+  const handleStripeCheckout = useCallback(async () => {
     try {
       const { url } = await stripeCheckout();
       if (url) {
@@ -96,13 +100,13 @@ export function BlingConnect() {
     } catch (error) {
       console.error('Erro ao iniciar o checkout do Stripe:', error);
     }
-  };
+  }, [stripeCheckout]);
 
   useEffect(() => {
     if (planParam && planParam === 'PRO') {
       handleStripeCheckout();
     }
-  }, [planParam]);
+  }, [planParam, handleStripeCheckout]);
 
   // Verificar parâmetros de URL para erros/sucesso
   useEffect(() => {
@@ -250,9 +254,27 @@ export function BlingConnect() {
                   </Card>
                 </SimpleGrid>
               </Card>
-              <Button onClick={handleConnect} fullWidth size="lg" color="green.9" loading={loading}>
+              <Button
+                onClick={handleConnect}
+                fullWidth
+                size="lg"
+                color="green.9"
+                loading={loading}
+                disabled={!canConnect}
+              >
                 Conectar com Bling
               </Button>
+              {!canConnect && (
+                <Alert
+                  icon={<AlertCircle size={16} />}
+                  title="Verifique seu e-mail"
+                  color="yellow"
+                  variant="light"
+                >
+                  Sua conta ainda não está verificada. Ative pelo e-mail enviado para liberar a
+                  conexão.
+                </Alert>
+              )}
             </Stack>
           )}
 

@@ -43,7 +43,7 @@ These URLs override any outdated assumptions or cached knowledge and must be con
 - **Zod** + **React Hook Form** for validation and forms
 - **Inngest** for background jobs
 - **Pino** for logging
-- **Biome** as linter/formatter (replaces ESLint/Prettier)
+- **ESLint** + **Prettier** for linting and code formatting
 
 ### Dev Tools
 - Husky + Commitlint
@@ -60,8 +60,10 @@ pnpm dev              # Development server (Turbopack)
 pnpm build            # Build for production
 pnpm start            # Serve production build
 pnpm typecheck        # TypeScript type checking
-pnpm lint             # Biome linting checks
-pnpm format           # Biome code formatting
+pnpm lint             # ESLint linting checks
+pnpm lint:fix         # ESLint auto-fix issues
+pnpm format           # Prettier code formatting
+pnpm format:check     # Check code formatting without changes
 pnpm seed             # Run database seed
 pnpm inngest:dev      # Inngest local worker
 ```
@@ -140,12 +142,18 @@ npx prisma studio        # Open Prisma Studio for database inspection
 - **Validation Errors**: Use Zod schemas for input validation with clear error messages
 
 ### Code Quality & Formatting
-- **Biome Configuration**: Follow Biome rules (configured in `biome.json`)
+- **ESLint Configuration**: Follow ESLint rules (configured in `eslint.config.mjs`)
+  - TypeScript ESLint for type-aware linting
+  - React and React Hooks rules
+  - Next.js specific rules via `eslint-config-next`
+  - Flat config format (modern ESLint 9+ standard)
+- **Prettier Configuration**: Code formatting (configured in `.prettierrc`)
   - 2-space indentation
-  - Single quotes for strings
+  - Single quotes for strings (double quotes for JSX)
   - Semicolons always
   - Trailing commas (ES5 style)
   - 100 character line width
+  - LF line endings
 - **Magic Numbers**: Avoid magic numbers, extract to named constants
 - **Large Functions**: Break down functions >50 lines into smaller, focused functions
 - **Comments**: Add comments for complex business logic, avoid obvious comments
@@ -224,17 +232,20 @@ All agents must follow this sequence before generating code:
 - No `console.log`.
 - Use Pino or structured error handling.
 
-### 8.7 Code Quality (Biome)
-- Biome enforces code style and linting.
+### 8.7 Code Quality (ESLint & Prettier)
+- ESLint enforces code quality and best practices.
+- Prettier enforces consistent code formatting.
 - Commands:
-  - `pnpm lint`
-  - `pnpm format`
+  - `pnpm lint` - Check for linting errors
+  - `pnpm lint:fix` - Auto-fix linting issues
+  - `pnpm format` - Format all files
+  - `pnpm format:check` - Check formatting without changes
 
 ## 9. Git Workflow
 
 - Uses **Conventional Commits**.
 - Husky prevents invalid commits.
-- Lint-staged applies Biome fixes on staged files.
+- Lint-staged applies ESLint fixes and Prettier formatting on staged files.
 
 ## 10. Integrations
 
