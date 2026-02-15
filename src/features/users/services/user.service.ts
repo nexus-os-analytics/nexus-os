@@ -1,4 +1,8 @@
+import pino from 'pino';
 import prisma from '@/lib/prisma';
+import { generateDeletedEmail } from '../utils';
+
+const logger = pino();
 
 export interface ListUsersParams {
   search?: string;
@@ -104,10 +108,66 @@ export async function updateUser(
   });
 }
 
+/**
+ * Soft delete a user by setting deletedAt and randomizing their email.
+ * This allows the original email to be reused by new users.
+ * 
+ * @param id - The UUID of the user to delete
+ * @returns The updated user record
+ * 
+ * @example
+ * ```typescript
+ * await deleteUser('a1b2c3d4-e5f6-7890-abcd-ef1234567890');
+ * // User's email becomes: deleted-1739587200000-a1b2c3d4@removed.local
+ * ```
+ */
 export async function deleteUser(id: string) {
-  return prisma.user.update({
-    where: { id },
-    data: { deletedAt: new Date() },
+  const deletedEmail = generateDeletedEmail(id);
+  const deletedAt = new Date();
+
+  return prisma.$transaction(async (tx) => {
+    // Fetch original email for audit trail
+    const user = await tx.user.findUnique({
+      where: { id },
+      select: { email: true, name: true },
+    });
+
+    if (!user) {
+      logger.error({ userId: id }, 'Attempted to delete non-existent user');
+      throw new Error('Usuário não encontrado');
+    }
+
+    // Soft delete with email randomization
+    const updated = await tx.user.update({
+      where: { id },
+      data: {
+        deletedAt,
+        email: deletedEmail,
+      },
+    });
+
+    // Create audit log
+    await tx.auditLog.create({
+      data: {
+        userId: id,
+        action: 'USER_DELETED',
+        resource: 'User',
+        metadata: `Email changed from ${user.email} to ${deletedEmail}`,
+      },
+    });
+
+    logger.info(
+      {
+        userId: id,
+        userName: user.name,
+        originalEmail: user.email,
+        deletedEmail,
+        deletedAt: deletedAt.toISOString(),
+      },
+      'User soft deleted with email randomization'
+    );
+
+    return updated;
   });
 }
 

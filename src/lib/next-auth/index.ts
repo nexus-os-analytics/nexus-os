@@ -42,16 +42,16 @@ export const authOptions: AuthOptions = {
           throw new Error('Credenciais inválidas');
         }
 
-        const user = await prisma.user.findUnique({
-          where: { email: credentials.email },
+        // Only find active users (not deleted)
+        const user = await prisma.user.findFirst({
+          where: {
+            email: credentials.email,
+            deletedAt: null,
+          },
         });
 
         if (!user || !user.hashedPassword) {
           throw new Error('Credenciais inválidas');
-        }
-
-        if (user.deletedAt) {
-          throw new Error('Conta desativada. Entre em contato com o suporte.');
         }
 
         if (user.lockedUntil && user.lockedUntil > new Date()) {
@@ -177,16 +177,16 @@ export const authOptions: AuthOptions = {
       // Para usuários OAuth (Google)
       if (account?.provider === 'google') {
         try {
-          const existingUser = await prisma.user.findUnique({
-            where: { email: user.email! },
+          // Find only active users (not deleted)
+          const existingUser = await prisma.user.findFirst({
+            where: {
+              email: user.email!,
+              deletedAt: null,
+            },
           });
 
           // Verificar se usuário existe e está ativo
           if (existingUser) {
-            if (existingUser.deletedAt) {
-              throw new Error('Conta desativada. Entre em contato com o suporte.');
-            }
-
             if (existingUser.lockedUntil && existingUser.lockedUntil > new Date()) {
               throw new Error('Conta bloqueada. Tente novamente mais tarde.');
             }

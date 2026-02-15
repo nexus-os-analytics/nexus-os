@@ -17,8 +17,20 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'Token inválido ou expirado.' }, { status: 400 });
     }
 
+    // Verify user is not deleted before activating
+    const user = await prisma.user.findFirst({
+      where: { email, deletedAt: null },
+    });
+
+    if (!user) {
+      return NextResponse.json(
+        { error: 'Conta não encontrada ou foi desativada.' },
+        { status: 400 }
+      );
+    }
+
     await prisma.user.update({
-      where: { email },
+      where: { id: user.id },
       data: { emailVerified: new Date() },
     });
 

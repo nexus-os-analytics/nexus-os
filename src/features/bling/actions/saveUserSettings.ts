@@ -29,9 +29,12 @@ export async function saveUserSettings(_: UserSettingsInput) {
     throw new Error('Unauthorized');
   }
 
-  // Find user by email
-  const user = await prisma.user.findUnique({
-    where: { email: session.user.email },
+  // Find active user by email (ignore deleted users)
+  const user = await prisma.user.findFirst({
+    where: {
+      email: session.user.email,
+      deletedAt: null,
+    },
   });
 
   if (!user) {
