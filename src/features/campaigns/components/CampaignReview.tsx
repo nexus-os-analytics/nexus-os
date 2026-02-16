@@ -15,7 +15,6 @@ import {
   Group,
   Paper,
   Badge,
-  Textarea,
   Radio,
   Alert,
   Loader,
@@ -27,7 +26,6 @@ import {
 import {
   IconArrowLeft,
   IconCheck,
-  IconSparkles,
   IconAlertCircle,
   IconCopy,
   IconRocket,
