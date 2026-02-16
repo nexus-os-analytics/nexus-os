@@ -720,10 +720,7 @@ export function generateRecommendations(
 
   // OPPORTUNITY: Aumentar estoque e testar aumento de preço
   if (productType === 'OPPORTUNITY') {
-    rec.push(
-      'Aumentar estoque',
-      'Recomendado teste de aumento de preço entre 10% a 20%'
-    );
+    rec.push('Aumentar estoque', 'Recomendado teste de aumento de preço entre 10% a 20%');
   }
 
   // RUPTURE: Repor estoque imediatamente
