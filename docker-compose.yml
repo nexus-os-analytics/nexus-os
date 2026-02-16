@@ -17,8 +17,8 @@ services:
       - --accesslog=true
       - --log.level=INFO
     ports:
-      - "80:80"
-      - "443:443"
+      - '80:80'
+      - '443:443'
     volumes:
       - letsencrypt:/letsencrypt
       - /var/run/docker.sock:/var/run/docker.sock:ro
@@ -36,7 +36,7 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER}"]
+      test: ['CMD-SHELL', 'pg_isready -U $${POSTGRES_USER}']
       interval: 10s
       timeout: 5s
       retries: 10
@@ -47,10 +47,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-      target: builder
-      cache_from:
-        - nexus-os-migrate:latest
-    image: nexus-os-migrate:${IMAGE_TAG}
+    image: nexus-os-migrate:${IMAGE_TAG:-latest}
     container_name: nexus_migrate
     command: sh -c "pnpm exec prisma generate && pnpm exec prisma migrate deploy --auto-approve"
     environment:
@@ -65,20 +62,18 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-      cache_from:
-        - nexus-os:latest
-    image: nexus-os:${IMAGE_TAG}
+    image: nexus-os:${IMAGE_TAG:-latest}
     container_name: nexus_app
     restart: unless-stopped
     env_file:
       - .env
     labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.nexus.rule=Host(`app.nexusos.com.br`)"
-      - "traefik.http.routers.nexus.entrypoints=websecure"
-      - "traefik.http.routers.nexus.tls.certresolver=le"
-      - "traefik.docker.network=web"
-      - "traefik.http.services.nexus.loadbalancer.server.port=3000"
+      - 'traefik.enable=true'
+      - 'traefik.http.routers.nexus.rule=Host(`app.nexusos.com.br`)'
+      - 'traefik.http.routers.nexus.entrypoints=websecure'
+      - 'traefik.http.routers.nexus.tls.certresolver=le'
+      - 'traefik.docker.network=web'
+      - 'traefik.http.services.nexus.loadbalancer.server.port=3000'
     depends_on:
       db:
         condition: service_healthy
@@ -97,4 +92,3 @@ networks:
     external: true
   internal:
     driver: bridge
-
