@@ -14,7 +14,7 @@ import {
   ThemeIcon,
   Title,
 } from '@mantine/core';
-import { BoxIcon, Download, Package, RotateCcw, Sparkles } from 'lucide-react';
+import { BoxIcon, ChartBar, Download, Package, RotateCcw, Sparkles } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { BlingConnectBanner } from '@/features/bling/components/BlingConnectBanner';
 import { ProductCard } from '@/features/products/components/ProductCard';
@@ -22,6 +22,7 @@ import { useBlingIntegration } from '@/hooks/useBlingIntegration';
 import { ProductIndicators } from '../../components/ProductIndicators';
 import { useOverviewMetrics } from '../../hooks/use-overview-metrics';
 import { useProductAlerts } from '../../hooks/use-product-alerts';
+import { AuthGuard } from '@/components/commons/AuthGuard';
 
 export function Dashboard() {
   const { status, loading, sync, refresh, manualSyncAllowed } = useBlingIntegration();
@@ -139,6 +140,15 @@ export function Dashboard() {
         </Group>
         <Group gap="sm" wrap="wrap">
           <Button
+            variant="filled"
+            color="brand"
+            leftSection={<ChartBar size={16} />}
+            component="a"
+            href="/visao-geral"
+          >
+            Visão Geral
+          </Button>
+          <Button
             variant="light"
             leftSection={<RotateCcw size={16} />}
             onClick={async () => {
@@ -169,15 +179,17 @@ export function Dashboard() {
               </Button>
             );
           })()}
-          <Button
-            variant="gradient"
-            gradient={{ from: 'blue', to: 'cyan', deg: 90 }}
-            leftSection={<Sparkles size={16} />}
-            component="a"
-            href="/campanhas/criar?step=1"
-          >
-            Criar Campanha
-          </Button>
+          <AuthGuard roles={['SUPER_ADMIN']}>
+            <Button
+              variant="gradient"
+              gradient={{ from: 'blue', to: 'cyan', deg: 90 }}
+              leftSection={<Sparkles size={16} />}
+              component="a"
+              href="/campanhas/criar?step=1"
+            >
+              Criar Campanha
+            </Button>
+          </AuthGuard>
         </Group>
       </Stack>
 
