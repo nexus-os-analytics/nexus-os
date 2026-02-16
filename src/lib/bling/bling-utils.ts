@@ -692,7 +692,7 @@ export function generateStatusMessage(
   if ((productType as unknown as string) === 'LIQUIDATION')
     return `ALTO: Excesso de estoque — considere liquidação`;
   if (productType === 'FINE') return `Estoque saudável`;
-  return `Monitorar estoque`;
+  return `Estoque saudável, continue monitorando os indicadores`;
 }
 
 /**
@@ -717,18 +717,16 @@ export function generateRecommendations(
 ): string[] {
   const rec: string[] = [];
   const defaults = CONSTANTS.DEFAULTS;
-  // const growthMinPct =
-  //   (thresholds?.opportunityGrowthThresholdPct ?? defaults.GROWTH_THRESHOLD) * CONSTANTS.PERCENT;
 
-  // OPPORTUNITY: Always recommend actions if type is OPPORTUNITY
+  // OPPORTUNITY: Aumentar estoque e testar aumento de preço
   if (productType === 'OPPORTUNITY') {
     rec.push(
-      'Aumentar estoque urgentemente',
-      'Aumentar preço entre 10% e 20%',
-      'Criar campanha de anúncios'
+      'Aumentar estoque',
+      'Recomendado teste de aumento de preço entre 10% a 20%'
     );
   }
 
+  // RUPTURE: Repor estoque imediatamente
   if (productType === 'RUPTURE')
     rec.push(
       'Repor estoque imediatamente',
@@ -736,26 +734,28 @@ export function generateRecommendations(
       'Negociar prazos com fornecedor'
     );
 
+  // LIQUIDATION: Reduzir preço e evitar novas compras
   if ((productType as unknown as string) === 'LIQUIDATION')
     rec.push(
-      'Libere o produto com 30% a 40% de desconto para recuperar o capital investido',
-      'Criar campanha de liquidação',
-      'Evitar novas compras'
+      'Recomendado diminuir o preço em 10 a 20%',
+      'Evitar novas compras no momento',
+      'Criar campanha com IA'
     );
 
+  // DEAD_STOCK (CAPITAL PARADO): Queima de estoque com desconto
   if ((productType as unknown as string) === 'DEAD_STOCK')
     rec.push(
-      'Produto parado há muito tempo: considerar queima de estoque',
-      'Avaliar descontinuação',
-      'Criar kit ou bundle para saída rápida'
+      'Produto parado há mais de 30 dias. Considerar queima de estoque',
+      'Liquidar o produto com 30 a 40% de desconto para recuperar parte do capital investido',
+      'Criar campanha com IA'
     );
 
   const capOpt = thresholds?.capitalOptimizationThreshold ?? defaults.CAPITAL_OPTIMIZATION;
   if (productType === 'FINE' && capitalStuck > capOpt)
     rec.push('Reduzir estoque para liberar capital', 'Avaliar alinhamento com giro de vendas');
 
-  // Universal fallback to ensure all alerts have an action
-  if (rec.length === 0) rec.push('Monitorar indicadores');
+  // FINE (OBSERVAÇÃO): Estoque saudável
+  if (rec.length === 0) rec.push('Estoque saudável, continue monitorando os indicadores');
 
   return rec;
 }
