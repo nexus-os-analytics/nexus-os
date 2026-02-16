@@ -33,8 +33,8 @@ export async function POST(req: Request) {
       mode: 'subscription',
       customer_email: email,
       line_items: [{ price: priceId, quantity: 1 }],
-      success_url: `${APP_URL}/stripe/success`,
-      cancel_url: `${APP_URL}/stripe/cancelado`,
+      success_url: `${APP_URL}/pagamento/sucesso`,
+      cancel_url: `${APP_URL}/pagamento/cancelado`,
       allow_promotion_codes: true,
       subscription_data: {
         metadata: { userId: user.id, planTier: 'PRO' },

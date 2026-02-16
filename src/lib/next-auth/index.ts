@@ -1,4 +1,3 @@
-import { PrismaAdapter } from '@next-auth/prisma-adapter';
 import { BlingSyncStatus, type PlanTier, UserRole } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import type { AuthOptions } from 'next-auth';
@@ -12,6 +11,7 @@ import {
   THIRTY_MINUTES_IN_SECONDS,
 } from '@/lib/constants';
 import prisma from '@/lib/prisma';
+import { CustomPrismaAdapter } from './adapter';
 
 export const authOptions: AuthOptions = {
   secret: process.env.NEXTAUTH_SECRET,
@@ -27,7 +27,7 @@ export const authOptions: AuthOptions = {
     updateAge: THIRTY_MINUTES_IN_SECONDS,
   },
 
-  adapter: PrismaAdapter(prisma),
+  adapter: CustomPrismaAdapter(prisma),
 
   providers: [
     CredentialsProvider({

@@ -680,7 +680,12 @@ export function ProductCard({ product }: ProductCardProps) {
             <Button
               type="button"
               onClick={() => {
-                router.push(`/produto/${product.blingProductId}?tab=campaign`);
+                // Determine campaign type based on alert type
+                const campaignType = alert.type === 'DEAD_STOCK' ? 'LIQUIDATION' : 'LIQUIDATION';
+                // Redirect to campaign wizard step 2 with pre-selected product and type
+                router.push(
+                  `/campanhas/criar?step=2&type=${campaignType}&productId=${product.blingProductId}`
+                );
               }}
               variant="filled"
               color={style.color}

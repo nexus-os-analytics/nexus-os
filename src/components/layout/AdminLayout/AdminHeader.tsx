@@ -19,6 +19,7 @@ import {
   IconCrown,
   IconDashboard,
   IconLogout,
+  IconSparkles,
   IconUserEdit,
   IconUsers,
 } from '@tabler/icons-react';
@@ -134,6 +135,18 @@ export function AdminHeader() {
               fullWidth
             >
               Dashboard
+            </Button>
+
+            <Button
+              variant="subtle"
+              leftSection={<IconSparkles size={18} />}
+              component={Link}
+              href="/campanhas"
+              onClick={closeDrawer}
+              justify="start"
+              fullWidth
+            >
+              Campanhas
             </Button>
 
             <Divider />

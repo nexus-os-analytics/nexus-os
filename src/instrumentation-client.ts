@@ -7,9 +7,6 @@ import * as Sentry from '@sentry/nextjs';
 Sentry.init({
   dsn: 'https://da628e54bc3f354ebb224774eb8c7b9b@o4510863150022656.ingest.us.sentry.io/4510874453934080',
 
-  // Add optional integrations for additional features
-  integrations: [Sentry.replayIntegration()],
-
   // Define how likely traces are sampled. Adjust this value in production, or use tracesSampler for greater control.
   tracesSampleRate: 1,
   // Enable logs to be sent to Sentry

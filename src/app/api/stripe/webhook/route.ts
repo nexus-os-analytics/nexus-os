@@ -1,6 +1,7 @@
 import { headers } from 'next/headers';
 import { NextResponse } from 'next/server';
 import pino from 'pino';
+import { inngest } from '@/lib/inngest/client';
 import prisma from '@/lib/prisma';
 import { getStripe } from '@/lib/stripe';
 import {
@@ -14,6 +15,7 @@ import {
   handleSubscriptionResumed,
   handleSubscriptionTrialWillEnd,
   handleSubscriptionUpdated,
+  type CheckoutCompletedResult,
 } from '@/lib/stripe/webhook-handlers';
 
 const logger = pino();
@@ -53,10 +55,12 @@ export async function POST(req: Request) {
     }
 
     // Process event within transaction for atomicity
+    let checkoutResult: CheckoutCompletedResult | null = null;
+
     await prisma.$transaction(async (tx) => {
       switch (event.type) {
         case 'checkout.session.completed':
-          await handleCheckoutSessionCompleted(event, tx);
+          checkoutResult = await handleCheckoutSessionCompleted(event, tx);
           break;
 
         case 'customer.subscription.updated':
@@ -110,6 +114,48 @@ export async function POST(req: Request) {
         },
       });
     });
+
+    // After transaction commits, emit Inngest event for email delivery (fire-and-forget)
+    const result = checkoutResult as CheckoutCompletedResult | null;
+    if (result && result.shouldSendEmail && result.userEmail) {
+      const emailData = {
+        userId: result.userId,
+        subscriptionId: result.subscriptionId,
+        userEmail: result.userEmail,
+        userName: result.userName || 'Cliente',
+        planTier: result.planTier,
+        eventId: result.eventId,
+      };
+
+      try {
+        await inngest.send({
+          name: 'billing/payment-confirmed',
+          data: emailData,
+        });
+
+        logger.info(
+          {
+            operation: 'emitInngestEvent',
+            eventName: 'billing/payment-confirmed',
+            eventId: event.id,
+            userId: emailData.userId,
+            subscriptionId: emailData.subscriptionId,
+          },
+          'Inngest event emitted for email delivery'
+        );
+      } catch (inngestError) {
+        // Email event emission failure should not fail the webhook
+        // The critical database update already succeeded
+        logger.error(
+          {
+            error: inngestError,
+            eventId: event.id,
+            userId: emailData.userId,
+          },
+          'Failed to emit Inngest event for email delivery (non-critical)'
+        );
+      }
+    }
 
     return NextResponse.json({ received: true });
   } catch (error) {

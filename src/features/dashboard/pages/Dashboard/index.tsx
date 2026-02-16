@@ -14,7 +14,7 @@ import {
   ThemeIcon,
   Title,
 } from '@mantine/core';
-import { BoxIcon, Download, Package, RotateCcw } from 'lucide-react';
+import { BoxIcon, Download, Package, RotateCcw, Sparkles } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { BlingConnectBanner } from '@/features/bling/components/BlingConnectBanner';
 import { ProductCard } from '@/features/products/components/ProductCard';
@@ -169,6 +169,15 @@ export function Dashboard() {
               </Button>
             );
           })()}
+          <Button
+            variant="gradient"
+            gradient={{ from: 'blue', to: 'cyan', deg: 90 }}
+            leftSection={<Sparkles size={16} />}
+            component="a"
+            href="/campanhas/criar?step=1"
+          >
+            Criar Campanha
+          </Button>
         </Group>
       </Stack>
 

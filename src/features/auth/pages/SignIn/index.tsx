@@ -15,9 +15,9 @@ import {
 import { useForm } from '@mantine/form';
 import { zod4Resolver } from 'mantine-form-zod-resolver';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { signIn } from 'next-auth/react';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { GoogleButton } from '@/components/commons/GoogleButton';
 import { useQueryString } from '@/hooks';
 import { HTTP_STATUS } from '@/lib/constants/http-status';
@@ -35,10 +35,15 @@ export function SignIn() {
   const [resendMessage, setResendMessage] = useState<string | null>(null);
   const [resendMessageColor, setResendMessageColor] = useState<'green' | 'yellow' | 'red'>('green');
   const { getQueryParam } = useQueryString();
+  const searchParams = useSearchParams();
   const nextPage = '/bling';
-  const planParam = (getQueryParam('plan') || '').toUpperCase();
-  const redirect = planParam ? `/bling?plan=${planParam}` : getQueryParam('redirect') || nextPage;
   const router = useRouter();
+
+  const redirect = useMemo(() => {
+    const planParam = (searchParams.get('plan') || '').toUpperCase();
+    const redirectParam = searchParams.get('redirect');
+    return planParam ? `/bling?plan=${planParam}` : redirectParam || nextPage;
+  }, [searchParams, nextPage]);
 
   const form = useForm({
     initialValues: {
@@ -97,17 +102,17 @@ export function SignIn() {
 
   useEffect(() => {
     // Check for account activation success
-    const activated = getQueryParam('activated');
+    const activated = searchParams.get('activated');
     if (activated === '1') {
       setSuccessMessage('Conta ativada com sucesso! Faça login para acessar a plataforma.');
-      const emailParam = getQueryParam('email');
+      const emailParam = searchParams.get('email');
       if (typeof emailParam === 'string' && emailParam) {
         form.setFieldValue('email', emailParam);
       }
     }
 
     // Surface authentication errors forwarded by NextAuth (e.g., AccessDenied)
-    const err = getQueryParam('error');
+    const err = searchParams.get('error');
     if (err) {
       if (err === 'AccessDenied') {
         setErrorMessage('Conta desativada. Entre em contato com o suporte.');
@@ -125,7 +130,7 @@ export function SignIn() {
       router.push(redirect as string);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [status, required2FA, router, redirect, getQueryParam]);
+  }, [status, required2FA, router, redirect, searchParams]);
 
   const handleResendVerification = async () => {
     setResendMessage(null);

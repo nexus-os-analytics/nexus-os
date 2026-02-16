@@ -21,6 +21,7 @@
     "inngest:dev": "npx inngest-cli@latest dev -u http://localhost:3000/api/inngest"
   },
   "dependencies": {
+    "@hookform/resolvers": "^5.2.2",
     "@mantine/carousel": "^8.3.11",
     "@mantine/charts": "^8.3.11",
     "@mantine/code-highlight": "^8.3.11",
@@ -107,7 +108,6 @@
       "prettier --write"
     ]
   },
-  "packageManager": "pnpm@10.27.0",
   "engines": {
     "node": ">=20",
     "pnpm": ">=10"

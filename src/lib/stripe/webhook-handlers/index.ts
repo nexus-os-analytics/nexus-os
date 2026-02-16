@@ -4,6 +4,7 @@
  */
 
 export { handleCheckoutSessionCompleted } from './checkout-session-completed';
+export type { CheckoutCompletedResult } from './checkout-session-completed';
 export {
   extractCustomerId,
   extractSubscriptionId,

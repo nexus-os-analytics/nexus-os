@@ -58,10 +58,31 @@ model User {
   blingIntegration     BlingIntegration?
   blingSyncStatus      BlingSyncStatus    @default(IDLE)
   invitationsSent      UserInvitation[]
+  campaigns            Campaign[]
+  emailDeliveryLogs    EmailDeliveryLog[]
 
   @@unique([email, deletedAt])
   @@index([email, createdAt, deletedAt])
   @@map("users")
+}
+
+model EmailDeliveryLog {
+  id             String              @id @default(cuid())
+  userId         String
+  subscriptionId String?
+  eventId        String
+  templateName   String
+  status         EmailDeliveryStatus @default(PENDING)
+  errorMessage   String?             @db.Text
+  retryCount     Int                 @default(0)
+  sentAt         DateTime?
+  createdAt      DateTime            @default(now())
+  user           User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([eventId, templateName])
+  @@index([userId, createdAt])
+  @@index([status, createdAt])
+  @@map("email_delivery_logs")
 }
 
 model Account {
@@ -217,6 +238,24 @@ enum BlingJobStatus {
   DONE
 }
 
+enum CampaignType {
+  LIQUIDATION
+  OPPORTUNITY
+}
+
+enum CampaignStatus {
+  DRAFT
+  ACTIVE
+  PAUSED
+  COMPLETED
+}
+
+enum EmailDeliveryStatus {
+  PENDING
+  SENT
+  FAILED
+}
+
 model BlingIntegration {
   id           String         @id @default(uuid())
   userId       String         @unique
@@ -253,6 +292,7 @@ model BlingProduct {
   settings         BlingProductSettings?
   salesHistory     BlingSalesHistory[]
   stockBalances    BlingStockBalance[]
+  campaigns        Campaign[]
 
   @@index([blingProductId, integrationId])
   @@map("bling_products")
@@ -356,6 +396,34 @@ model BlingAlert {
 
   @@index([blingProductId, type, risk])
   @@map("bling_alerts")
+}
+
+model Campaign {
+  id                  String         @id @default(uuid())
+  userId              String
+  type                CampaignType
+  blingProductId      String
+  discountPercentage  Int? // 10-40 for LIQUIDATION
+  increasePercentage  Int? // 10-20 for OPPORTUNITY
+  toneOfVoice         String // 'urgent' | 'promotional' | 'professional' | 'friendly'
+  customInstructions  String?        @db.Text
+  variations          Json // Array of {id, title, body, cta}
+  selectedVariationId String?
+  status              CampaignStatus @default(DRAFT)
+  createdAt           DateTime       @default(now())
+  startedAt           DateTime?
+  endedAt             DateTime?
+  clicks              Int            @default(0)
+  conversions         Int            @default(0)
+  revenue             Float          @default(0)
+  roi                 Float          @default(0)
+  user                User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product             BlingProduct   @relation(fields: [blingProductId], references: [blingProductId], onDelete: Cascade)
+
+  @@index([userId, type, status])
+  @@index([userId, createdAt])
+  @@index([blingProductId, status])
+  @@map("campaigns")
 }
 
 model BlingSyncJob {
