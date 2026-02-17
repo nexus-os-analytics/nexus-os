@@ -20,7 +20,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
   });
 
   return (
-    <SessionProvider>
+    <SessionProvider refetchInterval={3600}>
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
           <MantineProvider theme={theme}>

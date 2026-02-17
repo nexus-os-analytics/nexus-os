@@ -7,42 +7,52 @@ export const PRIVATE_ROUTES: Record<Route<string> | string, RouteObject> = {
     label: 'Bling',
     permissions: [],
   },
-  'visao-geral': {
-    path: '/visao-geral',
-    label: 'Visão Geral',
-    permissions: [],
+  campanhas: {
+    path: '/campanhas',
+    label: 'Campanhas',
+    permissions: ['campaign.read', 'campaign.write'],
   },
   dashboard: {
     path: '/dashboard',
     label: 'Dashboard',
-    permissions: [],
-  },
-  configuracoes: {
-    path: '/configuracoes',
-    label: 'Configurações',
-    permissions: ['products.read', 'products.write'],
-  },
-  'gerar-campanha': {
-    path: '/gerar-campanha',
-    label: 'Gerar Campanha',
-    permissions: ['campaign.read', 'campaign.write'],
-  },
-  usuarios: {
-    path: '/usuarios',
-    label: 'Usuários',
-    permissions: ['users.read', 'users.write'],
+    permissions: ['dashboard.read'],
   },
   'minha-conta': {
     path: '/minha-conta',
     label: 'Minha Conta',
     permissions: ['profile.read', 'profile.write'],
   },
+  pagamento: {
+    path: '/pagamento/*',
+    label: 'Pagamento',
+    permissions: [],
+  },
+  produto: {
+    path: '/produto/*',
+    label: 'Produto',
+    permissions: ['products.read', 'products.write'],
+  },
+  'sem-permissao': {
+    path: '/sem-permissao',
+    label: 'Sem Permissão',
+    permissions: [],
+  },
+  usuarios: {
+    path: '/usuarios',
+    label: 'Usuários',
+    permissions: ['users.read', 'users.write'],
+  },
+  'visao-geral': {
+    path: '/visao-geral',
+    label: 'Visão Geral',
+    permissions: ['dashboard.read'],
+  },
 };
 
 export const AUTH_ROUTES: Record<string, RouteObject> = {
-  login: {
-    path: '/login',
-    label: 'Login',
+  'alterar-senha': {
+    path: '/alterar-senha',
+    label: 'Alterar senha',
   },
   'cadastre-se': {
     path: '/cadastre-se',
@@ -52,9 +62,13 @@ export const AUTH_ROUTES: Record<string, RouteObject> = {
     path: '/esqueci-minha-senha',
     label: 'Esqueci minha senha',
   },
-  'alterar-senha': {
-    path: '/alterar-senha',
-    label: 'Alterar senha',
+  login: {
+    path: '/login',
+    label: 'Login',
+  },
+  'resetar-senha': {
+    path: '/resetar-senha',
+    label: 'Resetar senha',
   },
 };
 
@@ -63,6 +77,10 @@ export const PUBLIC_ROUTES: Record<string, RouteObject> = {
     path: '/',
     label: 'Home',
   },
+  manual: {
+    path: '/manual',
+    label: 'Manual',
+  },
   'politica-de-privacidade': {
     path: '/politica-de-privacidade',
     label: 'Política de Privacidade',
@@ -70,5 +88,9 @@ export const PUBLIC_ROUTES: Record<string, RouteObject> = {
   precos: {
     path: '/precos',
     label: 'Preços',
+  },
+  'termos-de-uso': {
+    path: '/termos-de-uso',
+    label: 'Termos de Uso',
   },
 };
