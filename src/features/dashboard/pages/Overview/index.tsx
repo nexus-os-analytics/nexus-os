@@ -23,6 +23,7 @@ import { ArrowRight, Sparkles } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { useBlingIntegration } from '@/hooks/useBlingIntegration';
+import { getAlertTypeColor, getAlertTypeLabel } from '@/lib/constants';
 import { ProductIndicators } from '../../components/ProductIndicators';
 import { useOverviewMetrics } from '../../hooks/use-overview-metrics';
 
@@ -146,24 +147,11 @@ export function Overview() {
               </Title>
               <SimpleGrid cols={{ base: 1, sm: 3 }} mb="md" spacing="lg">
                 {data.topActions.map((action) => {
-                  const type = action.alertType;
-                  const style = (() => {
-                    switch (type) {
-                      case 'RUPTURE':
-                        return { color: 'red' as const, label: 'Ruptura' };
-                      case 'DEAD_STOCK':
-                        return { color: 'brand' as const, label: 'Dinheiro parado' };
-                      case 'OPPORTUNITY':
-                        return { color: 'green' as const, label: 'Oportunidade' };
-                      case 'FINE':
-                        return { color: 'blue' as const, label: 'Observar' };
-                      case 'LIQUIDATION':
-                        return { color: 'orange' as const, label: 'Liquidação' };
-                      default:
-                        return { color: 'gray' as const, label: 'Produto' };
-                    }
-                  })();
-                  const label =
+                  const type = action.alertType ?? 'FINE';
+                  const color = getAlertTypeColor(type);
+                  const alertLabel = getAlertTypeLabel(type);
+
+                  const impactLabel =
                     action.impactAmount && action.impactAmount > 0
                       ? `${action.impactLabel ?? 'Impacto'}: R$ ${action.impactAmount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`
                       : null;
@@ -177,7 +165,7 @@ export function Overview() {
                       shadow="md"
                       styles={(theme: ThemeWithScheme) => {
                         const palette =
-                          (theme.colors as Record<string, readonly string[]>)[style.color] ??
+                          (theme.colors as Record<string, readonly string[]>)[color] ??
                           theme.colors.gray;
                         const BG_SHADE =
                           theme.colorScheme === 'dark' ? BG_SHADE_DARK : BG_SHADE_LIGHT;
@@ -194,18 +182,18 @@ export function Overview() {
                       <Group justify="space-between" mb="sm">
                         <Text size="sm" fw={700} component="div">
                           <Group gap="xs">
-                            <ThemeIcon size={20} radius="md" color={style.color} variant="light">
+                            <ThemeIcon size={20} radius="md" color={color} variant="light">
                               <ArrowRight size={12} />
                             </ThemeIcon>
                             {action.name}
-                            <Badge color={style.color} variant="light" size="sm">
-                              {style.label}
+                            <Badge color={color} variant="light" size="sm">
+                              {alertLabel}
                             </Badge>
                           </Group>
                         </Text>
-                        {label && (
+                        {impactLabel && (
                           <Badge color="teal" variant="light">
-                            {label}
+                            {impactLabel}
                           </Badge>
                         )}
                       </Group>

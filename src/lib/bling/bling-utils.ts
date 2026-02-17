@@ -53,6 +53,8 @@ import type {
   BlingProductSettingsType,
   BlingSalesHistoryType,
 } from './bling-types';
+import { getAlertTypeLabel } from '@/lib/constants';
+
 
 /**
  * VVD v2 migration flag: controls which VVD version to use.
@@ -761,18 +763,7 @@ export function generateRecommendations(
  * Mapeia o tipo de alerta para rótulos em português usados na UI/relatórios
  */
 export function mapAlertTypeToPtLabel(type: BlingAlertType): string {
-  switch (type as unknown as string) {
-    case 'RUPTURE':
-      return 'RUPTURA';
-    case 'OPPORTUNITY':
-      return 'OPORTUNIDADE';
-    case 'LIQUIDATION':
-      return 'LIQUIDAÇÃO';
-    case 'DEAD_STOCK':
-      return 'CAPITAL_PARADO';
-    default:
-      return 'OBSERVAR';
-  }
+  return getAlertTypeLabel(type);
 }
 
 /**

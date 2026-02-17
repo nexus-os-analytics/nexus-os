@@ -19,6 +19,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { BlingConnectBanner } from '@/features/bling/components/BlingConnectBanner';
 import { ProductCard } from '@/features/products/components/ProductCard';
 import { useBlingIntegration } from '@/hooks/useBlingIntegration';
+import { ALERT_TYPE_CONFIG } from '@/lib/constants';
 import { ProductIndicators } from '../../components/ProductIndicators';
 import { useOverviewMetrics } from '../../hooks/use-overview-metrics';
 import { useProductAlerts } from '../../hooks/use-product-alerts';
@@ -112,11 +113,11 @@ export function Dashboard() {
             value={typeFilter ? typeFilter.split(',') : []}
             onChange={(values) => setTypeFilter(values.join(','))}
             data={[
-              { value: 'RUPTURE', label: 'Ruptura' },
-              { value: 'DEAD_STOCK', label: 'Dinheiro Parado' },
-              { value: 'OPPORTUNITY', label: 'Oportunidade' },
-              { value: 'FINE', label: 'Observar' },
-              { value: 'LIQUIDATION', label: 'Liquidação' },
+              { value: 'RUPTURE', label: `${ALERT_TYPE_CONFIG.RUPTURE.emoji} ${ALERT_TYPE_CONFIG.RUPTURE.label}` },
+              { value: 'DEAD_STOCK', label: `${ALERT_TYPE_CONFIG.DEAD_STOCK.emoji} ${ALERT_TYPE_CONFIG.DEAD_STOCK.label}` },
+              { value: 'OPPORTUNITY', label: `${ALERT_TYPE_CONFIG.OPPORTUNITY.emoji} ${ALERT_TYPE_CONFIG.OPPORTUNITY.label}` },
+              { value: 'FINE', label: `${ALERT_TYPE_CONFIG.FINE.emoji} ${ALERT_TYPE_CONFIG.FINE.label}` },
+              { value: 'LIQUIDATION', label: `${ALERT_TYPE_CONFIG.LIQUIDATION.emoji} ${ALERT_TYPE_CONFIG.LIQUIDATION.label}` },
             ]}
             style={{ flexGrow: 1, minWidth: 200 }}
             searchable

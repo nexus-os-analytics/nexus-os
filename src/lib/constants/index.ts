@@ -29,3 +29,7 @@ export const APP_VIDEO_URL =
  * React Query related constants
  */
 export const QUERY_STALE_TIME = 5 * 60_000; // 5 minutes
+/**
+ * Alert type configuration and colors
+ */
+export * from './alert-config';
