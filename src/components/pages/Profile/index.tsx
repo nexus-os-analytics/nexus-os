@@ -50,7 +50,7 @@ export default function Profile() {
             variant="subtle"
             color="gray"
             leftSection={<ArrowLeft size={16} />}
-            onClick={() => router.back()}
+            onClick={() => router.push('/dashboard')}
           >
             Voltar
           </Button>
