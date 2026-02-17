@@ -37,12 +37,7 @@ export function AlertBadge({
   const emoji = getAlertTypeEmoji(alertType);
   const label = getAlertTypeLabel(alertType);
 
-  const content = [
-    showEmoji && emoji,
-    showLabel && label,
-  ]
-    .filter(Boolean)
-    .join(' ');
+  const content = [showEmoji && emoji, showLabel && label].filter(Boolean).join(' ');
 
   return (
     <Badge color={color} variant="light" {...badgeProps}>

@@ -55,7 +55,6 @@ import type {
 } from './bling-types';
 import { getAlertTypeLabel } from '@/lib/constants';
 
-
 /**
  * VVD v2 migration flag: controls which VVD version to use.
  * false = v1 (days with sales), true = v2 (days with stock)

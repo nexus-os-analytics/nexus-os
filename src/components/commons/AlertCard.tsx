@@ -2,7 +2,12 @@
 
 import { Alert, type AlertProps } from '@mantine/core';
 import type { BlingAlertType } from '@prisma/client';
-import { getAlertTypeColor, getAlertTypeDescription, getAlertTypeEmoji, getAlertTypeLabel } from '@/lib/constants';
+import {
+  getAlertTypeColor,
+  getAlertTypeDescription,
+  getAlertTypeEmoji,
+  getAlertTypeLabel,
+} from '@/lib/constants';
 
 interface AlertCardProps extends Omit<AlertProps, 'color' | 'icon' | 'title'> {
   /** Alert type to determine styling */
