@@ -101,7 +101,6 @@ export function ProductCard({ product }: ProductCardProps) {
       radius="md"
       withBorder
       shadow="sm"
-      style={{ height: '100%' }}
       styles={(theme: ThemeWithScheme) => {
         const palette =
           (theme.colors as Record<string, readonly string[]>)[style.color] ?? theme.colors.gray;
@@ -115,7 +114,7 @@ export function ProductCard({ product }: ProductCardProps) {
         };
       }}
     >
-      <Stack gap="md" style={{ height: '100%' }}>
+      <Stack gap="md">
         {/* Header + Status */}
         <Group justify="space-between" align="center">
           <Group gap="sm">
