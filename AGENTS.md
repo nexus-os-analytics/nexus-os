@@ -43,6 +43,9 @@ These URLs override any outdated assumptions or cached knowledge and must be con
 - **Zod** + **React Hook Form** for validation and forms
 - **Inngest** for background jobs
 - **Pino** for logging
+- **Stripe** for payments and subscriptions
+- **Brevo** for transactional email
+- **Sentry** for error monitoring (Next.js SDK)
 - **ESLint** + **Prettier** for linting and code formatting
 
 ### Dev Tools
@@ -69,7 +72,7 @@ pnpm inngest:dev      # Inngest local worker
 ```
 
 ### Testing Commands
-**Note:** Testing framework not yet fully implemented. Planned: Playwright for E2E testing.
+**Note:** Vitest is available for unit tests; Playwright for E2E is planned. Testing is not yet fully implemented across the codebase.
 ```bash
 # Planned testing commands (when implemented)
 pnpm test             # Run all tests
@@ -183,11 +186,54 @@ Integrations and global utilities:
 - `prisma/` ORM client + seed
 - `bling/` ERP integration
 - `next-auth/` authentication
-- `inngest/` job definitions
+- `stripe/` checkout, portal, webhook handlers
+- `brevo/` email templates and sending
+- `inngest/` client, server, and job handlers
 - `pino/` logging config
+- `routes/` route constants and helpers (`isPrivateRoute`, `canAccessRoute`)
 
 ### `src/hooks/*`
 Global client or server hooks (non-feature specific).
+
+### `src/providers/*`
+Root providers: SessionProvider, QueryClientProvider, AuthProvider, MantineProvider, ModalsProvider, Notifications. Wrapped in `src/providers/index.tsx`.
+
+---
+
+## 7.1 Routing & Access Control
+
+The app uses **Next.js route groups** to separate public, auth, and private areas:
+
+| Group    | Segment   | Layout        | Purpose |
+|----------|-----------|---------------|---------|
+| **Public**  | `(public)`  | `PublicLayout`  | Home `/`, preços, termos, política, manual |
+| **Auth**    | `(auth)`    | `AuthLayout`    | Login, cadastre-se, esqueci/resetar/alterar senha |
+| **Private** | `(private)` | `AdminLayout`   | Dashboard, campanhas, Bling, usuários, minha-conta, produto, pagamento |
+
+- **Route definitions**: `src/lib/routes/routes.constants.ts` (`PRIVATE_ROUTES`, `AUTH_ROUTES`, `PUBLIC_ROUTES`). Private routes can declare `permissions` (e.g. `campaign.read`, `users.write`).
+- **Auth redirects**: `src/proxy.ts` implements the auth middleware logic (JWT via `getToken`, redirect to login for unauthenticated private access, redirect to `/bling` for authenticated users on auth routes, `/sem-permissao` when role lacks permission). For redirects to run, the Next.js middleware file (`middleware.ts` at project or `src` root) must export this logic as the default handler (e.g. `export { proxy as default } from '@/proxy'` or equivalent) and use the same `config.matcher` if needed.
+- **Permission checks**: Use `useAuth().hasPermission(permission)` and `AuthGuard` (with optional `roles`) for UI; `canAccessRoute(role, pathname)` in `src/lib/routes/routes.utils.ts` for server/edge logic.
+
+---
+
+## 7.2 Authentication & Session
+
+- **NextAuth.js v4** with JWT strategy; Prisma adapter for User/Account/Session (`src/lib/next-auth/`).
+- **Providers**: Credentials (email/password, optional 2FA via otplib) and Google OAuth.
+- **Auth state**: `AuthProvider` and `useAuth()` expose `user`, `status`, `required2FA`, `signOut`, `update`, `hasPermission`. Session is refreshed by SessionProvider (`refetchInterval={3600}`).
+- **Role-based access**: Permissions map to roles in `src/features/auth/services`; use `getPermissions(permission)` and `hasPermission` for consistent checks.
+
+---
+
+## 7.3 Request Flow (High Level)
+
+1. **Request** → Next.js; if middleware is enabled and uses `proxy`, it runs JWT check and route-based redirects.
+2. **Root layout** → `Providers` (Session → QueryClient → Auth → Mantine → Modals → Notifications).
+3. **Route group layout** → `PublicLayout`, `AuthLayout`, or `AdminLayout` (private: header, nav, `UpgradeBanner`).
+4. **Page** → Thin Server Component that renders a feature component (e.g. `Dashboard`, `CampaignDashboard`). Client interactivity uses `useAuth`, React Query, and Server Actions or API routes.
+5. **Mutations** → Server Actions or API routes → Prisma and/or external APIs (Stripe, Bling). Async side effects (emails, syncs) are offloaded to **Inngest**.
+
+---
 
 ## 8. Engineering Rules (Critical)
 
@@ -249,20 +295,68 @@ All agents must follow this sequence before generating code:
 
 ## 10. Integrations
 
+### NextAuth
+- **Config**: `src/lib/next-auth/index.ts` (authOptions, providers, callbacks)
+- **Adapter**: `src/lib/next-auth/adapter.ts` (Prisma adapter)
+- **Types**: `src/types/next-auth.d.ts` for session/user extensions
+
+### Stripe (Billing)
+- **API routes**: `src/app/api/stripe/` — checkout, checkout-anon, portal, webhook
+- **Webhook handlers**: `src/lib/stripe/webhook-handlers/` — checkout-session-completed, subscription-*, invoice-*, payment-intent-failed. Use shared helpers in `helpers.ts` and types in `types.ts`.
+- **Billing actions**: `src/features/billing/actions/` (e.g. create-checkout-session)
+- **Inngest**: Billing-related jobs (e.g. send-payment-confirmation-email) are registered in `src/lib/inngest/handlers/billing/`.
+
 ### Bling ERP
-Located in:
-- `src/lib/bling`
-- `src/features/bling`
+- **Client & data**: `src/lib/bling/` — API client, types, adapters, repository, utils
+- **Feature UI & actions**: `src/features/bling/` — settings UI, `saveUserSettings` and other actions
+- **Inngest**: Bling sync and alert jobs in `src/lib/inngest/handlers/bling/` (sync-products, scheduled-sync, notify-critical-alert, etc.)
 
 ### Inngest
-Background jobs in:
-- `src/inngest`
+- **Entry**: `src/app/api/inngest/route.ts` (GET, POST, PUT from `src/lib/inngest/server.ts`)
+- **Server & functions**: `src/lib/inngest/server.ts` — registers all handlers (billing + bling)
+- **Handlers**: `src/lib/inngest/handlers/` — billing and bling subfolders
+- **Local dev**: Run `pnpm inngest:dev` with the app at `http://localhost:3000`
 
-### NextAuth
-Configured in:
-- `src/lib/next-auth`
+### Brevo (Email)
+- **Config & sending**: `src/lib/brevo/` — templates (e.g. payment-failed, subscription-trial-ending) and sending logic
 
-## 11. Copilot Instructions
+---
+
+## 11. Best Practices for Development
+
+### Where to Put New Code
+- **New domain logic or screens** → `src/features/<feature-name>/` (components, pages, actions, schemas, services, types).
+- **Shared UI used by multiple features** → `src/components/` (e.g. layout, commons).
+- **New API client, auth config, or app-wide util** → `src/lib/<domain>/`.
+- **New global hook** (not feature-specific) → `src/hooks/`.
+- **New route or layout** → `src/app/` under the correct group: `(public)`, `(auth)`, or `(private)`.
+
+### Auth & Permissions
+- Use **`useAuth()`** for current user, status, and **`hasPermission(permission)`**; wrap role-sensitive UI in **`AuthGuard`** when needed.
+- For new private routes, add the route and permissions in **`src/lib/routes/routes.constants.ts`** and ensure **`canAccessRoute`** in `routes.utils.ts` aligns with `getPermissions` in auth services.
+- Do not duplicate role or permission checks; use the central permission helpers.
+
+### Data & Mutations
+- Prefer **Server Components** for initial data; use **Server Actions** for mutations from forms or buttons when possible.
+- Use **React Query** for client-side fetching and cache; keep stale time and keys consistent (see `QUERY_STALE_TIME` in `src/lib/constants`).
+- Always use **Prisma-generated types and enums**; never redefine them in the app.
+
+### Forms & Validation
+- Use **Mantine** form components with **React Hook Form** and **Zod** (and `@hookform/resolvers` / mantine-form-zod-resolver where applicable).
+- Define Zod schemas in the feature (e.g. `src/features/<feature>/schemas/`) and reuse for Server Actions and API validation.
+
+### Background Work
+- Put long-running or async side effects (emails, external API syncs) in **Inngest** functions under `src/lib/inngest/handlers/`, and register them in `src/lib/inngest/server.ts`.
+- Prefer event-driven triggers or cron; avoid blocking the request with heavy work.
+
+### Before Committing
+- Run **`pnpm typecheck`** and **`pnpm lint`** (and **`pnpm format`** or **`pnpm format:check`** if needed).
+- Ensure no **`console.log`** or **`any`**; use Pino for logging and proper types.
+- Verify new or changed routes are under the correct layout and, if private, listed in route constants with correct permissions.
+
+---
+
+## 12. Copilot Instructions
 
 You are an experienced engineer specializing in TypeScript, Node.js, React, Next.js 16+ (App Router), and Mantine UI. Always use current and stable versions of these technologies.
 
@@ -291,7 +385,7 @@ Before creating or modifying any component, hook, layout, or UI logic:
 - Use `sx`, `styles`, `classNames`, or `unstyled` APIs following official guidance.
 - Respect Mantine’s responsive system, theme tokens, and customization patterns.
 
-## 12. Agent Expectations
+## 13. Agent Expectations
 Agents are expected to:
 
 * Always consult documentation URLs BEFORE generating code.
@@ -302,5 +396,6 @@ Agents are expected to:
 * Maintain strict type safety.
 * Follow all code style guidelines and naming conventions.
 * Run `pnpm lint` and `pnpm typecheck` after any code changes.
+* Use the routing, auth, and integration details in §7.1–7.3 and §10 when adding or changing routes, auth, or third-party integrations.
 
 Failure to respect these constraints will result in invalid contributions.

@@ -11,6 +11,11 @@ import {
 } from '@/lib/bling';
 import prisma from '@/lib/prisma';
 import { inngest } from '../../client';
+import {
+  getDaysWithSalesWithinWindow,
+  inferStockOutDate,
+  resolveCurrentStock,
+} from './generate-alerts.utils';
 
 // Named time window constants to avoid magic numbers
 const DAYS_IN_30 = 30;
@@ -18,44 +23,6 @@ const DAYS_IN_7 = 7;
 const DEFAULT_COST_FACTOR = 0.8;
 
 const logger = pino();
-
-function resolveCurrentStock(
-  productStock: number | null | undefined,
-  stockBalanceStock: number | null | undefined,
-  stockBalanceUpdatedAt: Date | string | null | undefined,
-  lastSaleDate: Date | null
-): number {
-  const balanceIsOlderThanLastSale = Boolean(
-    stockBalanceUpdatedAt &&
-      lastSaleDate &&
-      new Date(stockBalanceUpdatedAt).getTime() < new Date(lastSaleDate).getTime()
-  );
-  if (balanceIsOlderThanLastSale) return productStock ?? 0;
-  return stockBalanceStock ?? productStock ?? 0;
-}
-
-function getDaysWithSalesWithinWindow(sales: { date: Date | string }[], days: number): number {
-  const now = new Date();
-  const cutoff = new Date(now);
-  cutoff.setDate(now.getDate() - days);
-  const uniqueDays = new Set(
-    sales
-      .filter((s) => new Date(s.date) >= cutoff)
-      .map((s) => new Date(s.date).toISOString().split('T')[0])
-  );
-  return uniqueDays.size;
-}
-
-function inferStockOutDate(
-  hasStockOut: boolean,
-  stockBalanceStock: number | null | undefined,
-  stockBalanceUpdatedAt: Date | string | null | undefined,
-  lastSaleDate: Date | null
-): Date | undefined {
-  if (!hasStockOut) return undefined;
-  if (stockBalanceStock === 0 && stockBalanceUpdatedAt) return new Date(stockBalanceUpdatedAt);
-  return lastSaleDate ?? undefined;
-}
 
 export const generateAlerts = inngest.createFunction(
   {
