@@ -7,6 +7,10 @@ import { authOptions } from '@/lib/next-auth';
 
 const logger = pino({ name: 'api/products/[id]' });
 
+/**
+ * Single source for product detail: dashboard and Gerar Campanha must use this
+ * (or the same blingRepository.getProductById) so stock and prices stay consistent.
+ */
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await getServerSession(authOptions);

@@ -97,7 +97,7 @@ export function ProductCard({ product }: ProductCardProps) {
 
   return (
     <Card
-      padding="lg"
+      p={{ base: 'md', sm: 'lg' }}
       radius="md"
       withBorder
       shadow="sm"
@@ -114,7 +114,7 @@ export function ProductCard({ product }: ProductCardProps) {
         };
       }}
     >
-      <Stack gap="md">
+      <Stack gap="sm">
         {/* Header + Status */}
         <Group justify="space-between" align="center">
           <Group gap="sm">
@@ -128,7 +128,7 @@ export function ProductCard({ product }: ProductCardProps) {
           {/* Rupture risk badge removed as requested */}
         </Group>
 
-        {/* Product Media + Summary */}
+        {/* Product Media + Summary — mobile: cap image size for better scroll */}
         <Flex gap="md" align="stretch" wrap="wrap">
           <Box style={{ flex: isMobile ? '1 1 100%' : '0 0 120px' }}>
             <AspectRatio ratio={1} style={{ width: '100%' }}>
@@ -285,7 +285,7 @@ export function ProductCard({ product }: ProductCardProps) {
               <Title order={6} mb="xs">
                 Capital parado
               </Title>
-              <Title order={5}>{formatCurrency(alert.capitalStuck || 0)}</Title>
+              <Title order={5}>{formatCurrency(product.currentStock * product.salePrice)}</Title>
               <Text size="sm" c="dimmed" mb="sm">
                 Sem vendas há {alert.daysSinceLastSale ?? 0} dias
               </Text>
@@ -558,7 +558,7 @@ export function ProductCard({ product }: ProductCardProps) {
                       Capital parado
                     </Text>
                     <Text size="sm" fw={600}>
-                      {formatCurrency(alert.capitalStuck)}
+                      {formatCurrency(product.currentStock * product.salePrice)}
                     </Text>
                   </Group>
                 )}

@@ -1,4 +1,9 @@
 'use client';
+/**
+ * Gerador de Campanha com IA.
+ * Product must come from the same source as the dashboard (e.g. /api/products/[id] via blingRepository.getProductById)
+ * so stock and prices match the panel. Do not use cached or independently recalculated values.
+ */
 import {
   Badge,
   Box,
@@ -164,6 +169,12 @@ export function ProductCampaingGenerator({ product }: ProductCampaingGeneratorPr
               <Text size="sm" c="dimmed">
                 Venda (promocional): {formatCurrency(promotionalPrice)}
               </Text>
+              <Text size="sm" c="dimmed">
+                Estoque: {product.currentStock ?? 0} un. × {formatCurrency(product.salePrice ?? 0)} ={' '}
+                {formatCurrency((product.currentStock ?? 0) * (product.salePrice ?? 0))} (valor em estoque)
+              </Text>
+            </Group>
+            <Group gap="md">
               {product.salePrice !== promotionalPrice && (
                 <Badge color="brand" variant="light">
                   {(() => {

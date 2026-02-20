@@ -60,9 +60,10 @@ export async function GET(request: NextRequest) {
 
     // Calculate totals
     const totalAtRisk = liquidationProducts.reduce((sum: number, p) => {
-      const capitalStuck = p.alert?.capitalStuck || 0;
-      const excessCapital = p.alert?.excessCapital || 0;
-      return sum + capitalStuck + excessCapital;
+      // const capitalStuck = p.alert?.capitalStuck || 0;
+      // const excessCapital = p.alert?.excessCapital || 0;
+      // return sum + capitalStuck + excessCapital;
+      return sum + p.currentStock * p.salePrice;
     }, 0);
 
     const averageGrowth =

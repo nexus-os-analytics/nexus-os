@@ -22,6 +22,7 @@ import { useQuery } from '@tanstack/react-query';
 import type { CampaignType } from '@prisma/client';
 import type { CampaignOpportunities } from '@/features/campaigns/types';
 import { formatCurrency } from '@/lib/utils';
+import { DollarSign } from 'lucide-react';
 
 interface CampaignTypeSelectorProps {
   onSelect: (type: CampaignType) => void;
@@ -54,7 +55,7 @@ export function CampaignTypeSelector({ onSelect }: CampaignTypeSelectorProps) {
           <Stack gap="md">
             <Group justify="space-between" align="flex-start">
               <ThemeIcon size={60} radius="md" variant="light" color="blue">
-                <IconDroplet size={32} />
+                <DollarSign size={32} />
               </ThemeIcon>
               <Badge size="lg" variant="light" color="blue">
                 Liquidação
@@ -96,6 +97,8 @@ export function CampaignTypeSelector({ onSelect }: CampaignTypeSelectorProps) {
             )}
 
             <Button
+              variant="gradient"
+              gradient={{ from: 'blue', to: 'cyan', deg: 90 }}
               fullWidth
               size="md"
               leftSection={<IconSparkles size={18} />}

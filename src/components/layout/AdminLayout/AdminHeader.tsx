@@ -53,12 +53,17 @@ export function AdminHeader() {
       <Container size="xl" h="100%">
         <Group justify="space-between" h="100%">
           <Link href="/dashboard" style={{ textDecoration: 'none' }}>
-            <Image
-              src="/img/logo.png"
-              alt="Nexus OS"
-              width={isMobile ? LOGO_SIZE_MOBILE : LOGO_SIZE_DESKTOP}
-              height={isMobile ? LOGO_SIZE_MOBILE : LOGO_SIZE_DESKTOP}
-            />
+            <Group gap="xs">
+              <Image
+                src="/img/logo.png"
+                alt="Nexus OS"
+                width={isMobile ? LOGO_SIZE_MOBILE : LOGO_SIZE_DESKTOP}
+                height={isMobile ? LOGO_SIZE_MOBILE : LOGO_SIZE_DESKTOP}
+              />
+              <Text fw={500} size="lg" c="brand.6">
+                Nexus OS
+              </Text>
+            </Group>
           </Link>
 
           <Group gap="xs" visibleFrom="sm">

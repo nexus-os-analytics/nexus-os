@@ -197,7 +197,7 @@ export function ProductSelector({
                                 Capital em risco
                               </Text>
                               <Text size="sm" fw={500} c="red">
-                                {formatCurrency(alert.capitalStuck + (alert.excessCapital || 0))}
+                                {formatCurrency(product.currentStock * product.salePrice)}
                               </Text>
                             </div>
                           )}
@@ -254,6 +254,8 @@ export function ProductSelector({
           Voltar
         </Button>
         <Button
+          variant="gradient"
+          gradient={{ from: 'blue', to: 'cyan', deg: 90 }}
           rightSection={<IconArrowRight size={16} />}
           disabled={!selectedProductId}
           onClick={() => selectedProductId && onSelect(selectedProductId)}

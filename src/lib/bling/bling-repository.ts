@@ -728,7 +728,10 @@ export function createBlingRepository({ integrationId }: BlingRepositoryOptions)
       where: {
         integrationId,
         alert: {
-          isNot: null,
+          // isNot: null,
+          type: {
+            in: ['DEAD_STOCK', 'LIQUIDATION'],
+          },
         },
       },
       include: {
@@ -743,7 +746,8 @@ export function createBlingRepository({ integrationId }: BlingRepositoryOptions)
 
     for (const product of products) {
       if (product.alert) {
-        capitalStuck += product.alert.capitalStuck;
+        // capitalStuck += product.alert.capitalStuck || 0;
+        // capitalStuck += product.currentStock * product.salePrice || 0;
 
         // Contagem correta por tipo de alerta
         if (product.alert.type === 'RUPTURE') {
@@ -780,6 +784,13 @@ export function createBlingRepository({ integrationId }: BlingRepositoryOptions)
         });
       }
     }
+
+    capitalStuck = products.reduce((sum: number, p) => {
+      // const capitalStuck = p.alert?.capitalStuck || 0;
+      // const excessCapital = p.alert?.excessCapital || 0;
+      // return sum + capitalStuck + excessCapital;
+      return sum + p.currentStock * p.salePrice;
+    }, 0);
 
     // Ensure all possible BlingRuptureRisk values are covered
     const riskOrder: Record<string, number> = { CRITICAL: 4, HIGH: 3, MEDIUM: 2, LOW: 1 };
