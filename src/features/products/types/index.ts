@@ -35,6 +35,10 @@ export interface GetOverviewMetricsResponse {
     alertType?: BlingAlertType;
     alertRisk?: BlingRuptureRisk;
   }>;
+  /** Present for FREE plan: number of products currently in the integration (cota). */
+  productCount?: number;
+  /** Present for FREE plan: max products allowed (e.g. 30). PRO has null/unlimited. */
+  productLimit?: number | null;
 }
 
 export type CampaignStrategy = 'aggressive-liquidation' | 'strategic-combo' | 'checkout-upsell';

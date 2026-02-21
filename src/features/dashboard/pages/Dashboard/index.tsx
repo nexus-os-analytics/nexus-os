@@ -15,7 +15,9 @@ import {
   Title,
 } from '@mantine/core';
 import { BoxIcon, ChartBar, Download, Package, RotateCcw, Sparkles } from 'lucide-react';
+import { useSession } from 'next-auth/react';
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { ProLockedState } from '@/features/billing/components/ProLockedState';
 import { BlingConnectBanner } from '@/features/bling/components/BlingConnectBanner';
 import { ProductCard } from '@/features/products/components/ProductCard';
 import { useBlingIntegration } from '@/hooks/useBlingIntegration';
@@ -23,9 +25,12 @@ import { ALERT_TYPE_CONFIG, ALERT_URGENCY_ORDER } from '@/lib/constants';
 import { ProductIndicators } from '../../components/ProductIndicators';
 import { useOverviewMetrics } from '../../hooks/use-overview-metrics';
 import { useProductAlerts } from '../../hooks/use-product-alerts';
-import { AuthGuard } from '@/components/commons/AuthGuard';
+
+const CAMPAIGN_ELIGIBLE_TYPES = ['LIQUIDATION', 'DEAD_STOCK', 'OPPORTUNITY'] as const;
 
 export function Dashboard() {
+  const { data: session } = useSession();
+  const planTier = session?.user?.planTier ?? 'FREE';
   const { status, loading, sync, refresh, manualSyncAllowed } = useBlingIntegration();
   // Overview metrics
   const { data: overviewMetrics } = useOverviewMetrics();
@@ -62,6 +67,13 @@ export function Dashboard() {
     });
   }, [data]);
   const totalProductsCount = flatProducts.length;
+  const firstEligibleForCampaign = useMemo(
+    () =>
+      flatProducts.find((p) =>
+        p.alert ? (CAMPAIGN_ELIGIBLE_TYPES as readonly string[]).includes(p.alert.type) : false
+      ) ?? null,
+    [flatProducts]
+  );
   const visibleProducts = useMemo(() => {
     const s = search.trim().toLowerCase();
     if (!s) return flatProducts;
@@ -165,59 +177,77 @@ export function Dashboard() {
             clearable
           />
         </Group>
-        <Group gap="sm" wrap="wrap">
-          <Button
-            variant="filled"
-            color="brand"
-            leftSection={<ChartBar size={16} />}
-            component="a"
-            href="/visao-geral"
-          >
-            Visão Geral
-          </Button>
-          <Button
-            variant="light"
-            leftSection={<RotateCcw size={16} />}
-            onClick={async () => {
-              await sync();
-              await refresh();
-            }}
-            disabled={
-              loading || !status?.connected || status.syncStatus === 'SYNCING' || !manualSyncAllowed
-            }
-          >
-            Atualizar
-          </Button>
-          {(() => {
-            const csvHref = `/api/dashboard/alerts/export?${new URLSearchParams({
-              ...(typeFilter ? { type: typeFilter } : {}),
-              ...(riskFilter ? { risk: riskFilter } : {}),
-            }).toString()}`;
-            const isDisabled = totalProductsCount === 0;
-            return (
-              <Button
-                variant="light"
-                leftSection={<Download size={16} />}
-                component={isDisabled ? 'button' : 'a'}
-                href={isDisabled ? undefined : csvHref}
-                disabled={isDisabled}
-              >
-                Exportar CSV
-              </Button>
-            );
-          })()}
-          <AuthGuard roles={['SUPER_ADMIN']}>
+        <Group justify="space-between" align="center">
+          <Group gap="sm" wrap="wrap">
             <Button
-              variant="gradient"
-              gradient={{ from: 'blue', to: 'cyan', deg: 90 }}
-              leftSection={<Sparkles size={16} />}
+              variant="filled"
+              color="brand"
+              leftSection={<ChartBar size={16} />}
               component="a"
-              href="/campanhas/criar?step=1"
+              href="/visao-geral"
             >
-              Criar Campanha
+              Visão Geral
             </Button>
-          </AuthGuard>
+            <Button
+              variant="light"
+              leftSection={<RotateCcw size={16} />}
+              onClick={async () => {
+                await sync();
+                await refresh();
+              }}
+              disabled={
+                loading ||
+                !status?.connected ||
+                status.syncStatus === 'SYNCING' ||
+                !manualSyncAllowed
+              }
+            >
+              Atualizar
+            </Button>
+            {(() => {
+              const csvHref = `/api/dashboard/alerts/export?${new URLSearchParams({
+                ...(typeFilter ? { type: typeFilter } : {}),
+                ...(riskFilter ? { risk: riskFilter } : {}),
+              }).toString()}`;
+              const isDisabled = totalProductsCount === 0;
+              return (
+                <Button
+                  variant="light"
+                  leftSection={<Download size={16} />}
+                  component={isDisabled ? 'button' : 'a'}
+                  href={isDisabled ? undefined : csvHref}
+                  disabled={isDisabled}
+                >
+                  Exportar CSV
+                </Button>
+              );
+            })()}
+            {planTier === 'PRO' && (
+              <Button
+                variant="gradient"
+                gradient={{ from: 'blue', to: 'cyan', deg: 90 }}
+                leftSection={<Sparkles size={16} />}
+                component="a"
+                href="/campanhas/criar?step=1"
+              >
+                Criar Campanha
+              </Button>
+            )}
+          </Group>
+          {overviewMetrics?.productCount != null && overviewMetrics?.productLimit != null && (
+            <Text size="sm" c="dimmed">
+              Produtos sincronizados: {overviewMetrics.productCount}/
+              {planTier === 'PRO' ? '∞' : overviewMetrics.productLimit}
+            </Text>
+          )}
         </Group>
+        {planTier === 'FREE' && (
+          <ProLockedState
+            title="Gerador de campanhas PRO"
+            description="Gere campanhas inteligentes com IA para aumentar suas vendas e lucros."
+            ctaLabel="Desbloquear com o plano PRO"
+          />
+        )}
       </Stack>
 
       {/* Product Cards Grid or Skeletons */}

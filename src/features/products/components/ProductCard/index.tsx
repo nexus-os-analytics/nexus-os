@@ -36,6 +36,7 @@ import {
   Sparkles,
   TrendingUp,
 } from 'lucide-react';
+import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import type { BlingProductType } from '@/lib/bling';
 import { formatCurrency } from '@/lib/utils';
@@ -50,6 +51,8 @@ export function ProductCard({ product }: ProductCardProps) {
   const { alert } = product;
   const router = useRouter();
   const isMobile = useMediaQuery('(max-width: 36em)');
+  const { data: session } = useSession();
+  const planTier = session?.user?.planTier ?? 'FREE';
 
   if (!alert) {
     throw new Error('Alert data is required for ProductCard component.');
@@ -696,12 +699,14 @@ export function ProductCard({ product }: ProductCardProps) {
             <Button
               type="button"
               onClick={() => {
-                // Determine campaign type based on alert type
-                const campaignType = alert.type === 'DEAD_STOCK' ? 'LIQUIDATION' : 'LIQUIDATION';
-                // Redirect to campaign wizard step 2 with pre-selected product and type
-                router.push(
-                  `/campanhas/criar?step=2&type=${campaignType}&productId=${product.blingProductId}`
-                );
+                if (planTier === 'FREE') {
+                  router.push(`/produto/${product.blingProductId}?tab=campaign`);
+                } else {
+                  const campaignType = alert.type === 'DEAD_STOCK' ? 'LIQUIDATION' : 'LIQUIDATION';
+                  router.push(
+                    `/campanhas/criar?step=2&type=${campaignType}&productId=${product.blingProductId}`
+                  );
+                }
               }}
               variant="filled"
               color={style.color}
