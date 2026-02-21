@@ -1,6 +1,7 @@
 'use client';
 import type { MantineTheme } from '@mantine/core';
 import {
+  Accordion,
   Alert,
   AspectRatio,
   alpha,
@@ -166,42 +167,48 @@ export function ProductCard({ product }: ProductCardProps) {
               </Group>
             </Group>
 
-            {/* VVD Summary (always visible) */}
-            <Divider my="xs" />
-            <Title order={6} mb="xs">
-              Vendas por dia (VVD)
-            </Title>
-            <Stack gap={6}>
-              <Group justify="space-between">
-                <Text size="sm" c="dimmed">
-                  VVD Real
-                </Text>
-                <Text size="sm" fw={600}>
-                  {typeof alert.vvdReal === 'number' ? alert.vvdReal.toFixed(1) : '—'} unid./dia
-                </Text>
-              </Group>
-              <Group justify="space-between">
-                <Text size="sm" c="dimmed">
-                  VVD últimos 7 dias
-                </Text>
-                <Text size="sm" fw={600}>
-                  {typeof alert.vvd7 === 'number' ? alert.vvd7.toFixed(1) : '—'} unid./dia
-                </Text>
-              </Group>
-              <Group justify="space-between">
-                <Text size="sm" c="dimmed">
-                  VVD últimos 30 dias
-                </Text>
-                <Text size="sm" fw={600}>
-                  {typeof alert.vvd30 === 'number' ? alert.vvd30.toFixed(1) : '—'} unid./dia
-                </Text>
-              </Group>
-            </Stack>
           </Stack>
         </Flex>
 
-        {/* Content by Type */}
-        <Box style={{ flex: 1 }}>
+        <Accordion variant="contained" radius="md" defaultValue={['vvd']} multiple>
+          <Accordion.Item value="vvd">
+            <Accordion.Control>
+              <Title order={6}>Vendas por dia (VVD)</Title>
+            </Accordion.Control>
+            <Accordion.Panel>
+              <Stack gap={6}>
+                <Group justify="space-between">
+                  <Text size="sm" c="dimmed">
+                    VVD Real
+                  </Text>
+                  <Text size="sm" fw={600}>
+                    {typeof alert.vvdReal === 'number' ? alert.vvdReal.toFixed(1) : '—'} unid./dia
+                  </Text>
+                </Group>
+                <Group justify="space-between">
+                  <Text size="sm" c="dimmed">
+                    VVD últimos 7 dias
+                  </Text>
+                  <Text size="sm" fw={600}>
+                    {typeof alert.vvd7 === 'number' ? alert.vvd7.toFixed(1) : '—'} unid./dia
+                  </Text>
+                </Group>
+                <Group justify="space-between">
+                  <Text size="sm" c="dimmed">
+                    VVD últimos 30 dias
+                  </Text>
+                  <Text size="sm" fw={600}>
+                    {typeof alert.vvd30 === 'number' ? alert.vvd30.toFixed(1) : '—'} unid./dia
+                  </Text>
+                </Group>
+              </Stack>
+            </Accordion.Panel>
+          </Accordion.Item>
+
+          <Accordion.Item value="alert-type">
+            <Accordion.Control icon={<Icon size={18} />}>{style.badge}</Accordion.Control>
+            <Accordion.Panel>
+              <Box style={{ flex: 1 }}>
           {alert.type === 'RUPTURE' && (
             <Paper p="md" radius="md" withBorder>
               {/* Risk Message */}
@@ -632,36 +639,46 @@ export function ProductCard({ product }: ProductCardProps) {
               </Stack>
             </Paper>
           )}
-        </Box>
+              </Box>
+            </Accordion.Panel>
+          </Accordion.Item>
 
-        {/* Recommended Actions - shown on all cards */}
-        {(() => {
-          try {
-            const raw = alert.recommendations;
-            let recs: string[] = [];
-            if (Array.isArray(raw)) {
-              recs = raw as string[];
-            } else if (raw) {
-              recs = JSON.parse(raw as unknown as string) as string[];
-            }
-            return recs.length > 0 ? (
-              <Paper p="md" radius="md" withBorder>
-                <Title order={6} mb="xs">
-                  Ações recomendadas
-                </Title>
-                <Stack gap={4}>
-                  {recs.map((r: string) => (
-                    <Text key={r} size="sm">
-                      - {r}
+          <Accordion.Item value="recommendations">
+            <Accordion.Control>Ações recomendadas</Accordion.Control>
+            <Accordion.Panel>
+              {(() => {
+                try {
+                  const raw = alert.recommendations;
+                  let recs: string[] = [];
+                  if (Array.isArray(raw)) {
+                    recs = raw as string[];
+                  } else if (raw) {
+                    recs = JSON.parse(raw as unknown as string) as string[];
+                  }
+                  return recs.length > 0 ? (
+                    <Stack gap={4}>
+                      {recs.map((r: string) => (
+                        <Text key={r} size="sm">
+                          - {r}
+                        </Text>
+                      ))}
+                    </Stack>
+                  ) : (
+                    <Text size="sm" c="dimmed">
+                      Nenhuma ação recomendada no momento.
                     </Text>
-                  ))}
-                </Stack>
-              </Paper>
-            ) : null;
-          } catch {
-            return null;
-          }
-        })()}
+                  );
+                } catch {
+                  return (
+                    <Text size="sm" c="dimmed">
+                      Nenhuma ação recomendada no momento.
+                    </Text>
+                  );
+                }
+              })()}
+            </Accordion.Panel>
+          </Accordion.Item>
+        </Accordion>
 
         {/* CTAs */}
         {showDualCtas ? (
