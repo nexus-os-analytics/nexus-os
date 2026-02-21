@@ -19,7 +19,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { BlingConnectBanner } from '@/features/bling/components/BlingConnectBanner';
 import { ProductCard } from '@/features/products/components/ProductCard';
 import { useBlingIntegration } from '@/hooks/useBlingIntegration';
-import { ALERT_TYPE_CONFIG } from '@/lib/constants';
+import { ALERT_TYPE_CONFIG, ALERT_URGENCY_ORDER } from '@/lib/constants';
 import { ProductIndicators } from '../../components/ProductIndicators';
 import { useOverviewMetrics } from '../../hooks/use-overview-metrics';
 import { useProductAlerts } from '../../hooks/use-product-alerts';
@@ -48,8 +48,19 @@ export function Dashboard() {
 
   // No local computation for indicators; rely on overview API for consistency
 
-  // Compute client-side search filtering (name/SKU)
-  const flatProducts = useMemo(() => data?.pages.flatMap((p) => p.data) ?? [], [data]);
+  // Fixed alert type order: Ruptura → Capital Parado → Liquidação → Oportunidade → Saudável
+  const flatProducts = useMemo(() => {
+    const list = data?.pages.flatMap((p) => p.data) ?? [];
+    return [...list].sort((a, b) => {
+      const typeA = a.alert?.type ?? 'FINE';
+      const typeB = b.alert?.type ?? 'FINE';
+      const indexA = ALERT_URGENCY_ORDER.indexOf(typeA);
+      const indexB = ALERT_URGENCY_ORDER.indexOf(typeB);
+      const orderA = indexA === -1 ? ALERT_URGENCY_ORDER.length : indexA;
+      const orderB = indexB === -1 ? ALERT_URGENCY_ORDER.length : indexB;
+      return orderA - orderB;
+    });
+  }, [data]);
   const totalProductsCount = flatProducts.length;
   const visibleProducts = useMemo(() => {
     const s = search.trim().toLowerCase();
