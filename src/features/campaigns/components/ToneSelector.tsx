@@ -166,7 +166,12 @@ export function ToneSelector({ onSelect, onBack }: ToneSelectorProps) {
         <Button variant="default" leftSection={<IconArrowLeft size={16} />} onClick={onBack}>
           Voltar
         </Button>
-        <Button rightSection={<IconArrowRight size={16} />} onClick={() => onSelect(selectedTone)}>
+        <Button
+          variant="gradient"
+          gradient={{ from: 'blue', to: 'cyan', deg: 90 }}
+          rightSection={<IconArrowRight size={16} />}
+          onClick={() => onSelect(selectedTone)}
+        >
           Gerar Campanha
         </Button>
       </Group>

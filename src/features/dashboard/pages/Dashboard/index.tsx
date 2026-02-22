@@ -25,6 +25,8 @@ import { ALERT_TYPE_CONFIG, ALERT_URGENCY_ORDER } from '@/lib/constants';
 import { ProductIndicators } from '../../components/ProductIndicators';
 import { useOverviewMetrics } from '../../hooks/use-overview-metrics';
 import { useProductAlerts } from '../../hooks/use-product-alerts';
+import { modals } from '@mantine/modals';
+import { useRouter } from 'next/navigation';
 
 const CAMPAIGN_ELIGIBLE_TYPES = ['LIQUIDATION', 'DEAD_STOCK', 'OPPORTUNITY'] as const;
 
@@ -81,6 +83,28 @@ export function Dashboard() {
       [p.name, p.sku].some((v) => (v ?? '').toString().toLowerCase().includes(s))
     );
   }, [flatProducts, search]);
+  const router = useRouter();
+  const showProRequiredModal = () => {
+    modals.open({
+      title: 'Plano PRO',
+      size: 'lg',
+      centered: true,
+      withCloseButton: false,
+      withOverlay: true,
+      overlayProps: {
+        color: 'rgba(0, 0, 0, 0.5)',
+        opacity: 0.5,
+        blur: 10,
+      },
+      children: (
+        <ProLockedState
+          title="Gerador de campanhas PRO"
+          description="Gere campanhas inteligentes com IA para aumentar suas vendas e lucros."
+          ctaLabel="Desbloquear com o plano PRO"
+        />
+      ),
+    });
+  };
 
   // Infinite scroll with IntersectionObserver
   useEffect(() => {
@@ -222,17 +246,20 @@ export function Dashboard() {
                 </Button>
               );
             })()}
-            {planTier === 'PRO' && (
-              <Button
-                variant="gradient"
-                gradient={{ from: 'blue', to: 'cyan', deg: 90 }}
-                leftSection={<Sparkles size={16} />}
-                component="a"
-                href="/campanhas/criar?step=1"
-              >
-                Criar Campanha
-              </Button>
-            )}
+            <Button
+              variant="gradient"
+              gradient={{ from: 'blue', to: 'cyan', deg: 90 }}
+              leftSection={<Sparkles size={16} />}
+              onClick={() => {
+                if (planTier === 'FREE') {
+                  showProRequiredModal();
+                } else {
+                  router.push('/campanhas/criar?step=1');
+                }
+              }}
+            >
+              Criar Campanha
+            </Button>
           </Group>
           {overviewMetrics?.productCount != null && overviewMetrics?.productLimit != null && (
             <Text size="sm" c="dimmed">
@@ -241,13 +268,6 @@ export function Dashboard() {
             </Text>
           )}
         </Group>
-        {planTier === 'FREE' && (
-          <ProLockedState
-            title="Gerador de campanhas PRO"
-            description="Gere campanhas inteligentes com IA para aumentar suas vendas e lucros."
-            ctaLabel="Desbloquear com o plano PRO"
-          />
-        )}
       </Stack>
 
       {/* Product Cards Grid or Skeletons */}

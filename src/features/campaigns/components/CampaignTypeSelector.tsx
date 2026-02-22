@@ -158,9 +158,10 @@ export function CampaignTypeSelector({ onSelect }: CampaignTypeSelectorProps) {
             )}
 
             <Button
+              variant="gradient"
+              gradient={{ from: 'blue', to: 'cyan', deg: 90 }}
               fullWidth
               size="md"
-              color="green"
               leftSection={<IconSparkles size={18} />}
               onClick={() => onSelect('OPPORTUNITY')}
               disabled={isLoading || data?.opportunity.count === 0}

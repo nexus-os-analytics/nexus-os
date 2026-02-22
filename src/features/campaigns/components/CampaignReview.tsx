@@ -249,8 +249,9 @@ export function CampaignReview({
           <Stack gap="sm">
             <Text size="sm">{generateMutation.error.message}</Text>
             <Button
+              variant="gradient"
+              gradient={{ from: 'blue', to: 'cyan', deg: 90 }}
               leftSection={<IconRefresh size={16} />}
-              variant="light"
               size="sm"
               onClick={() => generateMutation.mutate()}
             >
@@ -266,7 +267,8 @@ export function CampaignReview({
           <Group justify="space-between">
             <Text fw={600}>Escolha uma variação para publicar:</Text>
             <Button
-              variant="subtle"
+              variant="gradient"
+              gradient={{ from: 'blue', to: 'cyan', deg: 90 }}
               size="sm"
               leftSection={<IconRefresh size={16} />}
               onClick={() => generateMutation.mutate()}
@@ -378,16 +380,17 @@ export function CampaignReview({
         >
           Voltar
         </Button>
-        <Button
+        {/* <Button
+          variant="gradient"
+          gradient={{ from: 'blue', to: 'cyan', deg: 90 }}
           leftSection={<IconRocket size={16} />}
-          color="green"
           size="lg"
           disabled={!selectedVariationId || generateMutation.isPending}
           loading={activateMutation.isPending}
           onClick={() => activateMutation.mutate()}
         >
           Publicar Campanha
-        </Button>
+        </Button> */}
       </Group>
     </Stack>
   );

@@ -321,6 +321,8 @@ export function DiscountSelector({ type, productId, onContinue, onBack }: Discou
           Voltar
         </Button>
         <Button
+          variant="gradient"
+          gradient={{ from: 'blue', to: 'cyan', deg: 90 }}
           rightSection={<IconArrowRight size={16} />}
           disabled={!product}
           onClick={() => onContinue(selectedPercentage.toString())}
