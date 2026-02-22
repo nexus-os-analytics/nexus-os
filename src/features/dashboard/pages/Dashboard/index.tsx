@@ -22,6 +22,10 @@ import { BlingConnectBanner } from '@/features/bling/components/BlingConnectBann
 import { ProductCard } from '@/features/products/components/ProductCard';
 import { useBlingIntegration } from '@/hooks/useBlingIntegration';
 import { ALERT_TYPE_CONFIG, ALERT_URGENCY_ORDER } from '@/lib/constants';
+import {
+  DashboardOnboarding,
+  getOnboardingCompleted,
+} from '../../components/DashboardOnboarding';
 import { ProductIndicators } from '../../components/ProductIndicators';
 import { useOverviewMetrics } from '../../hooks/use-overview-metrics';
 import { useProductAlerts } from '../../hooks/use-product-alerts';
@@ -52,6 +56,26 @@ export function Dashboard() {
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } =
     useProductAlerts(queryParams);
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
+  const indicatorsRef = useRef<HTMLDivElement>(null);
+  const filtersRef = useRef<HTMLDivElement>(null);
+
+  const [onboardingOpen, setOnboardingOpen] = useState(false);
+  const [onboardingStep, setOnboardingStep] = useState(1);
+
+  useEffect(() => {
+    if (!getOnboardingCompleted()) {
+      setOnboardingOpen(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!onboardingOpen) return;
+    if (onboardingStep === 2) {
+      indicatorsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } else if (onboardingStep === 3) {
+      filtersRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, [onboardingOpen, onboardingStep]);
 
   // No local computation for indicators; rely on overview API for consistency
 
@@ -124,12 +148,21 @@ export function Dashboard() {
 
   return (
     <Stack gap="xl">
+      <DashboardOnboarding
+        opened={onboardingOpen}
+        step={onboardingStep}
+        onStepChange={setOnboardingStep}
+        onComplete={() => setOnboardingOpen(false)}
+        onClose={() => setOnboardingOpen(false)}
+      />
+
       {!loading && !status?.connected && <BlingConnectBanner />}
 
       {/* Summary Cards aligned with Overview */}
-      {overviewMetrics ? (
-        <ProductIndicators metrics={overviewMetrics} />
-      ) : (
+      <Box ref={indicatorsRef}>
+        {overviewMetrics ? (
+          <ProductIndicators metrics={overviewMetrics} />
+        ) : (
         <SimpleGrid cols={{ base: 1, sm: 3 }} spacing="lg">
           {[0, 1, 2].map((i) => (
             <Card key={i} padding="xl" radius="md" withBorder shadow="sm">
@@ -142,10 +175,11 @@ export function Dashboard() {
             </Card>
           ))}
         </SimpleGrid>
-      )}
+        )}
+      </Box>
 
       {/* Filters */}
-      <Stack gap="md">
+      <Stack ref={filtersRef} gap="md">
         <Group align="end" gap="md" wrap="wrap">
           <TextInput
             label="Busca"
