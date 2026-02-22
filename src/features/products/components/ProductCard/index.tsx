@@ -36,7 +36,6 @@ import {
   Sparkles,
   TrendingUp,
 } from 'lucide-react';
-import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import type { BlingProductType } from '@/lib/bling';
 import { formatCurrency } from '@/lib/utils';
@@ -51,8 +50,6 @@ export function ProductCard({ product }: ProductCardProps) {
   const { alert } = product;
   const router = useRouter();
   const isMobile = useMediaQuery('(max-width: 36em)');
-  const { data: session } = useSession();
-  const planTier = session?.user?.planTier ?? 'FREE';
 
   if (!alert) {
     throw new Error('Alert data is required for ProductCard component.');
@@ -169,7 +166,6 @@ export function ProductCard({ product }: ProductCardProps) {
                 )}
               </Group>
             </Group>
-
           </Stack>
         </Flex>
 
@@ -212,436 +208,443 @@ export function ProductCard({ product }: ProductCardProps) {
             <Accordion.Control icon={<Icon size={18} />}>{style.badge}</Accordion.Control>
             <Accordion.Panel>
               <Box style={{ flex: 1 }}>
-          {alert.type === 'RUPTURE' && (
-            <Paper p="md" radius="md" withBorder>
-              {/* Risk Message */}
-              <Alert
-                variant="light"
-                color="red"
-                title="Ação Recomendadas"
-                icon={<AlertTriangle size={16} />}
-                mb="md"
-              >
-                {alert.message ?? 'Atenção: risco de ruptura de estoque identificado.'}
-              </Alert>
+                {alert.type === 'RUPTURE' && (
+                  <Paper p="md" radius="md" withBorder>
+                    {/* Risk Message */}
+                    <Alert
+                      variant="light"
+                      color="red"
+                      title="Ação Recomendadas"
+                      icon={<AlertTriangle size={16} />}
+                      mb="md"
+                    >
+                      {alert.message ?? 'Atenção: risco de ruptura de estoque identificado.'}
+                    </Alert>
 
-              <Title order={6} mb="xs">
-                Estoque e Consumo
-              </Title>
-              <Stack gap={6}>
-                <Group justify="space-between">
-                  <Text size="sm" c="dimmed">
-                    Estoque atual
-                  </Text>
-                  <Text size="sm" fw={600}>
-                    {product.currentStock} unid.
-                  </Text>
-                </Group>
-                <Group justify="space-between">
-                  <Text size="sm" c="dimmed">
-                    VVD real
-                  </Text>
-                  <Text size="sm" fw={600}>
-                    {alert.vvdReal?.toFixed(2)} unid./dia
-                  </Text>
-                </Group>
-                <Group justify="space-between">
-                  <Text size="sm" c="dimmed">
-                    Ponto de pedido
-                  </Text>
-                  <Text size="sm" fw={600}>
-                    {alert.reorderPoint?.toFixed(0)} unid.
-                  </Text>
-                </Group>
-                {typeof alert.daysRemaining === 'number' && (
-                  <Group justify="space-between">
-                    <Text size="sm" c="dimmed">
-                      Dias restantes
-                    </Text>
-                    <Text size="sm" fw={600}>
-                      {alert.daysRemaining} dias
-                    </Text>
-                  </Group>
-                )}
-              </Stack>
-
-              <Divider my="xs" />
-
-              <Title order={6} mb="xs">
-                Reposição
-              </Title>
-              <Text size="sm">
-                {product.settings?.leadTimeDays ?? 0} dias de lead time +{' '}
-                {product.settings?.safetyDays ?? 0} dias de segurança
-              </Text>
-              <Text size="sm" c="dimmed" mt={4}>
-                Lead time: tempo entre o pedido e a entrega do fornecedor.
-              </Text>
-              {alert.daysOutOfStock && alert.daysOutOfStock > 0 && (
-                <Paper p="xs" radius="sm" mt="xs" withBorder>
-                  <Group gap="xs">
-                    <Info size={12} />
-                    <Text size="sm" style={{ flex: 1 }}>
-                      ⚠️ Produto ficou {alert.daysOutOfStock} dias sem estoque no período analisado.
-                    </Text>
-                  </Group>
-                </Paper>
-              )}
-            </Paper>
-          )}
-
-          {alert.type === 'DEAD_STOCK' && (
-            <Paper p="md" radius="md" withBorder>
-              <Title order={6} mb="xs">
-                Capital parado
-              </Title>
-              <Title order={5}>{formatCurrency(product.currentStock * product.salePrice)}</Title>
-              <Text size="sm" c="dimmed" mb="sm">
-                Sem vendas há {alert.daysSinceLastSale ?? 0} dias
-              </Text>
-
-              <Stack gap={6}>
-                <Group justify="space-between">
-                  <Text size="sm" c="dimmed">
-                    Estoque
-                  </Text>
-                  <Text size="sm" fw={600}>
-                    {product.currentStock} unid.
-                  </Text>
-                </Group>
-                <Group justify="space-between">
-                  <Text size="sm" c="dimmed">
-                    Custo
-                  </Text>
-                  <Text size="sm" fw={600}>
-                    {formatCurrency(product.costPrice || 0)}
-                  </Text>
-                </Group>
-                <Group justify="space-between">
-                  <Text size="sm" c="dimmed">
-                    Preço de venda
-                  </Text>
-                  <Text size="sm" fw={600}>
-                    {formatCurrency(product.salePrice || 0)}
-                  </Text>
-                </Group>
-              </Stack>
-            </Paper>
-          )}
-
-          {alert.type === 'OPPORTUNITY' && (
-            <Paper p="md" radius="md" withBorder>
-              <Title order={6} mb="xs">
-                Oportunidade
-              </Title>
-              <Title order={5}>{(alert.growthTrend ?? 0).toFixed(1)}%</Title>
-
-              <Stack gap={6} mt="xs">
-                <Group justify="space-between">
-                  <Text size="sm" c="dimmed">
-                    VVD últimos 7 dias
-                  </Text>
-                  <Text size="sm" fw={600}>
-                    {alert.vvd7?.toFixed(1)} unid./dia
-                  </Text>
-                </Group>
-                <Group justify="space-between">
-                  <Text size="sm" c="dimmed">
-                    VVD últimos 30 dias
-                  </Text>
-                  <Text size="sm" fw={600}>
-                    {alert.vvd30?.toFixed(1)} unid./dia
-                  </Text>
-                </Group>
-                {typeof alert.daysRemaining === 'number' && (
-                  <Group justify="space-between">
-                    <Text size="sm" c="dimmed">
-                      Dias de estoque restante
-                    </Text>
-                    <Text size="sm" fw={600}>
-                      {alert.daysRemaining} dias
-                    </Text>
-                  </Group>
-                )}
-              </Stack>
-              <Divider my="xs" />
-              <Group gap="xs">
-                <PackageIcon size={14} />
-                <Text size="sm">Estoque atual: {product.currentStock} unidades</Text>
-              </Group>
-            </Paper>
-          )}
-
-          {alert.type === 'FINE' && (
-            <Paper p="md" radius="md" withBorder>
-              {alert.message ? (
-                <Alert
-                  variant="light"
-                  color="yellow"
-                  title="Ação Recomendadas"
-                  icon={<AlertTriangle size={16} />}
-                  mb="md"
-                >
-                  {alert.message ?? 'Atenção: recomenda-se observar este produto.'}
-                </Alert>
-              ) : null}
-              <Title order={6} mb="xs">
-                Resumo
-              </Title>
-              <Stack gap={6}>
-                <Group justify="space-between">
-                  <Text size="sm" c="dimmed">
-                    Estoque atual
-                  </Text>
-                  <Text size="sm" fw={600}>
-                    {product.currentStock} unid.
-                  </Text>
-                </Group>
-
-                {typeof alert.idealStock === 'number' && (
-                  <Group justify="space-between">
-                    <Text size="sm" c="dimmed">
-                      Estoque ideal
-                    </Text>
-                    <Text size="sm" fw={600}>
-                      {alert.idealStock}
-                    </Text>
-                  </Group>
-                )}
-
-                {(typeof alert.excessUnits === 'number' ||
-                  typeof alert.excessPercentage === 'number') &&
-                  (() => {
-                    let label = '';
-                    const hasUnits = typeof alert.excessUnits === 'number';
-                    const hasPct = typeof alert.excessPercentage === 'number';
-                    if (hasUnits && hasPct) {
-                      label = `Excesso: ${Number(alert.excessUnits).toFixed(0)} unid. (${Number(alert.excessPercentage).toFixed(1)}%)`;
-                    } else if (hasUnits) {
-                      label = `Excesso: ${Number(alert.excessUnits).toFixed(0)} unid.`;
-                    } else if (hasPct) {
-                      label = `Excesso: ${Number(alert.excessPercentage).toFixed(1)}%`;
-                    }
-                    return (
+                    <Title order={6} mb="xs">
+                      Estoque e Consumo
+                    </Title>
+                    <Stack gap={6}>
                       <Group justify="space-between">
                         <Text size="sm" c="dimmed">
-                          Excesso
+                          Estoque atual
                         </Text>
                         <Text size="sm" fw={600}>
-                          {label}
+                          {product.currentStock} unid.
                         </Text>
                       </Group>
-                    );
-                  })()}
+                      <Group justify="space-between">
+                        <Text size="sm" c="dimmed">
+                          VVD real
+                        </Text>
+                        <Text size="sm" fw={600}>
+                          {alert.vvdReal?.toFixed(2)} unid./dia
+                        </Text>
+                      </Group>
+                      <Group justify="space-between">
+                        <Text size="sm" c="dimmed">
+                          Ponto de pedido
+                        </Text>
+                        <Text size="sm" fw={600}>
+                          {alert.reorderPoint?.toFixed(0)} unid.
+                        </Text>
+                      </Group>
+                      {typeof alert.daysRemaining === 'number' && (
+                        <Group justify="space-between">
+                          <Text size="sm" c="dimmed">
+                            Dias restantes
+                          </Text>
+                          <Text size="sm" fw={600}>
+                            {alert.daysRemaining} dias
+                          </Text>
+                        </Group>
+                      )}
+                    </Stack>
 
-                {typeof alert.excessCapital === 'number' && (
-                  <Group justify="space-between">
-                    <Text size="sm" c="dimmed">
-                      Capital em excesso
-                    </Text>
-                    <Text size="sm" fw={600}>
-                      {formatCurrency(alert.excessCapital)}
-                    </Text>
-                  </Group>
-                )}
-
-                {typeof alert.estimatedDeadline === 'number' && alert.estimatedDeadline > 0 && (
-                  <Group justify="space-between">
-                    <Text size="sm" c="dimmed">
-                      Prazo estimado
-                    </Text>
-                    <Text size="sm" fw={600}>
-                      {alert.estimatedDeadline} dias
-                    </Text>
-                  </Group>
-                )}
-
-                {typeof alert.recoverableAmount === 'number' && (
-                  <Group justify="space-between">
-                    <Text size="sm" c="dimmed">
-                      Valor recuperável
-                    </Text>
-                    <Text size="sm" fw={600}>
-                      {formatCurrency(alert.recoverableAmount)}
-                    </Text>
-                  </Group>
-                )}
-
-                {typeof alert.suggestedPrice === 'number' && alert.suggestedPrice > 0 && (
-                  <Group justify="space-between">
-                    <Text size="sm" c="dimmed">
-                      Preço sugerido
-                    </Text>
-                    <Text size="sm" fw={600}>
-                      {formatCurrency(alert.suggestedPrice)}
-                    </Text>
-                  </Group>
-                )}
-
-                {(typeof alert.vvd7 === 'number' || typeof alert.vvd30 === 'number') && (
-                  <>
                     <Divider my="xs" />
-                    {typeof alert.vvdReal === 'number' && (
-                      <Text size="sm" mb="xs">
-                        VVD Real: {alert.vvdReal.toFixed(1)} unid./dia
-                      </Text>
-                    )}
-                    {typeof alert.vvd7 === 'number' && (
-                      <Text size="sm" mb="xs">
-                        VVD 7d: {alert.vvd7.toFixed(1)} unid./dia
-                      </Text>
-                    )}
-                    {typeof alert.vvd30 === 'number' && (
-                      <Text size="sm">VVD 30d: {alert.vvd30.toFixed(1)} unid./dia</Text>
-                    )}
-                  </>
-                )}
-              </Stack>
-            </Paper>
-          )}
 
-          {alert.type === 'LIQUIDATION' && (
-            <Paper p="md" radius="md" withBorder>
-              <Title order={6} mb="xs">
-                Liquidação
-              </Title>
-              <Stack gap={6}>
-                <Group justify="space-between">
-                  <Text size="sm" c="dimmed">
-                    Estoque atual
-                  </Text>
-                  <Text size="sm" fw={600}>
-                    {product.currentStock} unid.
-                  </Text>
-                </Group>
-
-                {typeof alert.idealStock === 'number' && (
-                  <Group justify="space-between">
-                    <Text size="sm" c="dimmed">
-                      Estoque ideal
+                    <Title order={6} mb="xs">
+                      Reposição
+                    </Title>
+                    <Text size="sm">
+                      {product.settings?.leadTimeDays ?? 0} dias de lead time +{' '}
+                      {product.settings?.safetyDays ?? 0} dias de segurança
                     </Text>
-                    <Text size="sm" fw={600}>
-                      {alert.idealStock}
+                    <Text size="sm" c="dimmed" mt={4}>
+                      Lead time: tempo entre o pedido e a entrega do fornecedor.
                     </Text>
-                  </Group>
+                    {alert.daysOutOfStock && alert.daysOutOfStock > 0 && (
+                      <Paper p="xs" radius="sm" mt="xs" withBorder>
+                        <Group gap="xs">
+                          <Info size={12} />
+                          <Text size="sm" style={{ flex: 1 }}>
+                            ⚠️ Produto ficou {alert.daysOutOfStock} dias sem estoque no período
+                            analisado.
+                          </Text>
+                        </Group>
+                      </Paper>
+                    )}
+                  </Paper>
                 )}
 
-                {(typeof alert.excessUnits === 'number' ||
-                  typeof alert.excessPercentage === 'number') &&
-                  (() => {
-                    let label = '';
-                    const hasUnits = typeof alert.excessUnits === 'number';
-                    const hasPct = typeof alert.excessPercentage === 'number';
-                    if (hasUnits && hasPct) {
-                      label = `Excesso: ${Number(alert.excessUnits).toFixed(0)} unid. (${Number(alert.excessPercentage).toFixed(1)}%)`;
-                    } else if (hasUnits) {
-                      label = `Excesso: ${Number(alert.excessUnits).toFixed(0)} unid.`;
-                    } else if (hasPct) {
-                      label = `Excesso: ${Number(alert.excessPercentage).toFixed(1)}%`;
-                    }
-                    return (
-                      <Group justify="space-between">
-                        <Text size="sm" c="dimmed">
-                          Excesso
-                        </Text>
-                        <Text size="sm" fw={600}>
-                          {label}
-                        </Text>
-                      </Group>
-                    );
-                  })()}
-
-                {typeof alert.excessCapital === 'number' && (
-                  <Group justify="space-between">
-                    <Text size="sm" c="dimmed">
-                      Capital em excesso
-                    </Text>
-                    <Text size="sm" fw={600}>
-                      {formatCurrency(alert.excessCapital)}
-                    </Text>
-                  </Group>
-                )}
-
-                {typeof alert.capitalStuck === 'number' && alert.capitalStuck > 0 && (
-                  <Group justify="space-between">
-                    <Text size="sm" c="dimmed">
+                {alert.type === 'DEAD_STOCK' && (
+                  <Paper p="md" radius="md" withBorder>
+                    <Title order={6} mb="xs">
                       Capital parado
-                    </Text>
-                    <Text size="sm" fw={600}>
+                    </Title>
+                    <Title order={5}>
                       {formatCurrency(product.currentStock * product.salePrice)}
+                    </Title>
+                    <Text size="sm" c="dimmed" mb="sm">
+                      Sem vendas há {alert.daysSinceLastSale ?? 0} dias
                     </Text>
-                  </Group>
+
+                    <Stack gap={6}>
+                      <Group justify="space-between">
+                        <Text size="sm" c="dimmed">
+                          Estoque
+                        </Text>
+                        <Text size="sm" fw={600}>
+                          {product.currentStock} unid.
+                        </Text>
+                      </Group>
+                      <Group justify="space-between">
+                        <Text size="sm" c="dimmed">
+                          Custo
+                        </Text>
+                        <Text size="sm" fw={600}>
+                          {formatCurrency(product.costPrice || 0)}
+                        </Text>
+                      </Group>
+                      <Group justify="space-between">
+                        <Text size="sm" c="dimmed">
+                          Preço de venda
+                        </Text>
+                        <Text size="sm" fw={600}>
+                          {formatCurrency(product.salePrice || 0)}
+                        </Text>
+                      </Group>
+                    </Stack>
+                  </Paper>
                 )}
 
-                {typeof alert.suggestedPrice === 'number' && alert.suggestedPrice > 0 ? (
-                  <Group justify="space-between">
-                    <Text size="sm" c="dimmed">
-                      Preço sugerido
-                    </Text>
-                    <Text size="sm" fw={600}>
-                      {formatCurrency(alert.suggestedPrice)}
-                    </Text>
-                  </Group>
-                ) : (
-                  <>
-                    <Group justify="space-between">
-                      <Text size="sm" c="dimmed">
-                        Preço atual
-                      </Text>
-                      <Text size="sm" fw={600}>
-                        {formatCurrency(product.salePrice || 0)}
-                      </Text>
-                    </Group>
-                    <Group justify="space-between">
-                      <Text size="sm" c="dimmed">
-                        Custo
-                      </Text>
-                      <Text size="sm" fw={600}>
-                        {formatCurrency(product.costPrice || 0)}
-                      </Text>
-                    </Group>
-                  </>
-                )}
+                {alert.type === 'OPPORTUNITY' && (
+                  <Paper p="md" radius="md" withBorder>
+                    <Title order={6} mb="xs">
+                      Oportunidade
+                    </Title>
+                    <Title order={5}>{(alert.growthTrend ?? 0).toFixed(1)}%</Title>
 
-                {typeof alert.daysSinceLastSale === 'number' && alert.daysSinceLastSale > 0 && (
-                  <Group justify="space-between">
-                    <Text size="sm" c="dimmed">
-                      Dias desde última venda
-                    </Text>
-                    <Text size="sm" fw={600}>
-                      {alert.daysSinceLastSale}
-                    </Text>
-                  </Group>
-                )}
-
-                {(typeof alert.vvd7 === 'number' ||
-                  typeof alert.vvd30 === 'number' ||
-                  typeof alert.daysRemaining === 'number') && (
-                  <>
+                    <Stack gap={6} mt="xs">
+                      <Group justify="space-between">
+                        <Text size="sm" c="dimmed">
+                          VVD últimos 7 dias
+                        </Text>
+                        <Text size="sm" fw={600}>
+                          {alert.vvd7?.toFixed(1)} unid./dia
+                        </Text>
+                      </Group>
+                      <Group justify="space-between">
+                        <Text size="sm" c="dimmed">
+                          VVD últimos 30 dias
+                        </Text>
+                        <Text size="sm" fw={600}>
+                          {alert.vvd30?.toFixed(1)} unid./dia
+                        </Text>
+                      </Group>
+                      {typeof alert.daysRemaining === 'number' && (
+                        <Group justify="space-between">
+                          <Text size="sm" c="dimmed">
+                            Dias de estoque restante
+                          </Text>
+                          <Text size="sm" fw={600}>
+                            {alert.daysRemaining} dias
+                          </Text>
+                        </Group>
+                      )}
+                    </Stack>
                     <Divider my="xs" />
-                    {typeof alert.vvdReal === 'number' && (
-                      <Text size="sm" mb="xs">
-                        VVD Real: {alert.vvdReal.toFixed(1)} unid./dia
-                      </Text>
-                    )}
-                    {typeof alert.vvd7 === 'number' && (
-                      <Text size="sm" mb="xs">
-                        VVD 7d: {alert.vvd7.toFixed(1)} unid./dia
-                      </Text>
-                    )}
-                    {typeof alert.vvd30 === 'number' && (
-                      <Text size="sm" mb="xs">
-                        VVD 30d: {alert.vvd30.toFixed(1)} unid./dia
-                      </Text>
-                    )}
-                    {typeof alert.daysRemaining === 'number' && (
-                      <Text size="sm">Dias de estoque restante: {alert.daysRemaining} dias</Text>
-                    )}
-                  </>
+                    <Group gap="xs">
+                      <PackageIcon size={14} />
+                      <Text size="sm">Estoque atual: {product.currentStock} unidades</Text>
+                    </Group>
+                  </Paper>
                 )}
-              </Stack>
-            </Paper>
-          )}
+
+                {alert.type === 'FINE' && (
+                  <Paper p="md" radius="md" withBorder>
+                    {alert.message ? (
+                      <Alert
+                        variant="light"
+                        color="yellow"
+                        title="Ação Recomendadas"
+                        icon={<AlertTriangle size={16} />}
+                        mb="md"
+                      >
+                        {alert.message ?? 'Atenção: recomenda-se observar este produto.'}
+                      </Alert>
+                    ) : null}
+                    <Title order={6} mb="xs">
+                      Resumo
+                    </Title>
+                    <Stack gap={6}>
+                      <Group justify="space-between">
+                        <Text size="sm" c="dimmed">
+                          Estoque atual
+                        </Text>
+                        <Text size="sm" fw={600}>
+                          {product.currentStock} unid.
+                        </Text>
+                      </Group>
+
+                      {typeof alert.idealStock === 'number' && (
+                        <Group justify="space-between">
+                          <Text size="sm" c="dimmed">
+                            Estoque ideal
+                          </Text>
+                          <Text size="sm" fw={600}>
+                            {alert.idealStock}
+                          </Text>
+                        </Group>
+                      )}
+
+                      {(typeof alert.excessUnits === 'number' ||
+                        typeof alert.excessPercentage === 'number') &&
+                        (() => {
+                          let label = '';
+                          const hasUnits = typeof alert.excessUnits === 'number';
+                          const hasPct = typeof alert.excessPercentage === 'number';
+                          if (hasUnits && hasPct) {
+                            label = `Excesso: ${Number(alert.excessUnits).toFixed(0)} unid. (${Number(alert.excessPercentage).toFixed(1)}%)`;
+                          } else if (hasUnits) {
+                            label = `Excesso: ${Number(alert.excessUnits).toFixed(0)} unid.`;
+                          } else if (hasPct) {
+                            label = `Excesso: ${Number(alert.excessPercentage).toFixed(1)}%`;
+                          }
+                          return (
+                            <Group justify="space-between">
+                              <Text size="sm" c="dimmed">
+                                Excesso
+                              </Text>
+                              <Text size="sm" fw={600}>
+                                {label}
+                              </Text>
+                            </Group>
+                          );
+                        })()}
+
+                      {typeof alert.excessCapital === 'number' && (
+                        <Group justify="space-between">
+                          <Text size="sm" c="dimmed">
+                            Capital em excesso
+                          </Text>
+                          <Text size="sm" fw={600}>
+                            {formatCurrency(alert.excessCapital)}
+                          </Text>
+                        </Group>
+                      )}
+
+                      {typeof alert.estimatedDeadline === 'number' &&
+                        alert.estimatedDeadline > 0 && (
+                          <Group justify="space-between">
+                            <Text size="sm" c="dimmed">
+                              Prazo estimado
+                            </Text>
+                            <Text size="sm" fw={600}>
+                              {alert.estimatedDeadline} dias
+                            </Text>
+                          </Group>
+                        )}
+
+                      {typeof alert.recoverableAmount === 'number' && (
+                        <Group justify="space-between">
+                          <Text size="sm" c="dimmed">
+                            Valor recuperável
+                          </Text>
+                          <Text size="sm" fw={600}>
+                            {formatCurrency(alert.recoverableAmount)}
+                          </Text>
+                        </Group>
+                      )}
+
+                      {typeof alert.suggestedPrice === 'number' && alert.suggestedPrice > 0 && (
+                        <Group justify="space-between">
+                          <Text size="sm" c="dimmed">
+                            Preço sugerido
+                          </Text>
+                          <Text size="sm" fw={600}>
+                            {formatCurrency(alert.suggestedPrice)}
+                          </Text>
+                        </Group>
+                      )}
+
+                      {(typeof alert.vvd7 === 'number' || typeof alert.vvd30 === 'number') && (
+                        <>
+                          <Divider my="xs" />
+                          {typeof alert.vvdReal === 'number' && (
+                            <Text size="sm" mb="xs">
+                              VVD Real: {alert.vvdReal.toFixed(1)} unid./dia
+                            </Text>
+                          )}
+                          {typeof alert.vvd7 === 'number' && (
+                            <Text size="sm" mb="xs">
+                              VVD 7d: {alert.vvd7.toFixed(1)} unid./dia
+                            </Text>
+                          )}
+                          {typeof alert.vvd30 === 'number' && (
+                            <Text size="sm">VVD 30d: {alert.vvd30.toFixed(1)} unid./dia</Text>
+                          )}
+                        </>
+                      )}
+                    </Stack>
+                  </Paper>
+                )}
+
+                {alert.type === 'LIQUIDATION' && (
+                  <Paper p="md" radius="md" withBorder>
+                    <Title order={6} mb="xs">
+                      Liquidação
+                    </Title>
+                    <Stack gap={6}>
+                      <Group justify="space-between">
+                        <Text size="sm" c="dimmed">
+                          Estoque atual
+                        </Text>
+                        <Text size="sm" fw={600}>
+                          {product.currentStock} unid.
+                        </Text>
+                      </Group>
+
+                      {typeof alert.idealStock === 'number' && (
+                        <Group justify="space-between">
+                          <Text size="sm" c="dimmed">
+                            Estoque ideal
+                          </Text>
+                          <Text size="sm" fw={600}>
+                            {alert.idealStock}
+                          </Text>
+                        </Group>
+                      )}
+
+                      {(typeof alert.excessUnits === 'number' ||
+                        typeof alert.excessPercentage === 'number') &&
+                        (() => {
+                          let label = '';
+                          const hasUnits = typeof alert.excessUnits === 'number';
+                          const hasPct = typeof alert.excessPercentage === 'number';
+                          if (hasUnits && hasPct) {
+                            label = `Excesso: ${Number(alert.excessUnits).toFixed(0)} unid. (${Number(alert.excessPercentage).toFixed(1)}%)`;
+                          } else if (hasUnits) {
+                            label = `Excesso: ${Number(alert.excessUnits).toFixed(0)} unid.`;
+                          } else if (hasPct) {
+                            label = `Excesso: ${Number(alert.excessPercentage).toFixed(1)}%`;
+                          }
+                          return (
+                            <Group justify="space-between">
+                              <Text size="sm" c="dimmed">
+                                Excesso
+                              </Text>
+                              <Text size="sm" fw={600}>
+                                {label}
+                              </Text>
+                            </Group>
+                          );
+                        })()}
+
+                      {typeof alert.excessCapital === 'number' && (
+                        <Group justify="space-between">
+                          <Text size="sm" c="dimmed">
+                            Capital em excesso
+                          </Text>
+                          <Text size="sm" fw={600}>
+                            {formatCurrency(alert.excessCapital)}
+                          </Text>
+                        </Group>
+                      )}
+
+                      {typeof alert.capitalStuck === 'number' && alert.capitalStuck > 0 && (
+                        <Group justify="space-between">
+                          <Text size="sm" c="dimmed">
+                            Capital parado
+                          </Text>
+                          <Text size="sm" fw={600}>
+                            {formatCurrency(product.currentStock * product.salePrice)}
+                          </Text>
+                        </Group>
+                      )}
+
+                      {typeof alert.suggestedPrice === 'number' && alert.suggestedPrice > 0 ? (
+                        <Group justify="space-between">
+                          <Text size="sm" c="dimmed">
+                            Preço sugerido
+                          </Text>
+                          <Text size="sm" fw={600}>
+                            {formatCurrency(alert.suggestedPrice)}
+                          </Text>
+                        </Group>
+                      ) : (
+                        <>
+                          <Group justify="space-between">
+                            <Text size="sm" c="dimmed">
+                              Preço atual
+                            </Text>
+                            <Text size="sm" fw={600}>
+                              {formatCurrency(product.salePrice || 0)}
+                            </Text>
+                          </Group>
+                          <Group justify="space-between">
+                            <Text size="sm" c="dimmed">
+                              Custo
+                            </Text>
+                            <Text size="sm" fw={600}>
+                              {formatCurrency(product.costPrice || 0)}
+                            </Text>
+                          </Group>
+                        </>
+                      )}
+
+                      {typeof alert.daysSinceLastSale === 'number' &&
+                        alert.daysSinceLastSale > 0 && (
+                          <Group justify="space-between">
+                            <Text size="sm" c="dimmed">
+                              Dias desde última venda
+                            </Text>
+                            <Text size="sm" fw={600}>
+                              {alert.daysSinceLastSale}
+                            </Text>
+                          </Group>
+                        )}
+
+                      {(typeof alert.vvd7 === 'number' ||
+                        typeof alert.vvd30 === 'number' ||
+                        typeof alert.daysRemaining === 'number') && (
+                        <>
+                          <Divider my="xs" />
+                          {typeof alert.vvdReal === 'number' && (
+                            <Text size="sm" mb="xs">
+                              VVD Real: {alert.vvdReal.toFixed(1)} unid./dia
+                            </Text>
+                          )}
+                          {typeof alert.vvd7 === 'number' && (
+                            <Text size="sm" mb="xs">
+                              VVD 7d: {alert.vvd7.toFixed(1)} unid./dia
+                            </Text>
+                          )}
+                          {typeof alert.vvd30 === 'number' && (
+                            <Text size="sm" mb="xs">
+                              VVD 30d: {alert.vvd30.toFixed(1)} unid./dia
+                            </Text>
+                          )}
+                          {typeof alert.daysRemaining === 'number' && (
+                            <Text size="sm">
+                              Dias de estoque restante: {alert.daysRemaining} dias
+                            </Text>
+                          )}
+                        </>
+                      )}
+                    </Stack>
+                  </Paper>
+                )}
               </Box>
             </Accordion.Panel>
           </Accordion.Item>
@@ -699,14 +702,10 @@ export function ProductCard({ product }: ProductCardProps) {
             <Button
               type="button"
               onClick={() => {
-                if (planTier === 'FREE') {
-                  router.push(`/produto/${product.blingProductId}?tab=campaign`);
-                } else {
-                  const campaignType = alert.type === 'DEAD_STOCK' ? 'LIQUIDATION' : 'LIQUIDATION';
-                  router.push(
-                    `/campanhas/criar?step=2&type=${campaignType}&productId=${product.blingProductId}`
-                  );
-                }
+                const campaignType = alert.type === 'DEAD_STOCK' ? 'LIQUIDATION' : 'LIQUIDATION';
+                router.push(
+                  `/campanhas/criar?step=3&type=${campaignType}&productId=${product.blingProductId}`
+                );
               }}
               variant="filled"
               color={style.color}

@@ -21,13 +21,11 @@ import {
   Info,
   Package as PackageIcon,
   Settings,
-  Sparkles,
   TrendingUp,
 } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import type { BlingProductType } from '@/lib/bling';
 import { formatDate } from '@/lib/utils';
-import { ProductCampaingGenerator } from '../ProductCampaingGenerator';
 import { ProductMetrics } from '../ProductMetrics';
 import { ProductSettingsForm } from '../ProductSettingsForm';
 
@@ -84,9 +82,7 @@ export function ProductDetails({ product }: ProductDetailsProps) {
   const currencyBRL = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
   const searchParams = useSearchParams();
   const tabParam = searchParams.get('tab');
-  const canGenerateCampaign =
-    alert.type === 'LIQUIDATION' || alert.type === 'DEAD_STOCK' || alert.type === 'OPPORTUNITY';
-  const defaultTab = canGenerateCampaign && tabParam === 'campaign' ? 'campaign' : 'details';
+  const defaultTab = tabParam === 'settings' ? 'settings' : 'details';
 
   return (
     <Container size="xl">
@@ -194,19 +190,6 @@ export function ProductDetails({ product }: ProductDetailsProps) {
           <Tabs.Tab value="settings" leftSection={<Settings size={16} />}>
             Configurações
           </Tabs.Tab>
-          {canGenerateCampaign && (
-            <Tabs.Tab
-              value="campaign"
-              leftSection={<Sparkles size={16} />}
-              style={{
-                boxShadow:
-                  '0 0 0 2px var(--mantine-color-brand-5), 0 0 12px var(--mantine-color-brand-4)',
-                borderRadius: 'var(--mantine-radius-md)',
-              }}
-            >
-              Gerador de Campanhas
-            </Tabs.Tab>
-          )}
         </Tabs.List>
 
         {/* Details Tab */}
@@ -221,13 +204,6 @@ export function ProductDetails({ product }: ProductDetailsProps) {
             blingProductId={product.blingProductId}
           />
         </Tabs.Panel>
-
-        {/* Campaign Generator Tab */}
-        {canGenerateCampaign && (
-          <Tabs.Panel value="campaign" pt="lg">
-            <ProductCampaingGenerator product={product} />
-          </Tabs.Panel>
-        )}
       </Tabs>
     </Container>
   );
