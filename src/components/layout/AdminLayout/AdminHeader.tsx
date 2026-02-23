@@ -17,6 +17,7 @@ import {
   IconCircleCheck,
   IconCreditCard,
   IconCrown,
+  IconCurrencyReal,
   IconDashboard,
   IconLogout,
   IconSparkles,
@@ -36,7 +37,7 @@ const LOGO_SIZE_DESKTOP = 64;
 
 export function AdminHeader() {
   const { connectionState } = useBlingIntegration();
-  const { user, signOut: logout } = useAuth();
+  const { user, signOut: logout, hasPermission } = useAuth();
   const [drawerOpened, { toggle: toggleDrawer, close: closeDrawer }] = useDisclosure(false);
   const isMobile = useMediaQuery('(max-width: 48em)');
 
@@ -111,22 +112,37 @@ export function AdminHeader() {
 
             <Divider />
 
-            {user && user.role === 'SUPER_ADMIN' && (
+            {(user?.role === 'SUPER_ADMIN' || hasPermission('payments.read')) && (
               <>
                 <Text size="sm" fw={500} c="dimmed" tt="uppercase">
                   Gerenciamento
                 </Text>
-                <Button
-                  variant="subtle"
-                  leftSection={<IconUsers size={18} />}
-                  component={Link}
-                  href="/usuarios"
-                  onClick={closeDrawer}
-                  justify="start"
-                  fullWidth
-                >
-                  Ver usuários
-                </Button>
+                {user?.role === 'SUPER_ADMIN' && (
+                  <Button
+                    variant="subtle"
+                    leftSection={<IconUsers size={18} />}
+                    component={Link}
+                    href="/usuarios"
+                    onClick={closeDrawer}
+                    justify="start"
+                    fullWidth
+                  >
+                    Ver usuários
+                  </Button>
+                )}
+                {hasPermission('payments.read') && (
+                  <Button
+                    variant="subtle"
+                    leftSection={<IconCurrencyReal size={18} />}
+                    component={Link}
+                    href="/pagamentos-pix"
+                    onClick={closeDrawer}
+                    justify="start"
+                    fullWidth
+                  >
+                    Pagamentos PIX
+                  </Button>
+                )}
               </>
             )}
 

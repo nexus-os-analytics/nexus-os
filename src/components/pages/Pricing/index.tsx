@@ -109,15 +109,24 @@ export function Pricing() {
               })()}
             </List>
             {t.plan === 'PRO' ? (
-              <Button
-                mt="md"
-                onClick={startProCheckout}
-                loading={loading}
-                color="brand"
-                variant={t.recommended ? 'filled' : 'outline'}
-              >
-                Experimentar PRO
-              </Button>
+              <Stack gap="xs" mt="md">
+                <Button
+                  onClick={startProCheckout}
+                  loading={loading}
+                  color="brand"
+                  variant={t.recommended ? 'filled' : 'outline'}
+                >
+                  Experimentar PRO (cartão)
+                </Button>
+                <Button
+                  component={Link}
+                  href="/pagamento/pix"
+                  color="brand"
+                  variant="light"
+                >
+                  Pagar com PIX Manual
+                </Button>
+              </Stack>
             ) : (
               <Button
                 component={Link}

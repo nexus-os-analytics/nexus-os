@@ -3,6 +3,7 @@ import { Avatar, Group, Menu, Text } from '@mantine/core';
 import {
   IconCreditCard,
   IconCrown,
+  IconCurrencyReal,
   IconLogout,
   IconUserEdit,
   IconUsers,
@@ -65,6 +66,13 @@ export function UserDropdown() {
                 href="/usuarios"
               >
                 Ver usuários
+              </Menu.Item>
+              <Menu.Item
+                leftSection={<IconCurrencyReal size={16} stroke={1.5} />}
+                component={Link}
+                href="/pagamentos-pix"
+              >
+                Pagamentos PIX
               </Menu.Item>
               <Menu.Divider />
             </>

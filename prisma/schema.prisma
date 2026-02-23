@@ -60,10 +60,28 @@ model User {
   invitationsSent      UserInvitation[]
   campaigns            Campaign[]
   emailDeliveryLogs    EmailDeliveryLog[]
+  manualPixPayments    ManualPixPayment[]
 
   @@unique([email, deletedAt])
   @@index([email, createdAt, deletedAt])
   @@map("users")
+}
+
+model ManualPixPayment {
+  id             String           @id @default(cuid())
+  userId         String
+  amount         Decimal          @db.Decimal(10, 2)
+  status         PixPaymentStatus @default(AGUARDANDO_PAGAMENTO)
+  pixKey         String
+  pixExternalId  String           // identifier for QR/EMV reconciliation
+  qrCodePayload  String           @db.Text // EMV BR Code payload
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  user           User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, status])
+  @@index([status, createdAt])
+  @@map("manual_pix_payments")
 }
 
 model EmailDeliveryLog {
@@ -254,6 +272,13 @@ enum EmailDeliveryStatus {
   PENDING
   SENT
   FAILED
+}
+
+enum PixPaymentStatus {
+  AGUARDANDO_PAGAMENTO
+  PAGAMENTO_CONFIRMADO
+  PAGAMENTO_RECUSADO
+  EXPIRADO
 }
 
 model BlingIntegration {

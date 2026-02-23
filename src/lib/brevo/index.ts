@@ -3,6 +3,8 @@ import criticalAlertTemplate from './templates/critical-alert.template';
 import inviteTemplate from './templates/invite-user.template';
 import paymentConfirmedTemplate from './templates/payment-confirmed.template';
 import paymentFailedTemplate from './templates/payment-failed.template';
+import pixPaymentConfirmedTemplate from './templates/pix-payment-confirmed.template';
+import pixPaymentRejectedTemplate from './templates/pix-payment-rejected.template';
 import resetPasswordTemplate from './templates/reset-password.template';
 import subscriptionCanceledTemplate from './templates/subscription-canceled.template';
 import subscriptionTrialEndingTemplate from './templates/subscription-trial-ending.template';
@@ -23,6 +25,8 @@ const emailTemplates = {
   subscriptionCanceled: subscriptionCanceledTemplate,
   paymentFailed: paymentFailedTemplate,
   subscriptionTrialEnding: subscriptionTrialEndingTemplate,
+  pixPaymentConfirmed: pixPaymentConfirmedTemplate,
+  pixPaymentRejected: pixPaymentRejectedTemplate,
 };
 
 interface BrevoErrorResponse {

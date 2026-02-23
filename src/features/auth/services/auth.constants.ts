@@ -21,6 +21,10 @@ export const PERMISSIONS = {
     read: [UserRole.SUPER_ADMIN],
     write: [UserRole.SUPER_ADMIN],
   },
+  payments: {
+    read: [UserRole.SUPER_ADMIN],
+    write: [UserRole.SUPER_ADMIN],
+  },
   profile: {
     read: [],
     write: [],

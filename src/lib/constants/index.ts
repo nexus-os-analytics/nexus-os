@@ -26,6 +26,16 @@ export const APP_VIDEO_URL =
   process.env.NEXT_PUBLIC_APP_VIDEO_URL || 'https://youtu.be/nexus-os-demo';
 
 /**
+ * PIX manual payment related constants
+ */
+export const PIX_KEY = process.env.PIX_KEY;
+export const PIX_MERCHANT_NAME = process.env.PIX_MERCHANT_NAME ?? 'Nexus OS';
+export const PIX_MERCHANT_CITY = process.env.PIX_MERCHANT_CITY ?? 'Sao Paulo';
+export const PIX_PRO_AMOUNT_BRL = Number(process.env.PIX_PRO_AMOUNT_BRL ?? '97');
+export const PIX_PAYMENTS_EMAIL =
+  process.env.PIX_PAYMENTS_EMAIL ?? process.env.CONTACT_EMAIL ?? 'pagamentos@nexusos.com.br';
+
+/**
  * React Query related constants
  */
 export const QUERY_STALE_TIME = 5 * 60_000; // 5 minutes

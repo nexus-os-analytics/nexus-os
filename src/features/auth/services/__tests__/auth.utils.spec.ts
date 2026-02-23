@@ -18,6 +18,11 @@ describe('getPermissions', () => {
     expect(getPermissions('users.write')).toEqual([UserRole.SUPER_ADMIN]);
   });
 
+  it('returns roles for payments.read and payments.write', () => {
+    expect(getPermissions('payments.read')).toEqual([UserRole.SUPER_ADMIN]);
+    expect(getPermissions('payments.write')).toEqual([UserRole.SUPER_ADMIN]);
+  });
+
   it('returns roles for bling.write', () => {
     expect(getPermissions('bling.write')).toEqual([UserRole.USER]);
   });

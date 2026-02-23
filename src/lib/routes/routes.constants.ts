@@ -27,6 +27,11 @@ export const PRIVATE_ROUTES: Record<Route<string> | string, RouteObject> = {
     label: 'Pagamento',
     permissions: [],
   },
+  'pagamentos-pix': {
+    path: '/pagamentos-pix',
+    label: 'Pagamentos PIX',
+    permissions: ['payments.read'],
+  },
   produto: {
     path: '/produto/*',
     label: 'Produto',
