@@ -1,16 +1,6 @@
 'use client';
 
-import {
-  Alert,
-  Box,
-  Button,
-  Card,
-  Container,
-  CopyButton,
-  Stack,
-  Text,
-  Title,
-} from '@mantine/core';
+import { Alert, Box, Button, Card, Container, CopyButton, Stack, Text, Title } from '@mantine/core';
 import { IconAlertCircle, IconCheck, IconCopy } from '@tabler/icons-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -18,12 +8,8 @@ import { useCallback, useEffect, useState } from 'react';
 
 interface PixPaymentData {
   id: string;
-  amount: number;
-  pixKey: string;
-  pixExternalId: string;
   qrCodeBase64: string;
   paymentsEmail: string;
-  createdAt: string;
 }
 
 export default function PagamentoPixPage() {
@@ -46,8 +32,16 @@ export default function PagamentoPixPage() {
         setError(json.error ?? 'Não foi possível gerar o pagamento PIX.');
         return;
       }
-      const result = (await res.json()) as PixPaymentData;
-      setData(result);
+      const result = (await res.json()) as {
+        id: string;
+        qrCodeBase64: string;
+        paymentsEmail: string;
+      };
+      setData({
+        id: result.id,
+        qrCodeBase64: result.qrCodeBase64,
+        paymentsEmail: result.paymentsEmail,
+      });
     } catch {
       setError('Erro de conexão. Tente novamente.');
     } finally {
@@ -90,16 +84,13 @@ export default function PagamentoPixPage() {
     return null;
   }
 
-  const formatCurrency = (value: number) =>
-    new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
-
   return (
     <Container size="sm" py="xl">
       <Stack gap="lg">
         <Title order={2}>Pagamento via PIX Manual</Title>
         <Card withBorder radius="md" p="xl">
           <Stack align="center" gap="md">
-            <Text fw={500}>Valor: {formatCurrency(data.amount)}</Text>
+            <Text fw={500}>Valor: R$ 109,00</Text>
             <Box
               component="img"
               src={data.qrCodeBase64}
@@ -110,9 +101,9 @@ export default function PagamentoPixPage() {
             />
             <Stack gap={4} align="center">
               <Text size="sm" c="dimmed">
-                Chave PIX (copie e cole no app do seu banco):
+                Código PIX (copie e cole no app do seu banco):
               </Text>
-              <CopyButton value={data.pixKey}>
+              <CopyButton value="00020126330014BR.GOV.BCB.PIX0111457678938455204000053039865406109.005802BR5901N6001C62140510NEXUSOSPRO63040003">
                 {({ copied, copy }) => (
                   <Button
                     variant="light"
@@ -124,8 +115,14 @@ export default function PagamentoPixPage() {
                   </Button>
                 )}
               </CopyButton>
-              <Text size="xs" c="dimmed" maw={320} ta="center">
-                {data.pixKey}
+              <Text
+                size="xs"
+                c="dimmed"
+                ta="center"
+                ff="monospace"
+                style={{ wordBreak: 'break-all' }}
+              >
+                00020126330014BR.GOV.BCB.PIX0111457678938455204000053039865406109.005802BR5901N6001C62140510NEXUSOSPRO63040003
               </Text>
             </Stack>
           </Stack>

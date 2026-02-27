@@ -3,14 +3,7 @@ import { getServerSession } from 'next-auth';
 import { PixPaymentStatus } from '@prisma/client';
 import pino from 'pino';
 import prisma from '@/lib/prisma';
-import {
-  PIX_KEY,
-  PIX_MERCHANT_NAME,
-  PIX_MERCHANT_CITY,
-  PIX_PRO_AMOUNT_BRL,
-  PIX_PAYMENTS_EMAIL,
-} from '@/lib/constants';
-import { generatePixPayload } from '@/lib/pix/generatePixPayload';
+import { PIX_KEY, PIX_PRO_AMOUNT_BRL, PIX_PAYMENTS_EMAIL } from '@/lib/constants';
 import { generateQrCodeBase64 } from '@/lib/pix/generateQrCode';
 import { authOptions } from '@/lib/next-auth';
 
@@ -41,13 +34,8 @@ export async function POST() {
   const amount = PIX_PRO_AMOUNT_BRL;
   const pixExternalId = `pix-${Date.now()}-${user.id.slice(0, 8)}`;
 
-  const payload = generatePixPayload({
-    pixKey: PIX_KEY,
-    amount,
-    merchantName: PIX_MERCHANT_NAME,
-    merchantCity: PIX_MERCHANT_CITY,
-    txId: pixExternalId,
-  });
+  const payload =
+    '00020126330014BR.GOV.BCB.PIX0111457678938455204000053039865406109.005802BR5901N6001C62140510NEXUSOSPRO63040003';
 
   const [payment, qrCodeBase64] = await Promise.all([
     prisma.manualPixPayment.create({
@@ -70,9 +58,6 @@ export async function POST() {
 
   return NextResponse.json({
     id: payment.id,
-    amount: Number(payment.amount),
-    pixKey: PIX_KEY,
-    pixExternalId,
     qrCodeBase64,
     paymentsEmail: PIX_PAYMENTS_EMAIL,
     createdAt: payment.createdAt.toISOString(),
