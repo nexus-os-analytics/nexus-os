@@ -17,21 +17,21 @@ export function PricingSection() {
   return (
     <Container id="precos" size="lg" py="xl">
       <Stack align="center" gap="sm">
-        <Title ta="center">Planos</Title>
+        <Title ta="center">Planos transparentes para cada momento</Title>
         <Text c="dimmed" ta="center">
-          Sem cartão de crédito • Cancele quando quiser
+          Sem surpresas, sem taxas escondidas • Cartão ou PIX • Cancele quando quiser
         </Text>
       </Stack>
       <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="lg" mt="md">
         <Card withBorder>
           <Title order={3}>Free</Title>
           <Text c="dimmed" mt="xs">
-            R$ 0/mês — até 30 produtos, integração Bling e alertas no Dashboard
+            R$ 0/mês — até 30 produtos, sync 1x/dia e alertas básicos no Dashboard
           </Text>
           <List size="sm" mt="sm">
             <List.Item>Máximo de produtos: 30</List.Item>
             <List.Item>Integração com Bling</List.Item>
-            <List.Item>Alertas básicas pelo Dashboard</List.Item>
+            <List.Item>Alertas básicos pelo Dashboard</List.Item>
           </List>
           <Group mt="md">
             <Button component={Link} href="/cadastre-se?plan=free" color="brand">
@@ -44,12 +44,12 @@ export function PricingSection() {
             <Title order={3}>PRO</Title>
             <Group gap="xs">
               <Text fw={600} c="brand.7">
-                R$ 97,00/mês
+                R$ 97/mês
               </Text>
             </Group>
           </Group>
           <Text c="dimmed" mt="xs">
-            Produtos ilimitados, profundidade nos alertas e relatórios avançados
+            Produtos ilimitados, sync em tempo quase real, alertas avançados e IA de campanhas
           </Text>
           <List size="sm" mt="sm">
             <List.Item>Máximo de produtos: Ilimitado</List.Item>

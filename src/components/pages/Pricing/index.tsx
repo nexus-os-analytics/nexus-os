@@ -1,28 +1,18 @@
 'use client';
 
-import {
-  Badge,
-  Button,
-  Card,
-  Container,
-  Group,
-  List,
-  SimpleGrid,
-  Stack,
-  Text,
-  Title,
-} from '@mantine/core';
+import { Badge, Button, Card, Container, Group, List, SimpleGrid, Stack, Text, Title } from '@mantine/core';
 import type { PlanTier } from '@prisma/client';
 import Link from 'next/link';
 import { useState } from 'react';
-import { getPlanFeatureStrings } from '@/features/billing/entitlements';
 import { HTTP_STATUS } from '@/lib/constants/http-status';
 
 interface TierCard {
   id: PlanTier | 'FREE' | 'PRO';
   name: string;
   description: string;
-  priceLabel: string; // e.g., "R$ 0/mês" or "R$ 97,00/mês"
+  priceLabel: string; // e.g., "R$ 0/mês" or "R$ 97/mês"
+  secondaryLabel?: string; // e.g., "Grátis para sempre" ou texto pequeno abaixo do preço
+  features: string[];
   plan: PlanTier;
   recommended?: boolean;
 }
@@ -32,15 +22,25 @@ const tiers: TierCard[] = [
     id: 'FREE',
     plan: 'FREE',
     name: 'Free',
-    description: 'Para começar sem custo',
+    description: 'Para começar sem custo e validar o Nexus OS no seu dia a dia.',
     priceLabel: 'R$ 0/mês',
+    secondaryLabel: 'Grátis para sempre',
+    features: ['Até 30 produtos', 'Sync 1x/dia (automática)', 'Alertas básicos', 'Dashboard principal'],
   },
   {
     id: 'PRO',
     plan: 'PRO',
     name: 'PRO',
-    description: 'Para operar com escala e inteligência de ponta',
-    priceLabel: 'R$ 97,00/mês',
+    description: 'Para operar em escala, com inteligência de ponta e integrações completas.',
+    priceLabel: 'R$ 97/mês',
+    secondaryLabel: 'Pagamentos via Cartão ou PIX • Cancele quando quiser',
+    features: [
+      'Produtos ilimitados',
+      'Sync em tempo quase real e manual',
+      'Alertas avançados e relatórios aprofundados',
+      'Gerador IA de Campanhas',
+      'Integração completa com Bling',
+    ],
     recommended: true,
   },
 ];
@@ -72,9 +72,9 @@ export function Pricing() {
   return (
     <Container size="lg" py="xl">
       <Stack gap="md" align="center">
-        <Title order={1}>Planos e Preços</Title>
+        <Title order={1}>Planos transparentes para cada momento</Title>
         <Text c="dimmed" ta="center" maw={700}>
-          Escolha o plano ideal para o seu negócio.
+          Sem surpresas, sem taxas escondidas. Cancele quando quiser.
         </Text>
       </Stack>
       <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="lg" mt="xl">
@@ -98,15 +98,16 @@ export function Pricing() {
               <Group align="baseline" gap={6}>
                 <Title order={2}>{t.priceLabel}</Title>
               </Group>
-              <Text size="sm" c="dimmed">
-                Sem taxas ocultas. Cancele quando quiser.
-              </Text>
+              {t.secondaryLabel ? (
+                <Text size="sm" c="dimmed">
+                  {t.secondaryLabel}
+                </Text>
+              ) : null}
             </Stack>
             <List spacing="xs" size="sm">
-              {(() => {
-                const items = getPlanFeatureStrings(t.plan);
-                return items.map((f) => <List.Item key={f}>{f}</List.Item>);
-              })()}
+              {t.features.map((f) => (
+                <List.Item key={f}>{f}</List.Item>
+              ))}
             </List>
             {t.plan === 'PRO' ? (
               <Stack gap="xs" mt="md">
@@ -116,7 +117,7 @@ export function Pricing() {
                   color="brand"
                   variant={t.recommended ? 'filled' : 'outline'}
                 >
-                  Experimentar PRO (cartão)
+                  Assinar PRO com Cartão
                 </Button>
                 <Button
                   component={Link}
@@ -124,7 +125,7 @@ export function Pricing() {
                   color="brand"
                   variant="light"
                 >
-                  Pagar com PIX Manual
+                  Pagar PRO com PIX
                 </Button>
               </Stack>
             ) : (
