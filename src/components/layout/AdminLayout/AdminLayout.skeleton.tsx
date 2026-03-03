@@ -13,7 +13,7 @@ export function AdminLayoutSkeleton() {
         </Container>
       </AppShell.Header>
       <AppShell.Main>
-        <Center h="calc(100vh - 120px)">
+        <Center h="calc(100dvh - 120px)">
           <Loader size="lg" />
         </Center>
       </AppShell.Main>

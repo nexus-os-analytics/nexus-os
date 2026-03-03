@@ -70,7 +70,7 @@ export function Overview() {
   }, [isLoading]);
 
   return (
-    <Box style={{ minHeight: '100vh', paddingTop: '4rem', paddingBottom: '4rem' }}>
+    <Box style={{ minHeight: '100dvh', paddingTop: '4rem', paddingBottom: '4rem' }}>
       <Container size="lg">
         <Stack gap="xl">
           {/* Header */}

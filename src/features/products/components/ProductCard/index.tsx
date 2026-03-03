@@ -20,6 +20,8 @@ import {
   Title,
 } from '@mantine/core';
 import { useMediaQuery } from '@mantine/hooks';
+import { modals } from '@mantine/modals';
+import { useSession } from 'next-auth/react';
 
 type ThemeWithScheme = MantineTheme & { colorScheme?: 'dark' | 'light' };
 const BORDER_SHADE = 6 as const;
@@ -37,6 +39,7 @@ import {
   TrendingUp,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { ProLockedState } from '@/features/billing/components/ProLockedState';
 import type { BlingProductType } from '@/lib/bling';
 import { formatCurrency } from '@/lib/utils';
 
@@ -50,10 +53,34 @@ export function ProductCard({ product }: ProductCardProps) {
   const { alert } = product;
   const router = useRouter();
   const isMobile = useMediaQuery('(max-width: 36em)');
+  const { data: session } = useSession();
+  const planTier = session?.user?.planTier ?? 'FREE';
 
   if (!alert) {
     throw new Error('Alert data is required for ProductCard component.');
   }
+
+  const showProRequiredModal = () => {
+    modals.open({
+      title: 'Plano PRO',
+      size: 'lg',
+      centered: true,
+      withCloseButton: false,
+      withOverlay: true,
+      overlayProps: {
+        color: 'rgba(0, 0, 0, 0.5)',
+        opacity: 0.5,
+        blur: 10,
+      },
+      children: (
+        <ProLockedState
+          title="Gerador de campanhas PRO"
+          description="Gere campanhas inteligentes com IA para aumentar suas vendas e lucros."
+          ctaLabel="Desbloquear com o plano PRO"
+        />
+      ),
+    });
+  };
 
   const getCardStyle = () => {
     switch (alert.type) {
@@ -702,10 +729,14 @@ export function ProductCard({ product }: ProductCardProps) {
             <Button
               type="button"
               onClick={() => {
-                const campaignType = alert.type === 'DEAD_STOCK' ? 'LIQUIDATION' : 'LIQUIDATION';
-                router.push(
-                  `/campanhas/criar?step=3&type=${campaignType}&productId=${product.blingProductId}`
-                );
+                if (planTier === 'FREE') {
+                  showProRequiredModal();
+                } else {
+                  const campaignType = alert.type === 'DEAD_STOCK' ? 'LIQUIDATION' : 'LIQUIDATION';
+                  router.push(
+                    `/campanhas/criar?step=3&type=${campaignType}&productId=${product.blingProductId}`
+                  );
+                }
               }}
               variant="filled"
               color={style.color}

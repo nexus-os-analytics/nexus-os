@@ -1,114 +1,132 @@
 ## 1. Stack
 
 - **Runtime:** Node >= 20
-- **Package Manager:** pnpm >= 10 (obrigatório)
-- **Framework:** Next.js 16 (App Router)
-- **UI:** Mantine 8
+- **Package Manager:** pnpm >= 10 (mandatory)
+- **Framework:** Next.js 16 (App Router only)
+- **UI:** Mantine v8 (only styling system allowed)
 - **Forms:** React Hook Form + Zod
 - **Data Fetching:** TanStack Query v5
-- **Auth:** NextAuth
-- **Database:** PostgreSQL + Prisma 7
-- **Async Jobs:** Inngest
+- **Auth:** NextAuth (JWT strategy)
+- **Database:** PostgreSQL + Prisma v7
+- **Background Jobs:** Inngest
 - **Payments:** Stripe
-- **Observability:** Sentry
-- **Tests:** Vitest
+- **Logging:** Pino
+- **Monitoring:** Sentry
+- **Testing:** Vitest
 
 ---
 
-## 2. Regras Gerais
+## 2. Global Rules
 
-1. Nunca usar npm ou yarn. Sempre `pnpm`.
-2. Nunca acessar banco direto via SQL se existir modelo Prisma.
-3. Toda validação de input deve usar **Zod**.
-4. Nenhuma lógica crítica deve ficar apenas no client.
-5. Não criar abstrações genéricas sem uso real.
-6. Seguir tipagem estrita. Não usar `any`.
-7. Manter funções pequenas e puras sempre que possível.
+1. Always use **pnpm**. Never use npm or yarn.
+2. Never use raw SQL if a Prisma model exists.
+3. All external input must be validated with **Zod**.
+4. Critical business logic must run on the server.
+5. Do not introduce abstractions without real usage.
+6. Strict TypeScript only. Never use `any`.
+7. Keep functions small, focused, and pure when possible.
+8. Prefer named exports over default exports.
 
 ---
 
-## 3. Estrutura Arquitetural
+## 3. Architecture Rules
 
 ### Frontend
 
-- Componentes devem ser:
-  - Presentacionais (UI)
-  - Containers (data + lógica)
+- Default to **React Server Components**.
+- Add `"use client"` only when strictly necessary.
+- Keep UI components presentational.
+- Move business logic to services or server actions.
+- Use React Query for client-side data fetching.
+- Avoid unnecessary global state.
+- Mantine is the only UI system. No Tailwind or custom CSS unless explicitly required.
 
-- Evitar lógica pesada dentro de componentes.
-- Requisições via React Query.
-- Estados globais apenas quando estritamente necessário.
+---
 
 ### Backend (API Routes / Server Actions)
 
-- Validar entrada com Zod.
-- Isolar regras de negócio em serviços.
-- Não misturar regra de negócio com camada HTTP.
-- Sempre tratar erros explicitamente.
+- Validate input with Zod before processing.
+- Keep HTTP layer thin.
+- Business logic must live in service modules.
+- Always handle and return structured errors.
+- Never trust frontend-provided values.
 
 ---
 
-## 4. Banco de Dados
+## 4. Database Rules
 
-- Toda alteração exige migration Prisma.
-- Nunca alterar schema manualmente no banco.
-- Seeds devem ser idempotentes.
-- Consultas complexas devem estar encapsuladas.
+- All schema changes require Prisma migrations.
+- Never modify the database manually.
+- Run:
 
----
+  ```bash
+  pnpm prisma generate
+  npx prisma migrate dev
+  ```
 
-## 5. Assíncrono / Eventos
-
-- Processos longos devem usar Inngest.
-- Nunca bloquear request HTTP com tarefas pesadas.
-- Eventos devem ter payload mínimo necessário.
-
----
-
-## 6. Pagamentos
-
-- Stripe é fonte da verdade para status de pagamento.
-- Sempre validar webhook.
-- Nunca confiar apenas em retorno do client.
+- Use Prisma-generated types and enums only.
+- Prevent N+1 queries.
+- Encapsulate complex queries in dedicated modules.
 
 ---
 
-## 7. Qualidade
+## 5. Background Processing
 
-Antes de qualquer PR:
+- Long-running tasks must use **Inngest**.
+- Never block HTTP requests with heavy computation.
+- Keep event payloads minimal.
+- Side effects (emails, syncs, async jobs) must not run inside request lifecycle if avoidable.
 
-```
+---
+
+## 6. Payments
+
+- Stripe is the source of truth for billing state.
+- Always validate webhooks.
+- Never rely only on client confirmation.
+- Webhook handlers must be idempotent.
+
+---
+
+## 7. Code Quality Requirements
+
+Before any commit or PR, run:
+
+```bash
 pnpm lint
 pnpm typecheck
 pnpm test
 pnpm build
 ```
 
-Nenhum erro permitido.
+Zero errors allowed.
 
 ---
 
-## 8. Segurança
+## 8. Security Rules
 
-- Nunca expor secrets no client.
-- Validar permissões no server.
-- Sanitizar qualquer input externo.
-- Não confiar em dados vindos do frontend.
-
----
-
-## 9. Performance
-
-- Evitar re-renders desnecessários.
-- Prefetch quando fizer sentido.
-- Queries devem ser cacheáveis sempre que possível.
-- Não fazer N+1 queries no Prisma.
+- Never expose secrets to the client.
+- Validate permissions on the server.
+- Sanitize all external input.
+- Do not store sensitive tokens in logs.
+- Use environment variables for secrets only.
 
 ---
 
-## 10. Padrão de Código
+## 9. Performance Guidelines
 
-- Nome de variáveis explícito.
-- Arquivos pequenos.
-- Código deve ser legível sem comentários excessivos.
-- Comentários apenas quando explicam **por quê**, não **o quê**.
+- Avoid unnecessary re-renders.
+- Prefer server-side data fetching when possible.
+- Cache queries appropriately.
+- Avoid over-fetching.
+- Keep API response payloads minimal.
+
+---
+
+## 10. Code Style
+
+- Use descriptive variable names.
+- Keep files small and modular.
+- Comment only when explaining **why**, not **what**.
+- Avoid magic numbers; extract constants.
+- Maintain consistent naming conventions.

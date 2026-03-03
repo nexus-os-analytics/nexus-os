@@ -107,7 +107,7 @@ export function AdminHeader() {
         hiddenFrom="sm"
         zIndex={1000000}
       >
-        <ScrollArea h="calc(100vh - 80px)" mx="-md">
+        <ScrollArea h="calc(100dvh - 80px)" mx="-md">
           <Divider my="sm" />
 
           <Stack p="md" gap="md">
