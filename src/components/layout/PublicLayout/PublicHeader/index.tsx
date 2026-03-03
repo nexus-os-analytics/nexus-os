@@ -56,7 +56,7 @@ export function PublicHeader({ user }: PublicHeaderProps) {
         hiddenFrom="sm"
         zIndex={1000000}
       >
-        <ScrollArea h="calc(100vh - 80px)" mx="-md">
+        <ScrollArea h="calc(100dvh - 80px)" mx="-md">
           <Divider my="sm" />
 
           <Link href="/precos" className={classes.link} onClick={closeDrawer}>

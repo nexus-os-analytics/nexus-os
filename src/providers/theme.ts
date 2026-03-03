@@ -1,4 +1,15 @@
-import { ActionIcon, Badge, createTheme, Loader } from '@mantine/core';
+import {
+  ActionIcon,
+  Badge,
+  createTheme,
+  Loader,
+  Input,
+  TextInput,
+  Select,
+  NumberInput,
+  PasswordInput,
+  Textarea,
+} from '@mantine/core';
 
 export const theme = createTheme({
   primaryColor: 'brand',
@@ -125,6 +136,50 @@ export const theme = createTheme({
     xl: '24px',
   },
   components: {
+    // Prevent zoom on mobile devices by enforcing strict font-size rules
+    Input: Input.extend({
+      styles: {
+        input: {
+          fontSize: '16px',
+        },
+      },
+    }),
+    TextInput: TextInput.extend({
+      styles: {
+        input: {
+          fontSize: '16px',
+        },
+      },
+    }),
+    Select: Select.extend({
+      styles: {
+        input: {
+          fontSize: '16px',
+        },
+      },
+    }),
+    PasswordInput: PasswordInput.extend({
+      styles: {
+        input: {
+          fontSize: '16px',
+        },
+      },
+    }),
+    NumberInput: NumberInput.extend({
+      styles: {
+        input: {
+          fontSize: '16px',
+        },
+      },
+    }),
+    Textarea: Textarea.extend({
+      styles: {
+        input: {
+          fontSize: '16px',
+        },
+      },
+    }),
+
     ActionIcon: ActionIcon.extend({
       defaultProps: {
         variant: 'subtle',
