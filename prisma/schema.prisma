@@ -57,6 +57,9 @@ model User {
   securityIncidents    SecurityIncident[]
   blingIntegration     BlingIntegration?
   blingSyncStatus      BlingSyncStatus    @default(IDLE)
+  activeIntegrationProvider IntegrationProvider?
+  meliSyncStatus           MeliSyncStatus        @default(IDLE)
+  meliIntegration          MeliIntegration?
   invitationsSent      UserInvitation[]
   campaigns            Campaign[]
   emailDeliveryLogs    EmailDeliveryLog[]
@@ -251,6 +254,46 @@ enum BlingJobSyncType {
 }
 
 enum BlingJobStatus {
+  RUNNING
+  FAILED
+  DONE
+}
+
+// Mercado Livre Integration Enums
+
+enum IntegrationProvider {
+  BLING
+  MERCADO_LIVRE
+}
+
+enum MeliSyncStatus {
+  IDLE
+  SYNCING
+  COMPLETED
+  FAILED
+}
+
+enum MeliAlertType {
+  FINE
+  RUPTURE
+  DEAD_STOCK
+  OPPORTUNITY
+  LIQUIDATION
+}
+
+enum MeliRuptureRisk {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum MeliJobSyncType {
+  ORDERS
+  FULL
+}
+
+enum MeliJobStatus {
   RUNNING
   FAILED
   DONE
@@ -467,6 +510,169 @@ model BlingSyncJob {
 
   @@index([integrationId, status, createdAt])
   @@map("bling_sync_jobs")
+}
+
+// Mercado Livre Integration Models
+
+model MeliIntegration {
+  id           String        @id @default(uuid())
+  userId       String        @unique
+  meliUserId   String
+  accessToken  String        @db.Text
+  refreshToken String        @db.Text
+  expiresAt    DateTime
+  tokenType    String
+  scope        String
+  connectedAt  DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  products     MeliProduct[]
+
+  @@map("meli_integrations")
+}
+
+model MeliProduct {
+  id             String               @id @default(uuid())
+  meliItemId     String               @unique
+  meliCategoryId String?
+  title          String
+  sku            String?
+  costPrice      Float                @default(0)
+  salePrice      Float                @default(0)
+  currentStock   Int                  @default(0)
+  thumbnail      String?              @db.Text
+  permalink      String?              @db.Text
+  listingType    String?
+  status         String?
+  integrationId  String
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @updatedAt
+  integration    MeliIntegration      @relation(fields: [integrationId], references: [id], onDelete: Cascade)
+  category       MeliCategory?        @relation(fields: [meliCategoryId], references: [meliCategoryId], onDelete: SetNull)
+  alert          MeliAlert?
+  settings       MeliProductSettings?
+  orderHistory   MeliOrderHistory[]
+  stockBalances  MeliStockBalance[]
+
+  @@index([meliItemId, integrationId])
+  @@map("meli_products")
+}
+
+model MeliProductSettings {
+  id                                String      @id @default(uuid())
+  meliItemId                        String      @unique
+  leadTimeDays                      Int         @default(15)
+  safetyDays                        Int         @default(5)
+  criticalDaysRemainingThreshold    Int         @default(7)
+  highDaysRemainingThreshold        Int         @default(15)
+  mediumDaysRemainingThreshold      Int         @default(30)
+  opportunityGrowthThresholdPct     Float       @default(0.5)
+  opportunityDemandVvd              Float       @default(1)
+  deadStockCapitalThreshold         Float       @default(5000)
+  capitalOptimizationThreshold      Float       @default(10000)
+  ruptureCapitalThreshold           Float       @default(5000)
+  liquidationDiscount               Float       @default(0.3)
+  costFactor                        Float       @default(0.8)
+  liquidationExcessCapitalThreshold Float       @default(2000)
+  fineExcessCapitalMax              Float       @default(5000)
+  product                           MeliProduct @relation(fields: [meliItemId], references: [meliItemId], onDelete: Cascade)
+
+  @@map("meli_product_settings")
+}
+
+model MeliCategory {
+  id             String       @id @default(uuid())
+  name           String
+  meliCategoryId String       @unique
+  meliParentId   String?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  products       MeliProduct[]
+
+  @@map("meli_categories")
+}
+
+model MeliOrderHistory {
+  id          String      @id @default(uuid())
+  meliOrderId String
+  meliItemId  String
+  date        DateTime
+  quantity    Int         @default(0)
+  totalValue  Float       @default(0)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  product     MeliProduct @relation(fields: [meliItemId], references: [meliItemId], onDelete: Cascade)
+
+  @@unique([meliOrderId, meliItemId])
+  @@index([meliItemId, meliOrderId, date])
+  @@map("meli_order_history")
+}
+
+model MeliStockBalance {
+  id         String      @id @default(uuid())
+  meliItemId String
+  stock      Int         @default(0)
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+  product    MeliProduct @relation(fields: [meliItemId], references: [meliItemId], onDelete: Cascade)
+
+  @@index([meliItemId])
+  @@map("meli_stock_balance")
+}
+
+model MeliAlert {
+  id                     String          @id @default(uuid())
+  meliItemId             String          @unique
+  type                   MeliAlertType   @default(FINE)
+  risk                   MeliRuptureRisk @default(LOW)
+  vvdReal                Float           @default(0)
+  vvd30                  Float           @default(0)
+  vvd7                   Float           @default(0)
+  daysRemaining          Int             @default(0)
+  reorderPoint           Int             @default(0)
+  growthTrend            Float           @default(0)
+  capitalStuck           Float           @default(0)
+  daysSinceLastSale      Int             @default(0)
+  suggestedPrice         Float           @default(0)
+  discount               Int             @default(0)
+  discountAmount         Float           @default(0)
+  estimatedDeadline      Int             @default(0)
+  recoverableAmount      Float           @default(0)
+  daysOutOfStock         Int             @default(0)
+  estimatedLostSales     Int             @default(0)
+  estimatedLostAmount    Float           @default(0)
+  idealStock             Float           @default(0)
+  excessUnits            Int             @default(0)
+  excessPercentage       Float           @default(0)
+  excessCapital          Float           @default(0)
+  message                String?         @db.Text
+  recommendations        Json?
+  lastCriticalNotifiedAt DateTime?
+  createdAt              DateTime        @default(now())
+  updatedAt              DateTime        @updatedAt
+  jobId                  String?
+  product                MeliProduct     @relation(fields: [meliItemId], references: [meliItemId], onDelete: Cascade)
+
+  @@index([meliItemId, type, risk])
+  @@map("meli_alerts")
+}
+
+model MeliSyncJob {
+  id               String          @id @default(uuid())
+  integrationId    String
+  userId           String
+  type             MeliJobSyncType
+  totalBatches     Int
+  processedBatches Int             @default(0)
+  status           MeliJobStatus   @default(RUNNING)
+  startedAt        DateTime        @default(now())
+  finishedAt       DateTime?
+  metadata         Json?
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+
+  @@index([integrationId, status, createdAt])
+  @@map("meli_sync_jobs")
 }
 
 // Webhook Event Tracking for Idempotency

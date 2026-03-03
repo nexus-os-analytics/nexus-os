@@ -22,7 +22,7 @@ import {
 import { ArrowRight, Sparkles } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { useBlingIntegration } from '@/hooks/useBlingIntegration';
+import { useActiveIntegration } from '@/hooks/useActiveIntegration';
 import { getAlertTypeColor, getAlertTypeLabel } from '@/lib/constants';
 import { ProductIndicators } from '../../components/ProductIndicators';
 import { useOverviewMetrics } from '../../hooks/use-overview-metrics';
@@ -34,7 +34,7 @@ export function Overview() {
   const BG_ALPHA_LIGHT = 0.12 as const;
   const BG_ALPHA_DARK = 0.06 as const;
   const { data, error, refetch } = useOverviewMetrics();
-  const { status, refresh } = useBlingIntegration();
+  const { status, refresh } = useActiveIntegration();
   const router = useRouter();
   const isLoading = status?.syncStatus !== 'COMPLETED';
 

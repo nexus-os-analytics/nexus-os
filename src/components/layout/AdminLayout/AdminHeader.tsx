@@ -30,13 +30,13 @@ import { signOut } from 'next-auth/react';
 import { UserDropdown } from '@/components/commons/UserDropdown';
 import { useAuth } from '@/features/auth/context/AuthContext';
 import { openCheckout, openPortal } from '@/features/billing/services/stripeClient';
-import { useBlingIntegration } from '@/hooks/useBlingIntegration';
+import { useActiveIntegration } from '@/hooks/useActiveIntegration';
 
 const LOGO_SIZE_MOBILE = 48;
 const LOGO_SIZE_DESKTOP = 64;
 
 export function AdminHeader() {
-  const { connectionState } = useBlingIntegration();
+  const { connectionState, provider } = useActiveIntegration();
   const { user, signOut: logout, hasPermission } = useAuth();
   const [drawerOpened, { toggle: toggleDrawer, close: closeDrawer }] = useDisclosure(false);
   const isMobile = useMediaQuery('(max-width: 48em)');
@@ -69,12 +69,27 @@ export function AdminHeader() {
 
           <Group gap="xs" visibleFrom="sm">
             {connectionState === 'connected' && (
-              <Tooltip label="Bling conectado!">
+              <Tooltip
+                label={
+                  provider === 'MERCADO_LIVRE' ? 'Mercado Livre conectado!' : 'Bling conectado!'
+                }
+              >
                 <Group align="baseline" gap={4}>
                   <ThemeIcon color="green.9" variant="light" size={20}>
                     <IconCircleCheck />
                   </ThemeIcon>
-                  <Image src="/img/bling-logo.png" alt="Bling Conectado" width={45} height={18} />
+                  {provider === 'MERCADO_LIVRE' ? (
+                    <Text size="sm" fw={500} c="yellow.7">
+                      Mercado Livre
+                    </Text>
+                  ) : (
+                    <Image
+                      src="/img/bling-logo.png"
+                      alt="Bling Conectado"
+                      width={45}
+                      height={18}
+                    />
+                  )}
                 </Group>
               </Tooltip>
             )}

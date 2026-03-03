@@ -2,9 +2,19 @@ import type { Route } from 'next';
 import type { RouteObject } from './routes.types';
 
 export const PRIVATE_ROUTES: Record<Route<string> | string, RouteObject> = {
+  integracao: {
+    path: '/integracao',
+    label: 'Integração',
+    permissions: [],
+  },
   bling: {
     path: '/bling',
     label: 'Bling',
+    permissions: [],
+  },
+  meli: {
+    path: '/meli',
+    label: 'Mercado Livre',
     permissions: [],
   },
   campanhas: {

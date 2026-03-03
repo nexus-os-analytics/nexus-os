@@ -30,17 +30,49 @@ async function safeDelete(actionName: string, fn: () => Promise<unknown>) {
 
 async function main() {
   // Ordem de exclusão: das tabelas filhas para as pai
+  
+  // Webhook events (independent)
+  await safeDelete('webhook_events', () => prisma.webhookEvent.deleteMany());
+  
+  // Campaign (depends on User and BlingProduct)
+  await safeDelete('campaigns', () => prisma.campaign.deleteMany());
+  
+  // Mercado Livre - child tables first
+  await safeDelete('meli_alerts', () => prisma.meliAlert.deleteMany());
+  await safeDelete('meli_stock_balance', () => prisma.meliStockBalance.deleteMany());
+  await safeDelete('meli_order_history', () => prisma.meliOrderHistory.deleteMany());
+  await safeDelete('meli_product_settings', () => prisma.meliProductSettings.deleteMany());
+  await safeDelete('meli_products', () => prisma.meliProduct.deleteMany());
+  await safeDelete('meli_categories', () => prisma.meliCategory.deleteMany());
+  await safeDelete('meli_sync_jobs', () => prisma.meliSyncJob.deleteMany());
+  await safeDelete('meli_integrations', () => prisma.meliIntegration.deleteMany());
+  
+  // Bling - child tables first
+  await safeDelete('bling_alerts', () => prisma.blingAlert.deleteMany());
+  await safeDelete('bling_stock_balance', () => prisma.blingStockBalance.deleteMany());
+  await safeDelete('bling_sales_history', () => prisma.blingSalesHistory.deleteMany());
+  await safeDelete('bling_product_settings', () => prisma.blingProductSettings.deleteMany());
+  await safeDelete('bling_products', () => prisma.blingProduct.deleteMany());
+  await safeDelete('bling_categories', () => prisma.blingCategory.deleteMany());
+  await safeDelete('bling_sync_jobs', () => prisma.blingSyncJob.deleteMany());
+  await safeDelete('bling_integrations', () => prisma.blingIntegration.deleteMany());
+  
+  // User-related tables
+  await safeDelete('manual_pix_payments', () => prisma.manualPixPayment.deleteMany());
+  await safeDelete('email_delivery_logs', () => prisma.emailDeliveryLog.deleteMany());
+  await safeDelete('user_invitations', () => prisma.userInvitation.deleteMany());
   await safeDelete('security_incidents', () => prisma.securityIncident.deleteMany());
   await safeDelete('audit_logs', () => prisma.auditLog.deleteMany());
   await safeDelete('login_activities', () => prisma.loginActivity.deleteMany());
   await safeDelete('api_keys', () => prisma.apiKey.deleteMany());
   await safeDelete('sessions', () => prisma.session.deleteMany());
   await safeDelete('accounts', () => prisma.account.deleteMany());
+  
+  // Independent tables
   await safeDelete('verification_tokens', () => prisma.verificationToken.deleteMany());
   await safeDelete('data_registries', () => prisma.dataRegistry.deleteMany());
-  await safeDelete('bling_sync_jobs', () => prisma.blingSyncJob.deleteMany());
 
-  // Agora pode excluir os usuários
+  // Finally, delete users
   await safeDelete('users', () => prisma.user.deleteMany());
 
   // Verificação mínima para seguir com criação de dados obrigatórios

@@ -1,4 +1,10 @@
-import type { BlingSyncStatus, PlanTier, UserRole } from '@prisma/client';
+import type {
+  BlingSyncStatus,
+  IntegrationProvider,
+  MeliSyncStatus,
+  PlanTier,
+  UserRole,
+} from '@prisma/client';
 import type { DefaultSession } from 'next-auth';
 
 declare module 'next-auth' {
@@ -8,8 +14,11 @@ declare module 'next-auth' {
       role: UserRole;
       image?: string | null;
       onboardingCompleted: boolean;
+      activeIntegrationProvider?: IntegrationProvider | null;
       blingSyncStatus: BlingSyncStatus;
       hasBlingIntegration: boolean;
+      meliSyncStatus?: MeliSyncStatus | null;
+      hasMeliIntegration: boolean;
       planTier: PlanTier;
       subscriptionStatus?: string | null;
       cancelAtPeriodEnd?: boolean;
@@ -22,8 +31,11 @@ declare module 'next-auth' {
     role: UserRole;
     onboardingCompleted: boolean;
     required2FA?: boolean;
+    activeIntegrationProvider?: IntegrationProvider | null;
     blingSyncStatus: BlingSyncStatus;
     hasBlingIntegration?: boolean;
+    meliSyncStatus?: MeliSyncStatus | null;
+    hasMeliIntegration?: boolean;
     planTier?: PlanTier;
     subscriptionStatus?: string | null;
     cancelAtPeriodEnd?: boolean;
@@ -36,8 +48,11 @@ declare module 'next-auth/jwt' {
     role: UserRole;
     onboardingCompleted: boolean;
     required2FA?: boolean;
+    activeIntegrationProvider?: IntegrationProvider | null;
     blingSyncStatus: BlingSyncStatus;
     hasBlingIntegration: boolean;
+    meliSyncStatus?: MeliSyncStatus | null;
+    hasMeliIntegration: boolean;
     auditCreated?: boolean;
     planTier?: PlanTier;
     subscriptionStatus?: string | null;

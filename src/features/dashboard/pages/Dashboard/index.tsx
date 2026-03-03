@@ -20,7 +20,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { ProLockedState } from '@/features/billing/components/ProLockedState';
 import { BlingConnectBanner } from '@/features/bling/components/BlingConnectBanner';
 import { ProductCard } from '@/features/products/components/ProductCard';
-import { useBlingIntegration } from '@/hooks/useBlingIntegration';
+import { useActiveIntegration } from '@/hooks/useActiveIntegration';
 import { ALERT_TYPE_CONFIG, ALERT_URGENCY_ORDER } from '@/lib/constants';
 import {
   DashboardOnboarding,
@@ -37,7 +37,7 @@ const CAMPAIGN_ELIGIBLE_TYPES = ['LIQUIDATION', 'DEAD_STOCK', 'OPPORTUNITY'] as 
 export function Dashboard() {
   const { data: session } = useSession();
   const planTier = session?.user?.planTier ?? 'FREE';
-  const { status, loading, sync, refresh, manualSyncAllowed } = useBlingIntegration();
+  const { status, loading, sync, refresh, manualSyncAllowed } = useActiveIntegration();
   // Overview metrics
   const { data: overviewMetrics } = useOverviewMetrics();
   // Filters (URL-synced as comma-separated strings)

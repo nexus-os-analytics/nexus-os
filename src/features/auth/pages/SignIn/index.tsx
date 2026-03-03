@@ -36,13 +36,13 @@ export function SignIn() {
   const [resendMessageColor, setResendMessageColor] = useState<'green' | 'yellow' | 'red'>('green');
   const { getQueryParam } = useQueryString();
   const searchParams = useSearchParams();
-  const nextPage = '/bling';
+  const nextPage = '/integracao';
   const router = useRouter();
 
   const redirect = useMemo(() => {
     const planParam = (searchParams.get('plan') || '').toUpperCase();
     const redirectParam = searchParams.get('redirect');
-    return planParam ? `/bling?plan=${planParam}` : redirectParam || nextPage;
+    return planParam ? `/integracao?plan=${planParam}` : redirectParam || nextPage;
   }, [searchParams, nextPage]);
 
   const form = useForm({
