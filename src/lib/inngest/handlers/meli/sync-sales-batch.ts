@@ -12,7 +12,7 @@ export const syncSalesBatch = inngest.createFunction(
   { event: 'meli/sync:sales-batch' },
   async ({ event, step }) => {
     const { integrationId, userId, jobId, orderIds } = event.data;
-    
+
     try {
       const { access_token } = await MeliIntegration.getValidMeliTokens(userId);
       const meliClient = createMeliClient({ accessToken: access_token });
@@ -21,14 +21,14 @@ export const syncSalesBatch = inngest.createFunction(
       logger.info(
         `[meli/sync:sales-batch] start batch ${event.data.batchIndex} for user ${userId}`
       );
-      
+
       // Fetch order details with limited concurrency
       const CONC = 2;
       const batches = [];
       for (let i = 0; i < orderIds.length; i += CONC) {
         batches.push(orderIds.slice(i, i + CONC));
       }
-      
+
       const fetched: any[] = [];
       for (const b of batches) {
         const res = await Promise.all(
@@ -42,7 +42,7 @@ export const syncSalesBatch = inngest.createFunction(
         fetched.push(...res.filter(Boolean).flat());
         await sleep(1000); // Avoid rate limits
       }
-      
+
       logger.info(
         `[meli/sync:sales-batch] fetched ${fetched.length} sales history records for batch ${event.data.batchIndex} user ${userId}`
       );

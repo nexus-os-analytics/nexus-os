@@ -5,15 +5,15 @@ const logger = pino().child({ module: 'meli-webhook-route' });
 
 /**
  * Mercado Livre Notifications Webhook
- * 
+ *
  * Documentation: https://developers.mercadolibre.com.br/pt_br/notificacoes
- * 
+ *
  * Mercado Livre sends notifications for:
  * - orders: New orders, status changes
  * - items: Item updates, stock changes
  * - claims: Buyer claims
  * - questions: New questions on listings
- * 
+ *
  * This endpoint receives POST requests with notification payloads.
  * For production use, implement signature validation and event processing.
  */

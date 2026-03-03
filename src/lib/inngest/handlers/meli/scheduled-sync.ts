@@ -55,7 +55,9 @@ export const scheduledSyncFree = inngest.createFunction(
       select: { id: true },
     });
 
-    logger.info(`[meli/scheduled-sync-free] Found ${freeUsers.length} FREE users with ML integration`);
+    logger.info(
+      `[meli/scheduled-sync-free] Found ${freeUsers.length} FREE users with ML integration`
+    );
 
     for (const user of freeUsers) {
       await step.sendEvent('meli/sync:user', {

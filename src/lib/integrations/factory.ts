@@ -14,9 +14,7 @@ import { MeliInventoryProvider } from './meli-provider';
  * @returns An instance of the corresponding InventoryProvider implementation
  * @throws Error if the provider is not supported
  */
-export function getInventoryProvider(
-  provider: IntegrationProvider
-): InventoryProvider {
+export function getInventoryProvider(provider: IntegrationProvider): InventoryProvider {
   switch (provider) {
     case IntegrationProvider.BLING:
       return new BlingInventoryProvider();

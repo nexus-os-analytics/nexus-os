@@ -19,9 +19,6 @@ export async function POST() {
     });
   } catch (error) {
     console.error('Error disconnecting Mercado Livre:', error);
-    return NextResponse.json(
-      { error: 'Erro ao desconectar conta Mercado Livre' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Erro ao desconectar conta Mercado Livre' }, { status: 500 });
   }
 }

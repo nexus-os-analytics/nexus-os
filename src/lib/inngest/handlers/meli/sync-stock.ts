@@ -14,7 +14,7 @@ export const syncStock = inngest.createFunction(
     const meliRepository = createMeliRepository({ integrationId });
 
     logger.info(`[meli/sync:stock] start sync stock for user ${userId}`);
-    
+
     const allStock = [];
     for (const itemId of itemIds) {
       try {

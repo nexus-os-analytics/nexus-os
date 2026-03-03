@@ -8,11 +8,11 @@ const logger = pino();
 
 /**
  * Generate alerts for Mercado Livre products.
- * 
+ *
  * NOTE: Full metrics calculation will be implemented once the shared metrics engine
  * is extracted from bling-utils.ts. For now, this handler completes the sync flow
  * without generating actual alerts.
- * 
+ *
  * TODO Phase 4+: Extract metrics engine to src/lib/integrations/metrics-engine.ts
  * and implement alert generation using the same logic as Bling.
  */
@@ -82,7 +82,7 @@ export const generateAlerts = inngest.createFunction(
       logger.info(
         `[meli/generate-alerts] Alert generation completed for integration ${integrationId}`
       );
-      
+
       return result;
     } catch (error) {
       logger.error({ error, integrationId, jobId }, 'Alert generation failed');

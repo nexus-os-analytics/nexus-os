@@ -93,19 +93,12 @@ export interface InventoryProvider {
   /**
    * Get paginated list of products.
    */
-  getProducts(
-    integrationId: string,
-    take?: number,
-    skip?: number
-  ): Promise<NormalizedProduct[]>;
+  getProducts(integrationId: string, take?: number, skip?: number): Promise<NormalizedProduct[]>;
 
   /**
    * Get a single product by its external ID.
    */
-  getProductById(
-    integrationId: string,
-    externalId: string
-  ): Promise<NormalizedProduct | null>;
+  getProductById(integrationId: string, externalId: string): Promise<NormalizedProduct | null>;
 
   /**
    * Get all alerts for products in this integration.

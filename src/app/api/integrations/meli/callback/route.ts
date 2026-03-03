@@ -28,9 +28,7 @@ export async function GET(request: NextRequest) {
     const session = await getServerSession(authOptions);
 
     if (!session?.user?.id) {
-      return NextResponse.redirect(
-        `${process.env.NEXTAUTH_URL}/mercado-livre?error=unauthorized`
-      );
+      return NextResponse.redirect(`${process.env.NEXTAUTH_URL}/mercado-livre?error=unauthorized`);
     }
 
     const clientId = process.env.MELI_CLIENT_ID;

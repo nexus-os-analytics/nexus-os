@@ -28,8 +28,7 @@ const meliRateLimiter = createRateLimiter({
 });
 
 export function createMeliClient({ accessToken }: MeliClientOptions) {
-  const BASE =
-    process.env.MELI_API_BASE_URL?.replace(/\/$/, '') ?? 'https://api.mercadolibre.com';
+  const BASE = process.env.MELI_API_BASE_URL?.replace(/\/$/, '') ?? 'https://api.mercadolibre.com';
 
   const meliClient: AxiosInstance = axios.create({
     baseURL: BASE,
@@ -77,9 +76,7 @@ export function createMeliClient({ accessToken }: MeliClientOptions) {
       });
 
       // Response is array of { code: 200, body: {...} }
-      const items = itemsRes.data
-        .filter((r: any) => r.code === 200)
-        .map((r: any) => r.body);
+      const items = itemsRes.data.filter((r: any) => r.code === 200).map((r: any) => r.body);
 
       return adaptProductsResponse(items);
     });

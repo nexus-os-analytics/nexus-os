@@ -19,9 +19,7 @@ export async function GET() {
 
     const integration = await MeliIntegration.getMeliIntegration(session.user.id);
     const isConnected = !!integration;
-    const isValid = integration
-      ? await MeliIntegration.isMeliTokenValid(session.user.id)
-      : false;
+    const isValid = integration ? await MeliIntegration.isMeliTokenValid(session.user.id) : false;
 
     return NextResponse.json({
       connected: isConnected,
@@ -36,9 +34,6 @@ export async function GET() {
     });
   } catch (error) {
     console.error('Error checking Mercado Livre status:', error);
-    return NextResponse.json(
-      { error: 'Erro ao verificar status da integração' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Erro ao verificar status da integração' }, { status: 500 });
   }
 }

@@ -22,10 +22,7 @@ import { BlingConnectBanner } from '@/features/bling/components/BlingConnectBann
 import { ProductCard } from '@/features/products/components/ProductCard';
 import { useActiveIntegration } from '@/hooks/useActiveIntegration';
 import { ALERT_TYPE_CONFIG, ALERT_URGENCY_ORDER } from '@/lib/constants';
-import {
-  DashboardOnboarding,
-  getOnboardingCompleted,
-} from '../../components/DashboardOnboarding';
+import { DashboardOnboarding, getOnboardingCompleted } from '../../components/DashboardOnboarding';
 import { ProductIndicators } from '../../components/ProductIndicators';
 import { useOverviewMetrics } from '../../hooks/use-overview-metrics';
 import { useProductAlerts } from '../../hooks/use-product-alerts';
@@ -163,18 +160,18 @@ export function Dashboard() {
         {overviewMetrics ? (
           <ProductIndicators metrics={overviewMetrics} />
         ) : (
-        <SimpleGrid cols={{ base: 1, sm: 3 }} spacing="lg">
-          {[0, 1, 2].map((i) => (
-            <Card key={i} padding="xl" radius="md" withBorder shadow="sm">
-              <Group justify="space-between" mb="md">
-                <Skeleton height={48} width={48} radius="md" />
-              </Group>
-              <Skeleton height={16} width="60%" mb={8} />
-              <Skeleton height={28} width="50%" mb={8} />
-              <Skeleton height={12} width="80%" />
-            </Card>
-          ))}
-        </SimpleGrid>
+          <SimpleGrid cols={{ base: 1, sm: 3 }} spacing="lg">
+            {[0, 1, 2].map((i) => (
+              <Card key={i} padding="xl" radius="md" withBorder shadow="sm">
+                <Group justify="space-between" mb="md">
+                  <Skeleton height={48} width={48} radius="md" />
+                </Group>
+                <Skeleton height={16} width="60%" mb={8} />
+                <Skeleton height={28} width="50%" mb={8} />
+                <Skeleton height={12} width="80%" />
+              </Card>
+            ))}
+          </SimpleGrid>
         )}
       </Box>
 

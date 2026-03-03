@@ -14,11 +14,7 @@ import type {
 export class MeliInventoryProvider implements InventoryProvider {
   readonly provider = IntegrationProvider.MERCADO_LIVRE;
 
-  async getProducts(
-    integrationId: string,
-    take = 50,
-    skip = 0
-  ): Promise<NormalizedProduct[]> {
+  async getProducts(integrationId: string, take = 50, skip = 0): Promise<NormalizedProduct[]> {
     const repo = createMeliRepository({ integrationId });
     const meliProducts = await repo.getProducts(take, skip);
 

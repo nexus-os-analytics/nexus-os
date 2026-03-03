@@ -14,11 +14,7 @@ import type {
 export class BlingInventoryProvider implements InventoryProvider {
   readonly provider = IntegrationProvider.BLING;
 
-  async getProducts(
-    integrationId: string,
-    take = 50,
-    skip = 0
-  ): Promise<NormalizedProduct[]> {
+  async getProducts(integrationId: string, take = 50, skip = 0): Promise<NormalizedProduct[]> {
     const repo = createBlingRepository({ integrationId });
     const blingProducts = await repo.getProducts(take, skip);
 

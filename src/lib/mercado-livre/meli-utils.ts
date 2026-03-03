@@ -1,10 +1,10 @@
 /**
  * Mercado Livre utility functions.
- * 
+ *
  * NOTE: The metrics engine will be extracted to a shared location
  * (src/lib/integrations/metrics-engine.ts) in a future iteration to avoid
  * duplication with Bling's implementation.
- * 
+ *
  * For now, this file serves as a placeholder for ML-specific utilities.
  */
 

@@ -9,7 +9,7 @@ export const syncCategories = inngest.createFunction(
   { event: 'meli/sync:categories' },
   async ({ event }) => {
     const { userId, integrationId, categoryIds } = event.data;
-    
+
     try {
       const integration = await MeliIntegration.getMeliIntegration(userId);
 
@@ -27,19 +27,17 @@ export const syncCategories = inngest.createFunction(
       });
 
       logger.info(`[meli/sync:categories] start sync categories for user ${userId}`);
-      
+
       const allCategories = [];
       for (const categoryId of categoryIds) {
         try {
           const category = await meliClient.getCategory(categoryId);
           allCategories.push(category);
         } catch (error) {
-          logger.error(
-            `[meli/sync:categories] error fetching category ${categoryId}: ${error}`
-          );
+          logger.error(`[meli/sync:categories] error fetching category ${categoryId}: ${error}`);
         }
       }
-      
+
       logger.info(`[meli/sync:categories] fetched ${allCategories.length} categories`);
 
       await meliRepository.upsertCategories(allCategories);

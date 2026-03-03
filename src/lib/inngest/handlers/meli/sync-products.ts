@@ -18,7 +18,7 @@ export const syncProducts = inngest.createFunction(
     const meliRepository = createMeliRepository({ integrationId });
 
     logger.info(`[meli/sync:products] start sync products for user ${userId}`);
-    
+
     const sellerId = parseInt(meliUserId, 10);
     const allProducts: Product[] = [];
     let offset = 0;
@@ -31,7 +31,7 @@ export const syncProducts = inngest.createFunction(
       if (pageProducts.length < limit) break;
       offset += limit;
     }
-    
+
     logger.info(`[meli/sync:products] fetched ${allProducts.length} products`);
 
     // Enforce plan product limits
@@ -44,7 +44,7 @@ export const syncProducts = inngest.createFunction(
       entitlements.productLimit === 'unlimited'
         ? allProducts
         : allProducts.slice(0, entitlements.productLimit);
-    
+
     if (limitedProducts.length !== allProducts.length) {
       logger.info(
         `[meli/sync:products] applying plan limit: ${limitedProducts.length}/${allProducts.length}`

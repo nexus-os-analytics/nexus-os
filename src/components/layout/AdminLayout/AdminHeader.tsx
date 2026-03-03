@@ -83,12 +83,7 @@ export function AdminHeader() {
                       Mercado Livre
                     </Text>
                   ) : (
-                    <Image
-                      src="/img/bling-logo.png"
-                      alt="Bling Conectado"
-                      width={45}
-                      height={18}
-                    />
+                    <Image src="/img/bling-logo.png" alt="Bling Conectado" width={45} height={18} />
                   )}
                 </Group>
               </Tooltip>

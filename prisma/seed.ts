@@ -8,10 +8,9 @@ const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
 
 async function tableExists(tableName: string) {
-  const { rows } = await pool.query<{ oid: string | null }>(
-    'SELECT to_regclass($1) as oid',
-    [`public.${tableName}`],
-  );
+  const { rows } = await pool.query<{ oid: string | null }>('SELECT to_regclass($1) as oid', [
+    `public.${tableName}`,
+  ]);
   return Boolean(rows?.[0]?.oid);
 }
 
@@ -30,13 +29,13 @@ async function safeDelete(actionName: string, fn: () => Promise<unknown>) {
 
 async function main() {
   // Ordem de exclusão: das tabelas filhas para as pai
-  
+
   // Webhook events (independent)
   await safeDelete('webhook_events', () => prisma.webhookEvent.deleteMany());
-  
+
   // Campaign (depends on User and BlingProduct)
   await safeDelete('campaigns', () => prisma.campaign.deleteMany());
-  
+
   // Mercado Livre - child tables first
   await safeDelete('meli_alerts', () => prisma.meliAlert.deleteMany());
   await safeDelete('meli_stock_balance', () => prisma.meliStockBalance.deleteMany());
@@ -46,7 +45,7 @@ async function main() {
   await safeDelete('meli_categories', () => prisma.meliCategory.deleteMany());
   await safeDelete('meli_sync_jobs', () => prisma.meliSyncJob.deleteMany());
   await safeDelete('meli_integrations', () => prisma.meliIntegration.deleteMany());
-  
+
   // Bling - child tables first
   await safeDelete('bling_alerts', () => prisma.blingAlert.deleteMany());
   await safeDelete('bling_stock_balance', () => prisma.blingStockBalance.deleteMany());
@@ -56,7 +55,7 @@ async function main() {
   await safeDelete('bling_categories', () => prisma.blingCategory.deleteMany());
   await safeDelete('bling_sync_jobs', () => prisma.blingSyncJob.deleteMany());
   await safeDelete('bling_integrations', () => prisma.blingIntegration.deleteMany());
-  
+
   // User-related tables
   await safeDelete('manual_pix_payments', () => prisma.manualPixPayment.deleteMany());
   await safeDelete('email_delivery_logs', () => prisma.emailDeliveryLog.deleteMany());
@@ -67,7 +66,7 @@ async function main() {
   await safeDelete('api_keys', () => prisma.apiKey.deleteMany());
   await safeDelete('sessions', () => prisma.session.deleteMany());
   await safeDelete('accounts', () => prisma.account.deleteMany());
-  
+
   // Independent tables
   await safeDelete('verification_tokens', () => prisma.verificationToken.deleteMany());
   await safeDelete('data_registries', () => prisma.dataRegistry.deleteMany());
@@ -80,8 +79,8 @@ async function main() {
   if (!hasUsers) {
     console.error(
       '❌ As tabelas obrigatórias não existem. Execute as migrações antes de rodar o seed:\n' +
-      '   - pnpm postinstall (aplica generate + migrate deploy)\n' +
-      '   - ou: npx prisma migrate deploy (prod) / npx prisma migrate dev (dev)\n',
+        '   - pnpm postinstall (aplica generate + migrate deploy)\n' +
+        '   - ou: npx prisma migrate deploy (prod) / npx prisma migrate dev (dev)\n'
     );
     return;
   }

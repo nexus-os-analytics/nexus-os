@@ -24,7 +24,9 @@ export function IntegrationSelection({ canConnect = false }: { canConnect?: bool
 
   const handleSelectBling = () => {
     if (!canConnect) {
-      setError('Confirme seu e-mail para conectar a uma integração. Verifique sua caixa de entrada.');
+      setError(
+        'Confirme seu e-mail para conectar a uma integração. Verifique sua caixa de entrada.'
+      );
       return;
     }
     router.push('/bling');
@@ -32,7 +34,9 @@ export function IntegrationSelection({ canConnect = false }: { canConnect?: bool
 
   const handleSelectMeli = () => {
     if (!canConnect) {
-      setError('Confirme seu e-mail para conectar a uma integração. Verifique sua caixa de entrada.');
+      setError(
+        'Confirme seu e-mail para conectar a uma integração. Verifique sua caixa de entrada.'
+      );
       return;
     }
     router.push('/meli');

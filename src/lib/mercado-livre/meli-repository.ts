@@ -192,8 +192,7 @@ export function createMeliRepository({ integrationId }: MeliRepositoryOptions) {
               ruptureCapitalThreshold: product.settings.ruptureCapitalThreshold,
               liquidationDiscount: product.settings.liquidationDiscount,
               costFactor: product.settings.costFactor,
-              liquidationExcessCapitalThreshold:
-                product.settings.liquidationExcessCapitalThreshold,
+              liquidationExcessCapitalThreshold: product.settings.liquidationExcessCapitalThreshold,
               fineExcessCapitalMax: product.settings.fineExcessCapitalMax,
             }
           : null,
