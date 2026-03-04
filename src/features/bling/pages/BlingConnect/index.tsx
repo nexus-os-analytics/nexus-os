@@ -203,7 +203,7 @@ export function BlingConnect({ canConnect = false }: { canConnect?: boolean }) {
       <Paper radius="lg" p="xl" withBorder shadow="md" style={{ width: '100%' }}>
         <Stack gap="lg">
           <Box style={{ textAlign: 'center' }}>
-            <Image src="/img/bling-logo.png" alt="Bling Logo" width={180} height={70} />
+            <Image src="/img/bling-logo.png" alt="Bling Logo" width={180} height={180} />
             <Title order={2} ta="center">
               {getTitle()}
             </Title>

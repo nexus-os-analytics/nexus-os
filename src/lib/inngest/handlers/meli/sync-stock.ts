@@ -21,7 +21,10 @@ export const syncStock = inngest.createFunction(
         const stock = await meliClient.getItemStock(itemId);
         allStock.push(stock);
       } catch (error) {
-        logger.error(`[meli/sync:stock] error fetching stock for item ${itemId}: ${error}`);
+        logger.error(
+          { error, itemId, userId, integrationId },
+          `[meli/sync:stock] Failed to fetch stock for item ${itemId}`
+        );
       }
     }
 

@@ -14,7 +14,7 @@ import {
   ThemeIcon,
   Title,
 } from '@mantine/core';
-import { AlertCircle, CheckCircle2, ShoppingBag } from 'lucide-react';
+import { AlertCircle, CheckCircle2 } from 'lucide-react';
 import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
@@ -164,125 +164,152 @@ export function MeliConnect({ canConnect = false }: { canConnect?: boolean }) {
     return () => clearInterval(checkInterval);
   }, [state, handleComplete]);
 
-  return (
-    <Box
-      style={{
-        minHeight: '100vh',
-        background: 'linear-gradient(135deg, #FFE600 0%, #F7D000 100%)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '2rem',
-      }}
-    >
-      <Container size="md">
-        <Paper
-          shadow="xl"
-          p="xl"
-          radius="md"
-          style={{
-            maxWidth: 600,
-            margin: '0 auto',
-          }}
-        >
-          <Stack gap="xl">
-            <Box ta="center">
-              <ThemeIcon
-                size={80}
-                radius="xl"
-                variant="gradient"
-                gradient={{ from: 'yellow', to: 'orange' }}
-                mb="md"
-                mx="auto"
-              >
-                {state === 'complete' ? (
-                  <CheckCircle2 size={48} />
-                ) : state === 'error' ? (
-                  <AlertCircle size={48} />
-                ) : state === 'idle' ? (
-                  <ShoppingBag size={48} />
-                ) : (
-                  <Loader size="lg" />
-                )}
-              </ThemeIcon>
-              <Title order={1} mb="sm" c="dark">
-                {getTitle()}
-              </Title>
-              <Text c="dimmed" size="lg">
-                {getDescription()}
-              </Text>
-            </Box>
-
-            {error && (
-              <Alert icon={<AlertCircle size={16} />} title="Erro" color="red" radius="md">
-                {error}
-              </Alert>
-            )}
-
-            {state === 'analyzing' && (
-              <Box>
-                <Progress value={progress} size="lg" radius="md" animated mb="md" />
-                <SimpleGrid cols={2} spacing="md">
-                  <Card shadow="sm" padding="md" radius="md" withBorder>
-                    <Text size="sm" c="dimmed" fw={500}>
-                      Anúncios
-                    </Text>
-                    <Text size="xl" fw={700}>
-                      {simStats.products}
-                    </Text>
-                  </Card>
-                  <Card shadow="sm" padding="md" radius="md" withBorder>
-                    <Text size="sm" c="dimmed" fw={500}>
-                      Vendas
-                    </Text>
-                    <Text size="xl" fw={700}>
-                      {simStats.sales}
-                    </Text>
-                  </Card>
-                </SimpleGrid>
-              </Box>
-            )}
-
-            {state === 'idle' && (
-              <Button
-                size="lg"
-                onClick={handleConnect}
-                loading={loading}
-                fullWidth
-                variant="gradient"
-                gradient={{ from: 'yellow', to: 'orange' }}
-              >
-                Conectar Mercado Livre
-              </Button>
-            )}
-
-            {state === 'complete' && (
-              <Button
-                size="lg"
-                onClick={handleComplete}
-                fullWidth
-                variant="gradient"
-                gradient={{ from: 'teal', to: 'green' }}
-              >
-                Ir para o Dashboard
-              </Button>
-            )}
-
-            {state === 'error' && (
-              <Button size="lg" onClick={handleConnect} fullWidth color="red">
-                Tentar Novamente
-              </Button>
-            )}
-
-            {planParam === 'PRO' && state === 'idle' && (
-              <Alert icon={<AlertCircle size={16} />} title="Plano PRO selecionado" color="blue">
-                Após conectar o Mercado Livre, você será direcionado ao checkout para ativar o plano
-                PRO com sincronização horária e produtos ilimitados.
-              </Alert>
-            )}
+  // Se ainda está carregando o status da integração
+  if (loading && state === 'idle') {
+    return (
+      <Container>
+        <Paper radius="lg" p="xl" withBorder shadow="md" style={{ width: '100%' }}>
+          <Stack gap="lg" align="center">
+            <Loader size="xl" />
+            <Text>Verificando status da integração...</Text>
           </Stack>
         </Paper>
       </Container>
-    </Box>
+    );
+  }
+
+  return (
+    <Container>
+      <Paper radius="lg" p="xl" withBorder shadow="md" style={{ width: '100%' }}>
+        <Stack gap="lg">
+          <Box style={{ textAlign: 'center' }}>
+            <Image src="/img/meli-logo.png" alt="Mercado Livre Logo" width={180} height={180} />
+            <Title order={2} ta="center">
+              {getTitle()}
+            </Title>
+            <Text size="sm" ta="center" mt="sm">
+              {getDescription()}
+            </Text>
+          </Box>
+
+          {error && (
+            <Alert
+              icon={<AlertCircle size={16} />}
+              title="Erro na conexão"
+              color="red"
+              variant="light"
+            >
+              {error}
+            </Alert>
+          )}
+
+          {state === 'idle' && (
+            <Stack gap="lg">
+              {/* Hero value props */}
+              <Card padding="lg" radius="md" withBorder shadow="sm">
+                <SimpleGrid cols={{ base: 1, sm: 3 }} spacing="lg">
+                  <Card withBorder padding="md" radius="md">
+                    <Text fw={700} size="sm">
+                      🔴 Nunca mais perca vendas por falta de estoque
+                    </Text>
+                    <Text size="sm" c="dimmed">
+                      Receba alertas inteligentes antes de ficar sem produtos ativos
+                    </Text>
+                  </Card>
+                  <Card withBorder padding="md" radius="md">
+                    <Text fw={700} size="sm">
+                      💰 Recupere capital travado em produtos parados
+                    </Text>
+                    <Text size="sm" c="dimmed">
+                      Identifique anúncios com estoque encalhado e preço ideal de liquidação
+                    </Text>
+                  </Card>
+                  <Card withBorder padding="md" radius="md">
+                    <Text fw={700} size="sm">
+                      🚀 Identifique anúncios em explosão de vendas
+                    </Text>
+                    <Text size="sm" c="dimmed">
+                      Aumente estoque antes de perder oportunidade
+                    </Text>
+                  </Card>
+                </SimpleGrid>
+              </Card>
+              <Button
+                onClick={handleConnect}
+                fullWidth
+                size="lg"
+                color="yellow"
+                loading={loading}
+                disabled={!canConnect}
+              >
+                Conectar com Mercado Livre
+              </Button>
+              {!canConnect && (
+                <Alert
+                  icon={<AlertCircle size={16} />}
+                  title="Verifique seu e-mail"
+                  color="yellow"
+                  variant="light"
+                >
+                  Sua conta ainda não está verificada. Ative pelo e-mail enviado para liberar a
+                  conexão.
+                </Alert>
+              )}
+            </Stack>
+          )}
+
+          {(state === 'connecting' || state === 'analyzing') && (
+            <Stack gap="md" align="center">
+              <Loader size="xl" color="yellow" type="dots" />
+              <Progress value={progress} size="lg" color="yellow" radius="xl" w="100%" animated />
+              <Text size="sm" c="dimmed">
+                {Math.round(progress)}% completo
+              </Text>
+              <SimpleGrid cols={{ base: 1, sm: 3 }} spacing="lg" style={{ width: '100%' }}>
+                <Card withBorder padding="md" radius="md">
+                  <Text size="sm">✓ {simStats.products} anúncios encontrados</Text>
+                </Card>
+                <Card withBorder padding="md" radius="md">
+                  <Text size="sm">✓ {simStats.sales} vendas analisadas</Text>
+                </Card>
+                <Card withBorder padding="md" radius="md">
+                  <Text size="sm">⏳ Calculando VVD...</Text>
+                </Card>
+              </SimpleGrid>
+              <Paper p="sm" radius="sm" withBorder style={{ width: '100%' }}>
+                <Text size="sm" fw={700}>
+                  💡 Você sabia?
+                </Text>
+                <Text size="xs" c="dimmed">
+                  Lojistas perdem em média R$ 12k por ano em rupturas evitáveis.
+                </Text>
+              </Paper>
+            </Stack>
+          )}
+
+          {state === 'complete' && (
+            <Stack gap="md" align="center">
+              <ThemeIcon size={64} radius="xl" color="teal" variant="light">
+                <CheckCircle2 size={32} />
+              </ThemeIcon>
+              <Text size="sm" c="dimmed" ta="center">
+                Redirecionando para o dashboard...
+              </Text>
+            </Stack>
+          )}
+
+          {state === 'error' && (
+            <Stack gap="md" align="center">
+              <ThemeIcon size={64} radius="xl" color="red" variant="light">
+                <AlertCircle size={32} />
+              </ThemeIcon>
+              <Button onClick={handleConnect} fullWidth size="md" color="yellow">
+                Tentar novamente
+              </Button>
+            </Stack>
+          )}
+        </Stack>
+      </Paper>
+    </Container>
   );
 }

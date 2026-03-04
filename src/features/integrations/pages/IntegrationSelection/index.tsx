@@ -5,15 +5,13 @@ import {
   Button,
   Card,
   Container,
-  Flex,
   Paper,
   SimpleGrid,
   Stack,
   Text,
-  ThemeIcon,
   Title,
 } from '@mantine/core';
-import { AlertCircle, ChevronRight, Package, ShoppingBag } from 'lucide-react';
+import { AlertCircle, ChevronRight } from 'lucide-react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
@@ -45,8 +43,6 @@ export function IntegrationSelection({ canConnect = false }: { canConnect?: bool
   return (
     <Box
       style={{
-        minHeight: '100vh',
-        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -99,15 +95,13 @@ export function IntegrationSelection({ canConnect = false }: { canConnect?: bool
                 <Card.Section
                   style={{
                     padding: '2rem',
-                    background: 'linear-gradient(135deg, #00B4D8 0%, #0077B6 100%)',
+                    background: '#f8f9fa',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                   }}
                 >
-                  <ThemeIcon size={80} radius="xl" variant="light" color="white">
-                    <Package size={48} />
-                  </ThemeIcon>
+                  <Image src="/img/bling-logo.png" alt="Bling Logo" width={150} height={150} />
                 </Card.Section>
 
                 <Stack gap="md" mt="md">
@@ -147,15 +141,18 @@ export function IntegrationSelection({ canConnect = false }: { canConnect?: bool
                 <Card.Section
                   style={{
                     padding: '2rem',
-                    background: 'linear-gradient(135deg, #FFE600 0%, #F7D000 100%)',
+                    background: '#f8f9fa',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                   }}
                 >
-                  <ThemeIcon size={80} radius="xl" variant="light" color="yellow">
-                    <ShoppingBag size={48} />
-                  </ThemeIcon>
+                  <Image
+                    src="/img/meli-logo.png"
+                    alt="Mercado Livre Logo"
+                    width={150}
+                    height={150}
+                  />
                 </Card.Section>
 
                 <Stack gap="md" mt="md">

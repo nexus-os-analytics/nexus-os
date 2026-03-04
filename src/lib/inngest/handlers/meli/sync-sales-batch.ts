@@ -73,7 +73,8 @@ export const syncSalesBatch = inngest.createFunction(
       }
     } catch (err) {
       logger.error(
-        `[meli/sync:sales-batch] error processing batch ${event.data.batchIndex} for user ${userId}`
+        { error: err, userId, integrationId, batchIndex: event.data.batchIndex, jobId },
+        `[meli/sync:sales-batch] Failed to process batch ${event.data.batchIndex} for user ${userId}`
       );
       await prisma.meliSyncJob.update({
         where: { id: event.data.jobId },

@@ -1,8 +1,9 @@
 ---
 name: Planner
 description: Creates comprehensive implementation plans by researching the codebase, consulting documentation, and identifying edge cases. Use when you need a detailed plan before implementing a feature or fixing a complex issue.
-model: Claude Opus 4.6 (copilot)
-tools: ['vscode', 'execute', 'read', 'agent', 'context7/*', 'edit', 'search', 'web', 'memory', 'todo']
+model: Claude Sonnet 4.5 (copilot)
+tools:
+  ['vscode', 'execute', 'read', 'agent', 'context7/*', 'edit', 'search', 'web', 'memory', 'todo']
 ---
 
 # Planning Agent
@@ -29,4 +30,3 @@ You create plans. You do NOT write code.
 - Consider what the user needs but didn't ask for
 - Note uncertainties—don't hide them
 - Match existing codebase patterns
-

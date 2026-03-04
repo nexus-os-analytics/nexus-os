@@ -21,6 +21,7 @@ tools:
     execute/createAndRunTask,
     execute/runInTerminal,
     execute/runTests,
+    'memory',
     read/getNotebookSummary,
     read/problems,
     read/readFile,

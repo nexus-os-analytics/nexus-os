@@ -1,4 +1,5 @@
-import axios, { type AxiosInstance, type AxiosRequestHeaders } from 'axios';
+import axios, { type AxiosInstance, type AxiosRequestHeaders, type AxiosError } from 'axios';
+import pino from 'pino';
 import { createRateLimiter } from '../utils/rate-limiter';
 import {
   adaptCategoryResponse,
@@ -13,6 +14,8 @@ import type {
   MeliSalesHistoryType,
   MeliStockBalanceType,
 } from './meli-types';
+
+const logger = pino();
 
 export interface MeliClientOptions {
   accessToken: string;
@@ -40,6 +43,42 @@ export function createMeliClient({ accessToken }: MeliClientOptions) {
     config.headers.Authorization = `Bearer ${accessToken}`;
     return config;
   });
+
+  // Error interceptor to log API error messages
+  meliClient.interceptors.response.use(
+    (response) => response,
+    (error: AxiosError) => {
+      if (error.response) {
+        const { status, data } = error.response;
+        const errorData = data as any;
+
+        // Extract error message from Mercado Livre API response
+        const apiMessage = errorData?.message || errorData?.error || 'Unknown error';
+        const errorDetails = {
+          status,
+          message: apiMessage,
+          method: error.config?.method?.toUpperCase(),
+          url: error.config?.url,
+          ...(errorData?.cause && { cause: errorData.cause }),
+        };
+
+        logger.error(errorDetails, `[MeliClient] API Error: ${apiMessage}`);
+      } else if (error.request) {
+        logger.error(
+          {
+            message: error.message,
+            method: error.config?.method?.toUpperCase(),
+            url: error.config?.url,
+          },
+          '[MeliClient] No response received from API'
+        );
+      } else {
+        logger.error({ message: error.message }, '[MeliClient] Request setup error');
+      }
+
+      return Promise.reject(error);
+    }
+  );
 
   /**
    * Get authenticated user information
@@ -105,9 +144,13 @@ export function createMeliClient({ accessToken }: MeliClientOptions) {
   /**
    * Search orders in date range
    * @param sellerId - Seller user ID
-   * @param dateFrom - Start date (ISO format)
-   * @param dateTo - End date (ISO format)
+   * @param dateFrom - Start date in ISO 8601 format (YYYY-MM-DDTHH:mm:ss.sssZ)
+   * @param dateTo - End date in ISO 8601 format (YYYY-MM-DDTHH:mm:ss.sssZ)
    * @param offset - Pagination offset
+   * @returns Array of order IDs matching the search criteria
+   *
+   * Note: Mercado Livre API requires full ISO 8601 datetime format with timezone.
+   * Use daysAgoISO() helper to generate valid date strings.
    */
   async function searchOrders(
     sellerId: number,

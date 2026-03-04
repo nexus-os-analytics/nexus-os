@@ -34,7 +34,10 @@ export const syncCategories = inngest.createFunction(
           const category = await meliClient.getCategory(categoryId);
           allCategories.push(category);
         } catch (error) {
-          logger.error(`[meli/sync:categories] error fetching category ${categoryId}: ${error}`);
+          logger.error(
+            { error, categoryId, userId, integrationId },
+            `[meli/sync:categories] Failed to fetch category ${categoryId}`
+          );
         }
       }
 
@@ -43,7 +46,10 @@ export const syncCategories = inngest.createFunction(
       await meliRepository.upsertCategories(allCategories);
       logger.info(`[meli/sync:categories] finished sync categories for user ${userId}`);
     } catch (err) {
-      logger.error(`[meli/sync:categories] error syncing categories for user ${userId}`);
+      logger.error(
+        { error: err, userId, integrationId },
+        `[meli/sync:categories] Failed to sync categories for user ${userId}`
+      );
       throw err;
     }
   }
