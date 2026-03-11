@@ -11,7 +11,8 @@ export const syncCategories = inngest.createFunction(
     const { userId, integrationId, categoryIds } = event.data;
 
     try {
-      const { access_token: accessToken, shop_id: shopId } = await ShopeeIntegration.getValidShopeeTokens(userId);
+      const { access_token: accessToken, shop_id: shopId } =
+        await ShopeeIntegration.getValidShopeeTokens(userId);
       const shopeeClient = createShopeeClient({ accessToken, shopId });
       const shopeeRepository = createShopeeRepository({ integrationId });
 

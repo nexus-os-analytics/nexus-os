@@ -13,7 +13,8 @@ export const syncSalesIds = inngest.createFunction(
     const { integrationId, userId, timeFrom, timeTo } = event.data;
 
     try {
-      const { access_token: accessToken, shop_id: shopId } = await ShopeeIntegration.getValidShopeeTokens(userId);
+      const { access_token: accessToken, shop_id: shopId } =
+        await ShopeeIntegration.getValidShopeeTokens(userId);
       const shopeeClient = createShopeeClient({ accessToken, shopId });
 
       logger.info(`[shopee/sync:sales-ids] start sync sales ids for user ${userId}`);

@@ -31,10 +31,7 @@ export async function GET() {
 
     const timestamp = Math.floor(Date.now() / 1000);
     const baseString = `${partnerId}${AUTH_PATH}${timestamp}`;
-    const sign = crypto
-      .createHmac('sha256', partnerKey)
-      .update(baseString)
-      .digest('hex');
+    const sign = crypto.createHmac('sha256', partnerKey).update(baseString).digest('hex');
 
     const authUrl =
       `${baseUrl}${AUTH_PATH}` +

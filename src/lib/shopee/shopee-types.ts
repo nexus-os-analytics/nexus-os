@@ -103,7 +103,7 @@ export interface ShopeeApiOrderDetailResponse {
 }
 
 // =============================================================================
-// Internal domain types  
+// Internal domain types
 // =============================================================================
 
 export interface ShopeeProductType {

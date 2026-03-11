@@ -1,10 +1,6 @@
 import pino from 'pino';
 import { getPlanEntitlements } from '@/features/billing/entitlements';
-import {
-  createShopeeClient,
-  ShopeeIntegration,
-  createShopeeRepository,
-} from '@/lib/shopee';
+import { createShopeeClient, ShopeeIntegration, createShopeeRepository } from '@/lib/shopee';
 import type { ShopeeProductType } from '@/lib/shopee';
 import prisma from '@/lib/prisma';
 import { inngest } from '../../client';
@@ -18,7 +14,8 @@ export const syncProducts = inngest.createFunction(
     const { userId, integrationId } = event.data;
 
     try {
-      const { access_token: accessToken, shop_id: shopId } = await ShopeeIntegration.getValidShopeeTokens(userId);
+      const { access_token: accessToken, shop_id: shopId } =
+        await ShopeeIntegration.getValidShopeeTokens(userId);
       const shopeeClient = createShopeeClient({ accessToken, shopId });
       const shopeeRepository = createShopeeRepository({ integrationId });
 

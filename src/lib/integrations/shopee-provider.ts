@@ -34,9 +34,7 @@ export class ShopeeInventoryProvider implements InventoryProvider {
     const repo = createShopeeRepository({ integrationId });
     const result = await repo.getProductAlerts({ integrationId });
 
-    return result.data
-      .filter((p) => p.alert != null)
-      .map((p) => normalizeShopeeAlert(p.alert!));
+    return result.data.filter((p) => p.alert != null).map((p) => normalizeShopeeAlert(p.alert!));
   }
 
   async getOverviewMetrics(

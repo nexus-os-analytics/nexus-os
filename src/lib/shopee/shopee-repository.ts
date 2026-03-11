@@ -54,7 +54,18 @@ export function createShopeeRepository({ integrationId }: ShopeeRepositoryOption
   async function upsertProducts(products: ShopeeProductType[]): Promise<void> {
     try {
       for (const product of products) {
-        const { shopeeItemId, shopeeCategoryId, sku, title, costPrice, salePrice, currentStock, thumbnail, permalink, status } = product;
+        const {
+          shopeeItemId,
+          shopeeCategoryId,
+          sku,
+          title,
+          costPrice,
+          salePrice,
+          currentStock,
+          thumbnail,
+          permalink,
+          status,
+        } = product;
 
         await prisma.shopeeProduct.upsert({
           where: { shopeeItemId: String(shopeeItemId) },
@@ -200,7 +211,9 @@ export function createShopeeRepository({ integrationId }: ShopeeRepositoryOption
     };
   }
 
-  async function getProductSettings(shopeeItemId: string): Promise<ShopeeProductSettingsType | null> {
+  async function getProductSettings(
+    shopeeItemId: string
+  ): Promise<ShopeeProductSettingsType | null> {
     const settings = await prisma.shopeeProductSettings.findFirst({
       where: { shopeeItemId: String(shopeeItemId) },
     });
@@ -289,7 +302,9 @@ export function createShopeeRepository({ integrationId }: ShopeeRepositoryOption
         });
 
         if (!product) {
-          console.warn(`Skipping order ${shopeeOrderSn}: product not found for shopeeItemId ${shopeeItemId}`);
+          console.warn(
+            `Skipping order ${shopeeOrderSn}: product not found for shopeeItemId ${shopeeItemId}`
+          );
           continue;
         }
 
@@ -528,7 +543,9 @@ export function createShopeeRepository({ integrationId }: ShopeeRepositoryOption
           id: product.id,
           title: product.title,
           sku: product.sku,
-          recommendations: product.alert.recommendations ? JSON.stringify(product.alert.recommendations) : null,
+          recommendations: product.alert.recommendations
+            ? JSON.stringify(product.alert.recommendations)
+            : null,
           impactAmount,
           impactLabel,
           alertType: product.alert.type,
@@ -537,10 +554,7 @@ export function createShopeeRepository({ integrationId }: ShopeeRepositoryOption
       }
     }
 
-    const capitalStuck = products.reduce(
-      (sum, p) => sum + p.currentStock * p.salePrice,
-      0
-    );
+    const capitalStuck = products.reduce((sum, p) => sum + p.currentStock * p.salePrice, 0);
 
     const riskOrder: Record<string, number> = { CRITICAL: 4, HIGH: 3, MEDIUM: 2, LOW: 1 };
     const sortedTopActions = topActions.toSorted((a, b) => {

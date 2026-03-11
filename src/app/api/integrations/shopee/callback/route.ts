@@ -54,10 +54,7 @@ export async function GET(request: NextRequest) {
     // Generate sign for token exchange
     const timestamp = Math.floor(Date.now() / 1000);
     const baseString = `${partnerId}${TOKEN_PATH}${timestamp}`;
-    const sign = crypto
-      .createHmac('sha256', partnerKey)
-      .update(baseString)
-      .digest('hex');
+    const sign = crypto.createHmac('sha256', partnerKey).update(baseString).digest('hex');
 
     const tokenResponse = await fetch(
       `${baseUrl}${TOKEN_PATH}?partner_id=${partnerId}&timestamp=${timestamp}&sign=${sign}`,
@@ -81,7 +78,10 @@ export async function GET(request: NextRequest) {
     const tokens = await tokenResponse.json();
 
     if (tokens.error && tokens.error !== '') {
-      logger.error({ error: tokens.error, message: tokens.message }, 'Shopee token exchange API error');
+      logger.error(
+        { error: tokens.error, message: tokens.message },
+        'Shopee token exchange API error'
+      );
       const errorUrl = getIntegrationErrorRedirect(
         IntegrationProvider.SHOPEE,
         'token_exchange_failed'

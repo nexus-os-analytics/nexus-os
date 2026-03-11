@@ -103,7 +103,9 @@ export class ShopeeIntegration {
   /**
    * Get valid Shopee tokens, auto-refreshing if expired
    */
-  static async getValidShopeeTokens(userId: string): Promise<{ access_token: string; shop_id: string }> {
+  static async getValidShopeeTokens(
+    userId: string
+  ): Promise<{ access_token: string; shop_id: string }> {
     const isValid = await ShopeeIntegration.isShopeeTokenValid(userId);
 
     if (!isValid) {
@@ -146,7 +148,8 @@ export class ShopeeIntegration {
     const sign = crypto.createHmac('sha256', PARTNER_KEY).update(baseString).digest('hex');
 
     const baseUrl =
-      process.env.SHOPEE_API_BASE_URL?.replace(/\/$/, '') ?? 'https://partner.shopeemobile.com/api/v2';
+      process.env.SHOPEE_API_BASE_URL?.replace(/\/$/, '') ??
+      'https://partner.shopeemobile.com/api/v2';
 
     const response = await fetch(`${baseUrl}${path}`, {
       method: 'POST',
@@ -162,14 +165,20 @@ export class ShopeeIntegration {
 
     if (!response.ok) {
       const text = await response.text();
-      logger.error({ status: response.status, body: text }, '[ShopeeIntegration] Token refresh failed');
+      logger.error(
+        { status: response.status, body: text },
+        '[ShopeeIntegration] Token refresh failed'
+      );
       throw new Error('Failed to refresh Shopee token');
     }
 
     const data = await response.json();
 
     if (data.error) {
-      logger.error({ error: data.error, message: data.message }, '[ShopeeIntegration] Token refresh API error');
+      logger.error(
+        { error: data.error, message: data.message },
+        '[ShopeeIntegration] Token refresh API error'
+      );
       throw new Error(`Shopee token refresh error: ${data.message}`);
     }
 
@@ -180,16 +189,14 @@ export class ShopeeIntegration {
     };
   }
 
-  private static mapToShopeeIntegration(
-    integration: {
-      id: string;
-      shopId: string;
-      accessToken: string;
-      refreshToken: string;
-      expiresAt: Date;
-      connectedAt: Date;
-    }
-  ): ShopeeIntegrationType {
+  private static mapToShopeeIntegration(integration: {
+    id: string;
+    shopId: string;
+    accessToken: string;
+    refreshToken: string;
+    expiresAt: Date;
+    connectedAt: Date;
+  }): ShopeeIntegrationType {
     return {
       id: integration.id,
       shopId: integration.shopId,

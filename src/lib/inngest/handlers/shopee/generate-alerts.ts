@@ -55,11 +55,14 @@ export const generateAlerts = inngest.createFunction(
               shopeeRepository.getProductSettings(product.shopeeItemId),
             ]);
 
-            const lastSaleDate = sales.length > 0
-              ? new Date(
-                  [...sales].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0].date
-                )
-              : null;
+            const lastSaleDate =
+              sales.length > 0
+                ? new Date(
+                    [...sales].sort(
+                      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+                    )[0].date
+                  )
+                : null;
 
             const currentStock = resolveCurrentStock(
               product.currentStock,
@@ -185,7 +188,10 @@ export const generateAlerts = inngest.createFunction(
 
       return result;
     } catch (error) {
-      logger.error({ error, integrationId, jobId }, '[shopee/generate-alerts] Alert generation failed');
+      logger.error(
+        { error, integrationId, jobId },
+        '[shopee/generate-alerts] Alert generation failed'
+      );
 
       if (userId) {
         await prisma.user.update({

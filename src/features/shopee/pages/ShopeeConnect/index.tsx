@@ -71,8 +71,7 @@ export function ShopeeConnect({ canConnect = false }: { canConnect?: boolean }) 
     if (state === 'connecting') return 'Redirecionando para o Shopee...';
     if (state === 'analyzing')
       return 'Analisando produtos ⏳ | Importando dados dos últimos 30 dias para gerar valor rápido...';
-    if (state === 'error')
-      return 'Houve um problema ao conectar com o Shopee. Tente novamente.';
+    if (state === 'error') return 'Houve um problema ao conectar com o Shopee. Tente novamente.';
     return 'Conexão bem-sucedida! Seu dashboard estará pronto em breve. Você será notificado por e-mail.';
   };
 
@@ -154,13 +153,7 @@ export function ShopeeConnect({ canConnect = false }: { canConnect?: boolean }) 
             )}
 
             {state === 'idle' && (
-              <Button
-                onClick={handleConnect}
-                loading={loading}
-                color="orange"
-                size="md"
-                fullWidth
-              >
+              <Button onClick={handleConnect} loading={loading} color="orange" size="md" fullWidth>
                 Conectar com Shopee
               </Button>
             )}
