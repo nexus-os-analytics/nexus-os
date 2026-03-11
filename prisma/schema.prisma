@@ -60,6 +60,8 @@ model User {
   activeIntegrationProvider IntegrationProvider?
   meliSyncStatus           MeliSyncStatus        @default(IDLE)
   meliIntegration          MeliIntegration?
+  shopeeSyncStatus         ShopeeSyncStatus      @default(IDLE)
+  shopeeIntegration        ShopeeIntegration?
   invitationsSent      UserInvitation[]
   campaigns            Campaign[]
   emailDeliveryLogs    EmailDeliveryLog[]
@@ -264,6 +266,7 @@ enum BlingJobStatus {
 enum IntegrationProvider {
   BLING
   MERCADO_LIVRE
+  SHOPEE
 }
 
 enum MeliSyncStatus {
@@ -687,4 +690,198 @@ model WebhookEvent {
 
   @@index([eventId, type])
   @@map("webhook_events")
+}
+
+// Shopee Integration Enums
+
+enum ShopeeSyncStatus {
+  IDLE
+  SYNCING
+  COMPLETED
+  FAILED
+}
+
+enum ShopeeAlertType {
+  FINE
+  RUPTURE
+  DEAD_STOCK
+  OPPORTUNITY
+  LIQUIDATION
+}
+
+enum ShopeeRuptureRisk {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum ShopeeJobSyncType {
+  ORDERS
+  FULL
+}
+
+enum ShopeeJobStatus {
+  RUNNING
+  FAILED
+  DONE
+}
+
+// Shopee Integration Models
+
+model ShopeeIntegration {
+  id           String          @id @default(uuid())
+  userId       String          @unique
+  shopId       String
+  accessToken  String          @db.Text
+  refreshToken String          @db.Text
+  expiresAt    DateTime
+  connectedAt  DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+  user         User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  products     ShopeeProduct[]
+
+  @@map("shopee_integrations")
+}
+
+model ShopeeProduct {
+  id               String                 @id @default(uuid())
+  shopeeItemId     String                 @unique
+  shopeeCategoryId String?
+  title            String
+  sku              String?
+  costPrice        Float                  @default(0)
+  salePrice        Float                  @default(0)
+  currentStock     Int                    @default(0)
+  thumbnail        String?                @db.Text
+  permalink        String?                @db.Text
+  status           String?
+  integrationId    String
+  createdAt        DateTime               @default(now())
+  updatedAt        DateTime               @updatedAt
+  integration      ShopeeIntegration      @relation(fields: [integrationId], references: [id], onDelete: Cascade)
+  category         ShopeeCategory?        @relation(fields: [shopeeCategoryId], references: [shopeeCategoryId], onDelete: SetNull)
+  alert            ShopeeAlert?
+  settings         ShopeeProductSettings?
+  orderHistory     ShopeeOrderHistory[]
+  stockBalances    ShopeeStockBalance[]
+
+  @@index([shopeeItemId, integrationId])
+  @@map("shopee_products")
+}
+
+model ShopeeProductSettings {
+  id                                String        @id @default(uuid())
+  shopeeItemId                      String        @unique
+  leadTimeDays                      Int           @default(15)
+  safetyDays                        Int           @default(5)
+  criticalDaysRemainingThreshold    Int           @default(7)
+  highDaysRemainingThreshold        Int           @default(15)
+  mediumDaysRemainingThreshold      Int           @default(30)
+  opportunityGrowthThresholdPct     Float         @default(0.5)
+  opportunityDemandVvd              Float         @default(1)
+  deadStockCapitalThreshold         Float         @default(5000)
+  capitalOptimizationThreshold      Float         @default(10000)
+  ruptureCapitalThreshold           Float         @default(5000)
+  liquidationDiscount               Float         @default(0.3)
+  costFactor                        Float         @default(0.8)
+  liquidationExcessCapitalThreshold Float         @default(2000)
+  fineExcessCapitalMax              Float         @default(5000)
+  product                           ShopeeProduct @relation(fields: [shopeeItemId], references: [shopeeItemId], onDelete: Cascade)
+
+  @@map("shopee_product_settings")
+}
+
+model ShopeeCategory {
+  id               String          @id @default(uuid())
+  name             String
+  shopeeCategoryId String          @unique
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+  products         ShopeeProduct[]
+
+  @@map("shopee_categories")
+}
+
+model ShopeeOrderHistory {
+  id             String        @id @default(uuid())
+  shopeeOrderSn  String
+  shopeeItemId   String
+  date           DateTime
+  quantity       Int           @default(0)
+  totalValue     Float         @default(0)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  product        ShopeeProduct @relation(fields: [shopeeItemId], references: [shopeeItemId], onDelete: Cascade)
+
+  @@unique([shopeeOrderSn, shopeeItemId])
+  @@index([shopeeItemId, shopeeOrderSn, date])
+  @@map("shopee_order_history")
+}
+
+model ShopeeStockBalance {
+  id           String        @id @default(uuid())
+  shopeeItemId String
+  stock        Int           @default(0)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  product      ShopeeProduct @relation(fields: [shopeeItemId], references: [shopeeItemId], onDelete: Cascade)
+
+  @@index([shopeeItemId])
+  @@map("shopee_stock_balance")
+}
+
+model ShopeeAlert {
+  id                     String            @id @default(uuid())
+  shopeeItemId           String            @unique
+  type                   ShopeeAlertType   @default(FINE)
+  risk                   ShopeeRuptureRisk @default(LOW)
+  vvdReal                Float             @default(0)
+  vvd30                  Float             @default(0)
+  vvd7                   Float             @default(0)
+  daysRemaining          Int               @default(0)
+  reorderPoint           Int               @default(0)
+  growthTrend            Float             @default(0)
+  capitalStuck           Float             @default(0)
+  daysSinceLastSale      Int               @default(0)
+  suggestedPrice         Float             @default(0)
+  discount               Int               @default(0)
+  discountAmount         Float             @default(0)
+  estimatedDeadline      Int               @default(0)
+  recoverableAmount      Float             @default(0)
+  daysOutOfStock         Int               @default(0)
+  estimatedLostSales     Int               @default(0)
+  estimatedLostAmount    Float             @default(0)
+  idealStock             Float             @default(0)
+  excessUnits            Int               @default(0)
+  excessPercentage       Float             @default(0)
+  excessCapital          Float             @default(0)
+  message                String?           @db.Text
+  recommendations        Json?
+  lastCriticalNotifiedAt DateTime?
+  createdAt              DateTime          @default(now())
+  updatedAt              DateTime          @updatedAt
+  jobId                  String?
+  product                ShopeeProduct     @relation(fields: [shopeeItemId], references: [shopeeItemId], onDelete: Cascade)
+
+  @@index([shopeeItemId, type, risk])
+  @@map("shopee_alerts")
+}
+
+model ShopeeSyncJob {
+  id               String            @id @default(uuid())
+  integrationId    String
+  userId           String
+  type             ShopeeJobSyncType
+  totalBatches     Int
+  processedBatches Int               @default(0)
+  status           ShopeeJobStatus   @default(RUNNING)
+  startedAt        DateTime          @default(now())
+  finishedAt       DateTime?
+  metadata         Json?
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+
+  @@index([integrationId, status, createdAt])
+  @@map("shopee_sync_jobs")
 }

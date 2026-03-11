@@ -178,6 +178,11 @@ export function createIntegrationService(provider: IntegrationProvider): IIntegr
       const { MeliMetricsService } = require('@/lib/mercado-livre/meli-metrics');
       return new MeliMetricsService();
 
+    case IntegrationProvider.SHOPEE:
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      const { ShopeeMetricsService } = require('@/lib/shopee/shopee-metrics');
+      return new ShopeeMetricsService();
+
     default:
       // Exhaustive check
       const _exhaustive: never = provider;

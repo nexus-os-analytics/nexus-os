@@ -17,6 +17,11 @@ export const PRIVATE_ROUTES: Record<Route<string> | string, RouteObject> = {
     label: 'Mercado Livre',
     permissions: [],
   },
+  shopee: {
+    path: '/shopee',
+    label: 'Shopee',
+    permissions: [],
+  },
   campanhas: {
     path: '/campanhas',
     label: 'Campanhas',

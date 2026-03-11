@@ -1,6 +1,7 @@
 import { useSession } from 'next-auth/react';
 import { useBlingIntegration } from './useBlingIntegration';
 import { useMeliIntegration } from './useMeliIntegration';
+import { useShopeeIntegration } from './useShopeeIntegration';
 
 /**
  * Generic integration hook that automatically detects and returns the active provider.
@@ -12,12 +13,19 @@ export function useActiveIntegration() {
 
   const blingIntegration = useBlingIntegration();
   const meliIntegration = useMeliIntegration();
+  const shopeeIntegration = useShopeeIntegration();
 
-  // Return the active provider's integration
   if (activeProvider === 'MERCADO_LIVRE') {
     return {
       ...meliIntegration,
       provider: 'MERCADO_LIVRE' as const,
+    };
+  }
+
+  if (activeProvider === 'SHOPEE') {
+    return {
+      ...shopeeIntegration,
+      provider: 'SHOPEE' as const,
     };
   }
 

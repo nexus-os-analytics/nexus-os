@@ -33,6 +33,8 @@ export function getIntegrationOverviewUrl(provider: IntegrationProvider): string
       return '/bling';
     case IntegrationProvider.MERCADO_LIVRE:
       return '/mercado-livre';
+    case IntegrationProvider.SHOPEE:
+      return '/shopee';
     default:
       // Exhaustive check
       const _exhaustive: never = provider;
@@ -94,6 +96,8 @@ export function getSuccessParam(provider: IntegrationProvider): IntegrationSucce
       return 'bling_connected';
     case IntegrationProvider.MERCADO_LIVRE:
       return 'meli_connected';
+    case IntegrationProvider.SHOPEE:
+      return 'shopee_connected';
     default:
       // Exhaustive check
       const _exhaustive: never = provider;
@@ -116,6 +120,8 @@ export function parseSuccessParam(param: string): IntegrationProvider | null {
       return IntegrationProvider.BLING;
     case 'meli_connected':
       return IntegrationProvider.MERCADO_LIVRE;
+    case 'shopee_connected':
+      return IntegrationProvider.SHOPEE;
     default:
       return null;
   }
@@ -201,6 +207,8 @@ export function getSyncStatusField(provider: IntegrationProvider): string {
       return 'blingSyncStatus';
     case IntegrationProvider.MERCADO_LIVRE:
       return 'meliSyncStatus';
+    case IntegrationProvider.SHOPEE:
+      return 'shopeeSyncStatus';
     default:
       // Exhaustive check
       const _exhaustive: never = provider;
@@ -223,6 +231,8 @@ export function getProviderDisplayName(provider: IntegrationProvider): string {
       return 'Bling';
     case IntegrationProvider.MERCADO_LIVRE:
       return 'Mercado Livre';
+    case IntegrationProvider.SHOPEE:
+      return 'Shopee';
     default:
       // Exhaustive check
       const _exhaustive: never = provider;
@@ -249,6 +259,8 @@ export function getSyncUserEventName(provider: IntegrationProvider): string {
       return 'bling/sync:user';
     case IntegrationProvider.MERCADO_LIVRE:
       return 'meli/sync:user';
+    case IntegrationProvider.SHOPEE:
+      return 'shopee/sync:user';
     default:
       // Exhaustive check
       const _exhaustive: never = provider;
@@ -271,6 +283,8 @@ export function getSyncCompleteEventName(provider: IntegrationProvider): string 
       return 'bling/sync:complete';
     case IntegrationProvider.MERCADO_LIVRE:
       return 'meli/sync:complete';
+    case IntegrationProvider.SHOPEE:
+      return 'shopee/sync:complete';
     default:
       // Exhaustive check
       const _exhaustive: never = provider;

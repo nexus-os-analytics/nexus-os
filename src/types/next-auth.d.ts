@@ -3,6 +3,7 @@ import type {
   IntegrationProvider,
   MeliSyncStatus,
   PlanTier,
+  ShopeeSyncStatus,
   UserRole,
 } from '@prisma/client';
 import type { DefaultSession } from 'next-auth';
@@ -19,6 +20,8 @@ declare module 'next-auth' {
       hasBlingIntegration: boolean;
       meliSyncStatus?: MeliSyncStatus | null;
       hasMeliIntegration: boolean;
+      shopeeSyncStatus?: ShopeeSyncStatus | null;
+      hasShopeeIntegration: boolean;
       planTier: PlanTier;
       subscriptionStatus?: string | null;
       cancelAtPeriodEnd?: boolean;
@@ -36,6 +39,8 @@ declare module 'next-auth' {
     hasBlingIntegration?: boolean;
     meliSyncStatus?: MeliSyncStatus | null;
     hasMeliIntegration?: boolean;
+    shopeeSyncStatus?: ShopeeSyncStatus | null;
+    hasShopeeIntegration?: boolean;
     planTier?: PlanTier;
     subscriptionStatus?: string | null;
     cancelAtPeriodEnd?: boolean;
@@ -53,6 +58,8 @@ declare module 'next-auth/jwt' {
     hasBlingIntegration: boolean;
     meliSyncStatus?: MeliSyncStatus | null;
     hasMeliIntegration: boolean;
+    shopeeSyncStatus?: ShopeeSyncStatus | null;
+    hasShopeeIntegration: boolean;
     auditCreated?: boolean;
     planTier?: PlanTier;
     subscriptionStatus?: string | null;

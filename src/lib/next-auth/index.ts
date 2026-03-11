@@ -250,7 +250,7 @@ export const authOptions: AuthOptions = {
               email: user.email!,
               deletedAt: null,
             },
-            include: { blingIntegration: true, meliIntegration: true },
+            include: { blingIntegration: true, meliIntegration: true, shopeeIntegration: true },
           });
 
           if (dbUser) {
@@ -263,6 +263,8 @@ export const authOptions: AuthOptions = {
             token.hasBlingIntegration = !!dbUser.blingIntegration;
             token.meliSyncStatus = dbUser.meliSyncStatus;
             token.hasMeliIntegration = !!dbUser.meliIntegration;
+            token.shopeeSyncStatus = dbUser.shopeeSyncStatus ?? null;
+            token.hasShopeeIntegration = !!dbUser.shopeeIntegration;
             token.planTier = dbUser.planTier as PlanTier;
             token.subscriptionStatus = dbUser.subscriptionStatus;
             token.cancelAtPeriodEnd = dbUser.cancelAtPeriodEnd;
@@ -297,7 +299,7 @@ export const authOptions: AuthOptions = {
         // Fetch additional user data
         const dbUser = await prisma.user.findUnique({
           where: { id: user.id },
-          include: { blingIntegration: true, meliIntegration: true },
+          include: { blingIntegration: true, meliIntegration: true, shopeeIntegration: true },
         });
 
         if (dbUser) {
@@ -306,6 +308,8 @@ export const authOptions: AuthOptions = {
           token.hasBlingIntegration = !!dbUser.blingIntegration;
           token.meliSyncStatus = dbUser.meliSyncStatus;
           token.hasMeliIntegration = !!dbUser.meliIntegration;
+          token.shopeeSyncStatus = dbUser.shopeeSyncStatus ?? null;
+          token.hasShopeeIntegration = !!dbUser.shopeeIntegration;
           token.planTier = dbUser.planTier as PlanTier;
           token.subscriptionStatus = dbUser.subscriptionStatus;
           token.cancelAtPeriodEnd = dbUser.cancelAtPeriodEnd;
@@ -316,7 +320,7 @@ export const authOptions: AuthOptions = {
       if (trigger === 'update') {
         const updatedUser = await prisma.user.findUnique({
           where: { id: token.id as string },
-          include: { blingIntegration: true, meliIntegration: true },
+          include: { blingIntegration: true, meliIntegration: true, shopeeIntegration: true },
         });
 
         if (updatedUser) {
@@ -329,6 +333,8 @@ export const authOptions: AuthOptions = {
           token.hasBlingIntegration = !!updatedUser.blingIntegration;
           token.meliSyncStatus = updatedUser.meliSyncStatus;
           token.hasMeliIntegration = !!updatedUser.meliIntegration;
+          token.shopeeSyncStatus = updatedUser.shopeeSyncStatus ?? null;
+          token.hasShopeeIntegration = !!updatedUser.shopeeIntegration;
           token.planTier = updatedUser.planTier as PlanTier;
           token.subscriptionStatus = updatedUser.subscriptionStatus;
           token.cancelAtPeriodEnd = updatedUser.cancelAtPeriodEnd;
@@ -352,6 +358,8 @@ export const authOptions: AuthOptions = {
           hasBlingIntegration: token.hasBlingIntegration,
           meliSyncStatus: token.meliSyncStatus,
           hasMeliIntegration: token.hasMeliIntegration,
+          shopeeSyncStatus: token.shopeeSyncStatus,
+          hasShopeeIntegration: token.hasShopeeIntegration ?? false,
           planTier: (token.planTier as PlanTier) ?? 'FREE',
           subscriptionStatus: token.subscriptionStatus as string | null | undefined,
           cancelAtPeriodEnd: token.cancelAtPeriodEnd as boolean | undefined,

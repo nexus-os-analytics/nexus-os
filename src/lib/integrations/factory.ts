@@ -2,6 +2,7 @@ import { IntegrationProvider } from '@prisma/client';
 import type { InventoryProvider } from './types';
 import { BlingInventoryProvider } from './bling-provider';
 import { MeliInventoryProvider } from './meli-provider';
+import { ShopeeInventoryProvider } from './shopee-provider';
 
 /**
  * Factory function that returns the appropriate InventoryProvider implementation
@@ -21,6 +22,9 @@ export function getInventoryProvider(provider: IntegrationProvider): InventoryPr
 
     case IntegrationProvider.MERCADO_LIVRE:
       return new MeliInventoryProvider();
+
+    case IntegrationProvider.SHOPEE:
+      return new ShopeeInventoryProvider();
 
     default:
       throw new Error(`Unsupported integration provider: ${provider}`);

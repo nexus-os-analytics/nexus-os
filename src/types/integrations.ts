@@ -14,6 +14,7 @@
 export enum IntegrationProvider {
   BLING = 'BLING',
   MERCADO_LIVRE = 'MERCADO_LIVRE',
+  SHOPEE = 'SHOPEE',
   // Future integrations:
   // TINY = 'TINY',
   // OMIE = 'OMIE',
@@ -108,7 +109,7 @@ export interface IntegrationConnection {
 /**
  * Success query param values for OAuth redirects
  */
-export type IntegrationSuccessParam = 'bling_connected' | 'meli_connected';
+export type IntegrationSuccessParam = 'bling_connected' | 'meli_connected' | 'shopee_connected';
 
 /**
  * Error query param values for OAuth redirects

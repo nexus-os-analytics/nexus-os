@@ -3,6 +3,7 @@ import { inngest } from './client';
 import * as billingHandlers from './handlers/billing';
 import * as blingHandlers from './handlers/bling';
 import * as meliHandlers from './handlers/meli';
+import * as shopeeHandlers from './handlers/shopee';
 
 // Cada função precisa ter um nome único e um trigger/evento
 export const { GET, POST, PUT } = serve({
@@ -12,5 +13,6 @@ export const { GET, POST, PUT } = serve({
     ...Object.values(blingHandlers),
     ...Object.values(meliHandlers),
     ...Object.values(billingHandlers),
+    ...Object.values(shopeeHandlers),
   ],
 });
