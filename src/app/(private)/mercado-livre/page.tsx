@@ -2,11 +2,11 @@ import { getServerSession } from 'next-auth';
 import { redirect } from 'next/navigation';
 import { authOptions } from '@/lib/next-auth';
 import prisma from '@/lib/prisma';
-import { BlingMetricsService } from '@/lib/bling/bling-metrics';
+import { MeliMetricsService } from '@/lib/mercado-livre/meli-metrics';
 import { IntegrationOverview } from '@/components/integrations/IntegrationOverview';
 import { IntegrationProvider } from '@/types/integrations';
 
-export default async function BlingConnectPage() {
+export default async function MercadoLivreConnectPage() {
   const session = await getServerSession(authOptions);
 
   if (!session?.user?.id) {
@@ -15,28 +15,28 @@ export default async function BlingConnectPage() {
 
   const user = await prisma.user.findUnique({
     where: { id: session.user.id },
-    select: { emailVerified: true, blingSyncStatus: true },
+    select: { emailVerified: true, meliSyncStatus: true },
   });
 
   const canConnect = !!user?.emailVerified;
 
   // Fetch metrics if sync is complete
   let metrics = null;
-  if (user?.blingSyncStatus === 'COMPLETED') {
-    const service = new BlingMetricsService();
+  if (user?.meliSyncStatus === 'COMPLETED') {
+    const service = new MeliMetricsService();
     try {
       metrics = await service.getMetrics({ userId: session.user.id });
     } catch (error) {
-      console.error('Error fetching Bling metrics:', error);
+      console.error('Error fetching Meli metrics:', error);
     }
   }
 
   return (
     <IntegrationOverview
-      provider={IntegrationProvider.BLING}
+      provider={IntegrationProvider.MERCADO_LIVRE}
       canConnect={canConnect}
       initialMetrics={metrics}
-      initialSyncStatus={user?.blingSyncStatus || 'IDLE'}
+      initialSyncStatus={user?.meliSyncStatus || 'IDLE'}
     />
   );
 }

@@ -5,6 +5,11 @@ import { MeliIntegration } from '@/lib/mercado-livre/meli-integration';
 import { inngest } from '@/lib/inngest/client';
 import { authOptions } from '@/lib/next-auth';
 import prisma from '@/lib/prisma';
+import {
+  getIntegrationSuccessRedirect,
+  getIntegrationErrorRedirect,
+} from '@/lib/integrations/utils';
+import { IntegrationProvider } from '@/types/integrations';
 
 export async function GET(request: NextRequest) {
   try {
@@ -14,21 +19,29 @@ export async function GET(request: NextRequest) {
     const error = searchParams.get('error');
 
     if (error) {
-      return NextResponse.redirect(
-        `${process.env.NEXTAUTH_URL}/mercado-livre?error=auth_failed&message=${error}`
+      const errorUrl = getIntegrationErrorRedirect(
+        IntegrationProvider.MERCADO_LIVRE,
+        'auth_failed'
       );
+      return NextResponse.redirect(new URL(errorUrl, process.env.NEXTAUTH_URL));
     }
 
     if (!code) {
-      return NextResponse.redirect(
-        `${process.env.NEXTAUTH_URL}/mercado-livre?error=invalid_callback`
+      const errorUrl = getIntegrationErrorRedirect(
+        IntegrationProvider.MERCADO_LIVRE,
+        'invalid_callback'
       );
+      return NextResponse.redirect(new URL(errorUrl, process.env.NEXTAUTH_URL));
     }
 
     const session = await getServerSession(authOptions);
 
     if (!session?.user?.id) {
-      return NextResponse.redirect(`${process.env.NEXTAUTH_URL}/mercado-livre?error=unauthorized`);
+      const errorUrl = getIntegrationErrorRedirect(
+        IntegrationProvider.MERCADO_LIVRE,
+        'unauthorized'
+      );
+      return NextResponse.redirect(new URL(errorUrl, process.env.NEXTAUTH_URL));
     }
 
     const clientId = process.env.MELI_CLIENT_ID;
@@ -36,9 +49,11 @@ export async function GET(request: NextRequest) {
     const redirectUri = process.env.MELI_REDIRECT_URI;
 
     if (!clientId || !clientSecret || !redirectUri) {
-      return NextResponse.redirect(
-        `${process.env.NEXTAUTH_URL}/mercado-livre?error=config_missing`
+      const errorUrl = getIntegrationErrorRedirect(
+        IntegrationProvider.MERCADO_LIVRE,
+        'config_missing'
       );
+      return NextResponse.redirect(new URL(errorUrl, process.env.NEXTAUTH_URL));
     }
 
     // Exchange code for access token
@@ -60,9 +75,11 @@ export async function GET(request: NextRequest) {
     if (!tokenResponse.ok) {
       const errorText = await tokenResponse.text();
       console.error('Token exchange failed:', errorText);
-      return NextResponse.redirect(
-        `${process.env.NEXTAUTH_URL}/mercado-livre?error=token_exchange_failed`
+      const errorUrl = getIntegrationErrorRedirect(
+        IntegrationProvider.MERCADO_LIVRE,
+        'token_exchange_failed'
       );
+      return NextResponse.redirect(new URL(errorUrl, process.env.NEXTAUTH_URL));
     }
 
     const tokens = await tokenResponse.json();
@@ -86,13 +103,14 @@ export async function GET(request: NextRequest) {
     // Trigger initial sync
     await inngest.send({ name: 'meli/sync:user', data: { userId: session.user.id } });
 
-    return NextResponse.redirect(
-      `${process.env.NEXTAUTH_URL}/mercado-livre?success=meli_connected`
-    );
+    const successUrl = getIntegrationSuccessRedirect(IntegrationProvider.MERCADO_LIVRE);
+    return NextResponse.redirect(new URL(successUrl, process.env.NEXTAUTH_URL));
   } catch (error) {
     console.error('Error in Mercado Livre callback:', error);
-    return NextResponse.redirect(
-      `${process.env.NEXTAUTH_URL}/mercado-livre?error=connection_failed`
+    const errorUrl = getIntegrationErrorRedirect(
+      IntegrationProvider.MERCADO_LIVRE,
+      'connection_failed'
     );
+    return NextResponse.redirect(new URL(errorUrl, process.env.NEXTAUTH_URL));
   }
 }
