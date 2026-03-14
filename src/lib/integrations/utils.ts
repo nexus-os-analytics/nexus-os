@@ -44,17 +44,15 @@ export function getIntegrationOverviewUrl(provider: IntegrationProvider): string
 /**
  * Get the success redirect URL after OAuth
  *
- * @param provider - The integration provider
- * @returns The full redirect URL with success parameter
+ * @param _provider - The integration provider (unused; all providers redirect to the overview)
+ * @returns The overview page path
  *
  * @example
  * getIntegrationSuccessRedirect(IntegrationProvider.BLING)
- * // → '/bling?success=bling_connected'
+ * // → '/visao-geral'
  */
-export function getIntegrationSuccessRedirect(provider: IntegrationProvider): string {
-  const baseUrl = getIntegrationOverviewUrl(provider);
-  const successParam = getSuccessParam(provider);
-  return `${baseUrl}?success=${successParam}`;
+export function getIntegrationSuccessRedirect(_provider: IntegrationProvider): string {
+  return '/visao-geral';
 }
 
 /**
