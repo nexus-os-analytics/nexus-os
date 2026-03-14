@@ -7,7 +7,7 @@ import { useShopeeIntegration } from '@/hooks/useShopeeIntegration';
 
 const SHOPEE_CONFIG: ConnectPageConfig = {
   color: 'orange',
-  logoSrc: '/assets/shopee-logo.png',
+  logoSrc: '/img/shopee-logo.webp',
   logoAlt: 'Shopee Logo',
   logoWidth: 120,
   logoHeight: 40,
