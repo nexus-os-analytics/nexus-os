@@ -250,7 +250,7 @@ export const authOptions: AuthOptions = {
               email: user.email!,
               deletedAt: null,
             },
-            include: { blingIntegration: true },
+            include: { blingIntegration: true, meliIntegration: true, shopeeIntegration: true },
           });
 
           if (dbUser) {
@@ -258,8 +258,13 @@ export const authOptions: AuthOptions = {
             token.role = dbUser.role;
             token.image = dbUser.image;
             token.onboardingCompleted = dbUser.onboardingCompleted;
+            token.activeIntegrationProvider = dbUser.activeIntegrationProvider;
             token.blingSyncStatus = dbUser.blingSyncStatus;
             token.hasBlingIntegration = !!dbUser.blingIntegration;
+            token.meliSyncStatus = dbUser.meliSyncStatus;
+            token.hasMeliIntegration = !!dbUser.meliIntegration;
+            token.shopeeSyncStatus = dbUser.shopeeSyncStatus ?? null;
+            token.hasShopeeIntegration = !!dbUser.shopeeIntegration;
             token.planTier = dbUser.planTier as PlanTier;
             token.subscriptionStatus = dbUser.subscriptionStatus;
             token.cancelAtPeriodEnd = dbUser.cancelAtPeriodEnd;
@@ -294,12 +299,17 @@ export const authOptions: AuthOptions = {
         // Fetch additional user data
         const dbUser = await prisma.user.findUnique({
           where: { id: user.id },
-          include: { blingIntegration: true },
+          include: { blingIntegration: true, meliIntegration: true, shopeeIntegration: true },
         });
 
         if (dbUser) {
+          token.activeIntegrationProvider = dbUser.activeIntegrationProvider;
           token.blingSyncStatus = dbUser.blingSyncStatus;
           token.hasBlingIntegration = !!dbUser.blingIntegration;
+          token.meliSyncStatus = dbUser.meliSyncStatus;
+          token.hasMeliIntegration = !!dbUser.meliIntegration;
+          token.shopeeSyncStatus = dbUser.shopeeSyncStatus ?? null;
+          token.hasShopeeIntegration = !!dbUser.shopeeIntegration;
           token.planTier = dbUser.planTier as PlanTier;
           token.subscriptionStatus = dbUser.subscriptionStatus;
           token.cancelAtPeriodEnd = dbUser.cancelAtPeriodEnd;
@@ -310,7 +320,7 @@ export const authOptions: AuthOptions = {
       if (trigger === 'update') {
         const updatedUser = await prisma.user.findUnique({
           where: { id: token.id as string },
-          include: { blingIntegration: true },
+          include: { blingIntegration: true, meliIntegration: true, shopeeIntegration: true },
         });
 
         if (updatedUser) {
@@ -318,8 +328,13 @@ export const authOptions: AuthOptions = {
           token.image = updatedUser.image;
           token.role = updatedUser.role;
           token.onboardingCompleted = updatedUser.onboardingCompleted;
+          token.activeIntegrationProvider = updatedUser.activeIntegrationProvider;
           token.blingSyncStatus = updatedUser.blingSyncStatus;
           token.hasBlingIntegration = !!updatedUser.blingIntegration;
+          token.meliSyncStatus = updatedUser.meliSyncStatus;
+          token.hasMeliIntegration = !!updatedUser.meliIntegration;
+          token.shopeeSyncStatus = updatedUser.shopeeSyncStatus ?? null;
+          token.hasShopeeIntegration = !!updatedUser.shopeeIntegration;
           token.planTier = updatedUser.planTier as PlanTier;
           token.subscriptionStatus = updatedUser.subscriptionStatus;
           token.cancelAtPeriodEnd = updatedUser.cancelAtPeriodEnd;
@@ -338,8 +353,13 @@ export const authOptions: AuthOptions = {
           role: token.role as UserRole,
           image: token.image as string,
           onboardingCompleted: token.onboardingCompleted as boolean,
+          activeIntegrationProvider: token.activeIntegrationProvider,
           blingSyncStatus: token.blingSyncStatus,
           hasBlingIntegration: token.hasBlingIntegration,
+          meliSyncStatus: token.meliSyncStatus,
+          hasMeliIntegration: token.hasMeliIntegration,
+          shopeeSyncStatus: token.shopeeSyncStatus,
+          hasShopeeIntegration: token.hasShopeeIntegration ?? false,
           planTier: (token.planTier as PlanTier) ?? 'FREE',
           subscriptionStatus: token.subscriptionStatus as string | null | undefined,
           cancelAtPeriodEnd: token.cancelAtPeriodEnd as boolean | undefined,

@@ -1,4 +1,5 @@
 'use client';
+import { useEffect } from 'react';
 import {
   Burger,
   Button,
@@ -9,12 +10,9 @@ import {
   ScrollArea,
   Stack,
   Text,
-  ThemeIcon,
-  Tooltip,
 } from '@mantine/core';
 import { useDisclosure, useMediaQuery } from '@mantine/hooks';
 import {
-  IconCircleCheck,
   IconCreditCard,
   IconCrown,
   IconCurrencyReal,
@@ -26,20 +24,47 @@ import {
 } from '@tabler/icons-react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { signOut } from 'next-auth/react';
+import { signOut, useSession } from 'next-auth/react';
 import { UserDropdown } from '@/components/commons/UserDropdown';
 import { useAuth } from '@/features/auth/context/AuthContext';
 import { openCheckout, openPortal } from '@/features/billing/services/stripeClient';
-import { useBlingIntegration } from '@/hooks/useBlingIntegration';
+import { useActiveIntegration } from '@/hooks/useActiveIntegration';
+import { IntegrationSwitcher } from '@/features/dashboard/components/IntegrationSwitcher';
+import { useQueryString } from '@/hooks/useQueryString';
 
 const LOGO_SIZE_MOBILE = 48;
 const LOGO_SIZE_DESKTOP = 64;
 
 export function AdminHeader() {
-  const { connectionState } = useBlingIntegration();
+  const { connectionState } = useActiveIntegration();
   const { user, signOut: logout, hasPermission } = useAuth();
+  const { data: session } = useSession();
   const [drawerOpened, { toggle: toggleDrawer, close: closeDrawer }] = useDisclosure(false);
   const isMobile = useMediaQuery('(max-width: 48em)');
+  const { getQueryParam, setQueryParam } = useQueryString();
+
+  const availableProviders: string[] = [
+    session?.user?.hasBlingIntegration ? 'BLING' : null,
+    session?.user?.hasMeliIntegration ? 'MERCADO_LIVRE' : null,
+    session?.user?.hasShopeeIntegration ? 'SHOPEE' : null,
+  ].filter((p): p is string => p !== null);
+
+  const sourceParam = getQueryParam('source');
+  const firstProvider = availableProviders[0] ?? null;
+
+  useEffect(() => {
+    if (sourceParam === null && firstProvider !== null) {
+      setQueryParam('source', firstProvider);
+    }
+    // setQueryParam is a new reference each render but has stable behavior
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sourceParam, firstProvider]);
+
+  const source = sourceParam ?? firstProvider;
+
+  const handleSourceChange = (value: string | null) => {
+    if (value) setQueryParam('source', value);
+  };
 
   const handleLogout = () => {
     logout();
@@ -61,23 +86,22 @@ export function AdminHeader() {
                 width={isMobile ? LOGO_SIZE_MOBILE : LOGO_SIZE_DESKTOP}
                 height={isMobile ? LOGO_SIZE_MOBILE : LOGO_SIZE_DESKTOP}
               />
-              <Text fw={500} size="lg" c="brand.6">
+              <Text fw={500} size="lg" c="brand.6" hiddenFrom="sm">
                 Nexus OS
               </Text>
             </Group>
           </Link>
 
           <Group gap="xs" visibleFrom="sm">
-            {connectionState === 'connected' && (
-              <Tooltip label="Bling conectado!">
-                <Group align="baseline" gap={4}>
-                  <ThemeIcon color="green.9" variant="light" size={20}>
-                    <IconCircleCheck />
-                  </ThemeIcon>
-                  <Image src="/img/bling-logo.png" alt="Bling Conectado" width={45} height={18} />
-                </Group>
-              </Tooltip>
-            )}
+            <IntegrationSwitcher
+              value={source}
+              onChange={handleSourceChange}
+              availableProviders={availableProviders}
+              connectionState={connectionState}
+            />
+            {/* {availableProviders.length > 0 && (
+
+            )} */}
             <UserDropdown />
           </Group>
 
@@ -101,14 +125,18 @@ export function AdminHeader() {
           <Divider my="sm" />
 
           <Stack p="md" gap="md">
-            {connectionState === 'connected' && (
-              <Group align="center" gap={8}>
-                <ThemeIcon color="green.9" variant="light" size={20}>
-                  <IconCircleCheck />
-                </ThemeIcon>
-                <Image src="/img/bling-logo.png" alt="Bling Conectado" width={45} height={18} />
-              </Group>
-            )}
+            <IntegrationSwitcher
+              value={source}
+              onChange={(v) => {
+                handleSourceChange(v);
+                closeDrawer();
+              }}
+              availableProviders={availableProviders}
+              connectionState={connectionState}
+            />
+            {/* {availableProviders.length > 0 && (
+
+            )} */}
 
             <Divider />
 

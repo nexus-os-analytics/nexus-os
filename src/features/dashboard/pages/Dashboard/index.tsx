@@ -20,26 +20,25 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { ProLockedState } from '@/features/billing/components/ProLockedState';
 import { BlingConnectBanner } from '@/features/bling/components/BlingConnectBanner';
 import { ProductCard } from '@/features/products/components/ProductCard';
-import { useBlingIntegration } from '@/hooks/useBlingIntegration';
+import { useActiveIntegration } from '@/hooks/useActiveIntegration';
 import { ALERT_TYPE_CONFIG, ALERT_URGENCY_ORDER } from '@/lib/constants';
-import {
-  DashboardOnboarding,
-  getOnboardingCompleted,
-} from '../../components/DashboardOnboarding';
+import { DashboardOnboarding, getOnboardingCompleted } from '../../components/DashboardOnboarding';
 import { ProductIndicators } from '../../components/ProductIndicators';
 import { useOverviewMetrics } from '../../hooks/use-overview-metrics';
 import { useProductAlerts } from '../../hooks/use-product-alerts';
 import { modals } from '@mantine/modals';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 const CAMPAIGN_ELIGIBLE_TYPES = ['LIQUIDATION', 'DEAD_STOCK', 'OPPORTUNITY'] as const;
 
 export function Dashboard() {
   const { data: session } = useSession();
   const planTier = session?.user?.planTier ?? 'FREE';
-  const { status, loading, sync, refresh, manualSyncAllowed } = useBlingIntegration();
+  const { status, loading, sync, refresh, manualSyncAllowed } = useActiveIntegration();
+  const searchParams = useSearchParams();
+  const source = searchParams.get('source') as 'BLING' | 'MERCADO_LIVRE' | 'SHOPEE' | null;
   // Overview metrics
-  const { data: overviewMetrics } = useOverviewMetrics();
+  const { data: overviewMetrics } = useOverviewMetrics({ provider: source ?? undefined });
   // Filters (URL-synced as comma-separated strings)
   const [search, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState<string>('');
@@ -48,10 +47,11 @@ export function Dashboard() {
   // Build API params
   const queryParams = useMemo(() => {
     return {
+      provider: source ?? undefined,
       type: typeFilter || undefined,
       risk: riskFilter || undefined,
     } as Record<string, string | number | undefined>;
-  }, [typeFilter, riskFilter]);
+  }, [source, typeFilter, riskFilter]);
 
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } =
     useProductAlerts(queryParams);
@@ -156,25 +156,27 @@ export function Dashboard() {
         onClose={() => setOnboardingOpen(false)}
       />
 
-      {!loading && !status?.connected && <BlingConnectBanner />}
+      {!loading && !status?.connected && (source === 'BLING' || source === null) && (
+        <BlingConnectBanner />
+      )}
 
       {/* Summary Cards aligned with Overview */}
       <Box ref={indicatorsRef}>
         {overviewMetrics ? (
           <ProductIndicators metrics={overviewMetrics} />
         ) : (
-        <SimpleGrid cols={{ base: 1, sm: 3 }} spacing="lg">
-          {[0, 1, 2].map((i) => (
-            <Card key={i} padding="xl" radius="md" withBorder shadow="sm">
-              <Group justify="space-between" mb="md">
-                <Skeleton height={48} width={48} radius="md" />
-              </Group>
-              <Skeleton height={16} width="60%" mb={8} />
-              <Skeleton height={28} width="50%" mb={8} />
-              <Skeleton height={12} width="80%" />
-            </Card>
-          ))}
-        </SimpleGrid>
+          <SimpleGrid cols={{ base: 1, sm: 3 }} spacing="lg">
+            {[0, 1, 2].map((i) => (
+              <Card key={i} padding="xl" radius="md" withBorder shadow="sm">
+                <Group justify="space-between" mb="md">
+                  <Skeleton height={48} width={48} radius="md" />
+                </Group>
+                <Skeleton height={16} width="60%" mb={8} />
+                <Skeleton height={28} width="50%" mb={8} />
+                <Skeleton height={12} width="80%" />
+              </Card>
+            ))}
+          </SimpleGrid>
         )}
       </Box>
 
@@ -264,6 +266,7 @@ export function Dashboard() {
             </Button>
             {(() => {
               const csvHref = `/api/dashboard/alerts/export?${new URLSearchParams({
+                ...(source ? { provider: source } : {}),
                 ...(typeFilter ? { type: typeFilter } : {}),
                 ...(riskFilter ? { risk: riskFilter } : {}),
               }).toString()}`;

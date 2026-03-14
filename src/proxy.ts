@@ -24,7 +24,7 @@ export async function proxy(request: NextRequest) {
     }
 
     if (isAuthRoute(pathname) && !required2FA) {
-      return NextResponse.redirect(new URL('/bling', request.url));
+      return NextResponse.redirect(new URL('/integracao', request.url));
     }
 
     if (!canAccessRoute(role, pathname)) {

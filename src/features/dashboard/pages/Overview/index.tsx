@@ -22,8 +22,10 @@ import {
 import { ArrowRight, Sparkles } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { useBlingIntegration } from '@/hooks/useBlingIntegration';
+import { useActiveIntegration } from '@/hooks/useActiveIntegration';
+import { useSyncStatusPolling } from '@/hooks/useSyncStatusPolling';
 import { getAlertTypeColor, getAlertTypeLabel } from '@/lib/constants';
+import { IntegrationProvider } from '@/types/integrations';
 import { ProductIndicators } from '../../components/ProductIndicators';
 import { useOverviewMetrics } from '../../hooks/use-overview-metrics';
 
@@ -34,9 +36,13 @@ export function Overview() {
   const BG_ALPHA_LIGHT = 0.12 as const;
   const BG_ALPHA_DARK = 0.06 as const;
   const { data, error, refetch } = useOverviewMetrics();
-  const { status, refresh } = useBlingIntegration();
+  const { provider } = useActiveIntegration();
+  const { isCompleted } = useSyncStatusPolling({
+    provider: provider as IntegrationProvider,
+    enabled: true,
+  });
   const router = useRouter();
-  const isLoading = status?.syncStatus !== 'COMPLETED';
+  const isLoading = !isCompleted;
 
   const tips = [
     'Dica: Você pode navegar enquanto calculamos os resultados.',
@@ -50,17 +56,10 @@ export function Overview() {
 
   const onContinue = () => router.push('/dashboard');
 
-  const SYNC_POLL_INTERVAL_MS = 3000;
   const TIP_ROTATE_INTERVAL_MS = 4000;
   useEffect(() => {
-    const interval = setInterval(() => {
-      if (status?.syncStatus !== 'COMPLETED') {
-        refresh();
-        refetch();
-      }
-    }, SYNC_POLL_INTERVAL_MS);
-    return () => clearInterval(interval);
-  }, [status, refresh, refetch]);
+    if (isCompleted) refetch();
+  }, [isCompleted, refetch]);
 
   useEffect(() => {
     if (!isLoading) return;
@@ -135,12 +134,10 @@ export function Overview() {
           )}
 
           {/* Summary Cards */}
-          {status?.syncStatus === 'COMPLETED' && !error && data && (
-            <ProductIndicators metrics={data} />
-          )}
+          {isCompleted && !error && data && <ProductIndicators metrics={data} />}
 
           {/* Top Actions */}
-          {status?.syncStatus === 'COMPLETED' && !error && data && (
+          {isCompleted && !error && data && (
             <Card padding="xl" radius="md" withBorder shadow="md">
               <Title order={3} mb="lg">
                 Top 3 Ações Recomendadas

@@ -1,6 +1,27 @@
 export default {
-  extends: ["@commitlint/config-conventional"],
+  extends: ['@commitlint/config-conventional'],
   rules: {
-    'header-max-length': [2, 'always', 120]
-  }
+    'subject-case': [0],
+    'body-max-line-length': [0],
+    'header-max-length': [0],
+    'body-leading-blank': [0],
+    'type-enum': [
+      1,
+      'always',
+      [
+        'feat',
+        'fix',
+        'docs',
+        'style',
+        'refactor',
+        'test',
+        'chore',
+        'perf',
+        'ci',
+        'build',
+        'revert',
+        'wip',
+      ],
+    ],
+  },
 };
