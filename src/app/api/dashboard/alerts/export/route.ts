@@ -1,22 +1,212 @@
-import type { BlingAlertType, BlingRuptureRisk } from '@prisma/client';
+import {
+  IntegrationProvider,
+  type BlingAlertType,
+  type BlingRuptureRisk,
+  type MeliAlertType,
+  type MeliRuptureRisk,
+  type ShopeeAlertType,
+  type ShopeeRuptureRisk,
+} from '@prisma/client';
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import pino from 'pino';
+import { z } from 'zod';
+import type { DashboardAlertProduct, DashboardProductAlert } from '@/features/products/types';
+import type { BlingProductAlertType, BlingProductType } from '@/lib/bling';
 import { BlingIntegration, createBlingRepository } from '@/lib/bling';
+import type { MeliProductAlertType, MeliProductType } from '@/lib/mercado-livre';
+import { MeliIntegration, createMeliRepository } from '@/lib/mercado-livre';
 import { authOptions } from '@/lib/next-auth';
+import type { ShopeeProductType } from '@/lib/shopee';
+import { ShopeeIntegration, createShopeeRepository } from '@/lib/shopee';
 
 const logger = pino({ name: 'api/dashboard/alerts/export' });
 const DEFAULT_EXPORT_LIMIT = 1000;
 
+const querySchema = z.object({
+  provider: z.enum(['BLING', 'MERCADO_LIVRE', 'SHOPEE']).default('BLING'),
+  type: z.string().optional(),
+  risk: z.string().optional(),
+  limit: z.coerce.number().int().positive().max(DEFAULT_EXPORT_LIMIT).default(DEFAULT_EXPORT_LIMIT),
+});
+
+// ---------------------------------------------------------------------------
+// Normalizers (mirrors alerts/route.ts)
+// ---------------------------------------------------------------------------
+
+type BlingProductRaw = Pick<
+  BlingProductType,
+  'id' | 'blingProductId' | 'name' | 'sku' | 'costPrice' | 'salePrice' | 'currentStock' | 'image'
+> & {
+  alert: Pick<
+    BlingProductAlertType,
+    | 'id'
+    | 'type'
+    | 'risk'
+    | 'vvdReal'
+    | 'vvd30'
+    | 'vvd7'
+    | 'daysRemaining'
+    | 'capitalStuck'
+    | 'recommendations'
+  > | null;
+};
+
+function normalizeBlingProduct(product: BlingProductRaw): DashboardAlertProduct {
+  return {
+    id: product.id,
+    externalId: product.blingProductId,
+    provider: IntegrationProvider.BLING,
+    name: product.name,
+    sku: product.sku ?? null,
+    costPrice: product.costPrice,
+    salePrice: product.salePrice,
+    currentStock: product.currentStock,
+    image: product.image ?? null,
+    alert: product.alert
+      ? {
+          id: product.alert.id,
+          type: product.alert.type,
+          risk: product.alert.risk,
+          vvdReal: product.alert.vvdReal,
+          vvd30: product.alert.vvd30,
+          vvd7: product.alert.vvd7,
+          daysRemaining: product.alert.daysRemaining,
+          capitalStuck: product.alert.capitalStuck,
+          recommendations: product.alert.recommendations ?? null,
+        }
+      : null,
+  };
+}
+
+function buildMeliAlert(raw: MeliProductAlertType): DashboardProductAlert {
+  const rawRecs = raw.recommendations as string | null | Record<string, unknown> | unknown[];
+  const recommendations: string | null =
+    rawRecs == null ? null : typeof rawRecs === 'string' ? rawRecs : JSON.stringify(rawRecs);
+
+  return {
+    id: raw.id,
+    type: raw.type,
+    risk: raw.risk,
+    vvdReal: raw.vvdReal,
+    vvd30: raw.vvd30,
+    vvd7: raw.vvd7,
+    daysRemaining: raw.daysRemaining,
+    capitalStuck: raw.capitalStuck,
+    recommendations,
+  };
+}
+
+function normalizeMeliProduct(product: MeliProductType): DashboardAlertProduct {
+  return {
+    id: product.id,
+    externalId: product.meliItemId,
+    provider: IntegrationProvider.MERCADO_LIVRE,
+    name: product.title,
+    sku: product.sku ?? null,
+    costPrice: product.costPrice,
+    salePrice: product.salePrice,
+    currentStock: product.currentStock,
+    image: product.thumbnail ?? null,
+    alert: product.alert ? buildMeliAlert(product.alert) : null,
+  };
+}
+
+function normalizeShopeeProduct(product: ShopeeProductType): DashboardAlertProduct {
+  return {
+    id: product.id,
+    externalId: product.shopeeItemId,
+    provider: IntegrationProvider.SHOPEE,
+    name: product.title,
+    sku: product.sku ?? null,
+    costPrice: product.costPrice,
+    salePrice: product.salePrice,
+    currentStock: product.currentStock,
+    image: product.thumbnail ?? null,
+    alert: product.alert
+      ? {
+          id: product.alert.id,
+          type: product.alert.type,
+          risk: product.alert.risk,
+          vvdReal: product.alert.vvdReal,
+          vvd30: product.alert.vvd30,
+          vvd7: product.alert.vvd7,
+          daysRemaining: product.alert.daysRemaining,
+          capitalStuck: product.alert.capitalStuck,
+          recommendations: product.alert.recommendations ?? null,
+        }
+      : null,
+  };
+}
+
+// ---------------------------------------------------------------------------
+// CSV helpers
+// ---------------------------------------------------------------------------
+
 function toCsvValue(value: unknown): string {
   if (value === null || value === undefined) return '';
-  const normalized = typeof value === 'object' ? JSON.stringify(value) : String(value);
-  if (/[",\n]/.test(normalized)) {
-    return `"${normalized.replaceAll('"', '""')}"`;
+  const str = typeof value === 'object' ? JSON.stringify(value) : String(value);
+  if (/[",\n]/.test(str)) {
+    return `"${str.replaceAll('"', '""')}"`;
   }
-  return normalized;
+  return str;
 }
+
+function parseRecommendations(raw: string | null): string {
+  if (!raw) return '';
+  try {
+    const parsed = JSON.parse(raw) as unknown;
+    if (Array.isArray(parsed)) return (parsed as string[]).join(' | ');
+  } catch {
+    // raw is already a plain string
+  }
+  return raw;
+}
+
+const CSV_HEADERS = [
+  'externalId',
+  'provider',
+  'name',
+  'sku',
+  'costPrice',
+  'salePrice',
+  'currentStock',
+  'alert.type',
+  'alert.risk',
+  'alert.vvdReal',
+  'alert.vvd7',
+  'alert.vvd30',
+  'alert.daysRemaining',
+  'alert.capitalStuck',
+  'alert.recommendations',
+] as const;
+
+function productToCsvRow(p: DashboardAlertProduct): string {
+  const a = p.alert;
+  const cols: unknown[] = [
+    p.externalId,
+    p.provider,
+    p.name,
+    p.sku,
+    p.costPrice,
+    p.salePrice,
+    p.currentStock,
+    a?.type ?? '',
+    a?.risk ?? '',
+    a?.vvdReal ?? '',
+    a?.vvd7 ?? '',
+    a?.vvd30 ?? '',
+    a?.daysRemaining ?? '',
+    a?.capitalStuck ?? '',
+    parseRecommendations(a?.recommendations ?? null),
+  ];
+  return cols.map(toCsvValue).join(',');
+}
+
+// ---------------------------------------------------------------------------
+// Route handler
+// ---------------------------------------------------------------------------
 
 export async function GET(req: NextRequest) {
   try {
@@ -27,118 +217,103 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Não autenticado.' }, { status: 401 });
     }
 
-    const integration = await BlingIntegration.getBlingIntegration(userId);
+    const { searchParams } = new URL(req.url);
+    const parsed = querySchema.safeParse({
+      provider: searchParams.get('provider') ?? undefined,
+      type: searchParams.get('type') ?? undefined,
+      risk: searchParams.get('risk') ?? undefined,
+      limit: searchParams.get('limit') ?? undefined,
+    });
 
-    if (!integration) {
+    if (!parsed.success) {
       return NextResponse.json(
-        { error: 'Integração com Bling não encontrada para o usuário.' },
-        { status: 404 }
+        { error: 'Parâmetros inválidos.', details: parsed.error.flatten() },
+        { status: 400 }
       );
     }
 
-    const { searchParams } = new URL(req.url);
-    const typeParam = searchParams.get('type');
-    const riskParam = searchParams.get('risk');
-    const limitParam = Number(searchParams.get('limit')) || DEFAULT_EXPORT_LIMIT;
+    const { provider, type: typeParam, risk: riskParam, limit } = parsed.data;
 
-    const blingRepository = createBlingRepository({ integrationId: integration.id });
+    let normalized: DashboardAlertProduct[];
 
-    const result = await blingRepository.getProductAlerts({
-      integrationId: integration.id,
-      limit: limitParam,
-      filters: {
-        type: typeParam ? (typeParam.split(',') as BlingAlertType[]) : undefined,
-        risk: riskParam ? (riskParam.split(',') as BlingRuptureRisk[]) : undefined,
-      },
-    });
+    if (provider === 'BLING') {
+      const integration = await BlingIntegration.getBlingIntegration(userId);
 
-    const headers = [
-      'blingProductId',
-      'sku',
-      'name',
-      'categoryName',
-      'costPrice',
-      'salePrice',
-      'currentStock',
-      'alert.type',
-      'alert.risk',
-      'alert.vvdReal',
-      'alert.vvd7',
-      'alert.vvd30',
-      'alert.daysRemaining',
-      'alert.reorderPoint',
-      'alert.growthTrend',
-      'alert.capitalStuck',
-      'alert.daysSinceLastSale',
-      'alert.suggestedPrice',
-      'alert.estimatedDeadline',
-      'alert.recoverableAmount',
-      'alert.daysOutOfStock',
-      'alert.estimatedLostSales',
-      'alert.estimatedLostAmount',
-      'alert.idealStock',
-      'alert.excessUnits',
-      'alert.excessPercentage',
-      'alert.excessCapital',
-      'alert.recommendations',
-    ];
-
-    const rows = result.data.map((p) => {
-      const a = p.alert;
-      let recs: string[] = [];
-      if (a?.recommendations) {
-        if (Array.isArray(a.recommendations)) {
-          recs = a.recommendations as string[];
-        } else {
-          try {
-            recs = JSON.parse(a.recommendations as unknown as string) as string[];
-          } catch {
-            recs = [];
-          }
-        }
+      if (!integration) {
+        return NextResponse.json(
+          { error: 'Integração com Bling não encontrada para o usuário.' },
+          { status: 404 }
+        );
       }
 
-      const cols: unknown[] = [
-        p.blingProductId,
-        p.sku,
-        p.name,
-        p.category?.name ?? '',
-        p.costPrice,
-        p.salePrice,
-        p.currentStock,
-        a?.type ?? '',
-        a?.risk ?? '',
-        a?.vvdReal ?? '',
-        a?.vvd7 ?? '',
-        a?.vvd30 ?? '',
-        a?.daysRemaining ?? '',
-        a?.reorderPoint ?? '',
-        a?.growthTrend ?? '',
-        a?.capitalStuck ?? '',
-        a?.daysSinceLastSale ?? '',
-        a?.suggestedPrice ?? '',
-        a?.estimatedDeadline ?? '',
-        a?.recoverableAmount ?? '',
-        a?.daysOutOfStock ?? '',
-        a?.estimatedLostSales ?? '',
-        a?.estimatedLostAmount ?? '',
-        a?.idealStock ?? '',
-        a?.excessUnits ?? '',
-        a?.excessPercentage ?? '',
-        a?.excessCapital ?? '',
-        recs.join(' | '),
-      ];
+      const filters: { type?: BlingAlertType[]; risk?: BlingRuptureRisk[] } = {};
+      if (typeParam) filters.type = typeParam.split(',') as BlingAlertType[];
+      if (riskParam) filters.risk = riskParam.split(',') as BlingRuptureRisk[];
 
-      return cols.map(toCsvValue).join(',');
-    });
+      const blingRepo = createBlingRepository({ integrationId: integration.id });
+      const result = await blingRepo.getProductAlerts({
+        integrationId: integration.id,
+        limit,
+        filters,
+      });
 
-    const csv = [headers.join(','), ...rows].join('\n');
+      normalized = (result.data as unknown as BlingProductRaw[]).map(normalizeBlingProduct);
+    } else if (provider === 'MERCADO_LIVRE') {
+      const integration = await MeliIntegration.getMeliIntegration(userId);
+
+      if (!integration) {
+        return NextResponse.json(
+          { error: 'Integração com Mercado Livre não encontrada para o usuário.' },
+          { status: 404 }
+        );
+      }
+
+      const filters: { type?: MeliAlertType[]; risk?: MeliRuptureRisk[] } = {};
+      if (typeParam) filters.type = typeParam.split(',') as MeliAlertType[];
+      if (riskParam) filters.risk = riskParam.split(',') as MeliRuptureRisk[];
+
+      const meliRepo = createMeliRepository({ integrationId: integration.id });
+      const result = await meliRepo.getProductAlerts({
+        integrationId: integration.id,
+        limit,
+        filters,
+      });
+
+      normalized = result.data.map(normalizeMeliProduct);
+    } else {
+      // provider === 'SHOPEE'
+      const integration = await ShopeeIntegration.getShopeeIntegration(userId);
+
+      if (!integration) {
+        return NextResponse.json(
+          { error: 'Integração com Shopee não encontrada para o usuário.' },
+          { status: 404 }
+        );
+      }
+
+      const filters: { type?: ShopeeAlertType[]; risk?: ShopeeRuptureRisk[] } = {};
+      if (typeParam) filters.type = typeParam.split(',') as ShopeeAlertType[];
+      if (riskParam) filters.risk = riskParam.split(',') as ShopeeRuptureRisk[];
+
+      const shopeeRepo = createShopeeRepository({ integrationId: integration.id });
+      const result = await shopeeRepo.getProductAlerts({
+        integrationId: integration.id,
+        limit,
+        filters,
+      });
+
+      normalized = result.data.map(normalizeShopeeProduct);
+    }
+
+    logger.info({ provider, count: normalized.length }, 'Exporting alerts CSV');
+
+    const csv = [CSV_HEADERS.join(','), ...normalized.map(productToCsvRow)].join('\n');
 
     return new Response(csv, {
       status: 200,
       headers: {
         'Content-Type': 'text/csv; charset=utf-8',
-        'Content-Disposition': 'attachment; filename="alerts.csv"',
+        'Content-Disposition': `attachment; filename="alerts-${provider.toLowerCase()}.csv"`,
         'Cache-Control': 'no-store',
       },
     });

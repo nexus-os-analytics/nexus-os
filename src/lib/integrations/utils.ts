@@ -6,7 +6,6 @@
  * @module lib/integrations/utils
  */
 
-import prisma from '@/lib/prisma';
 import {
   IntegrationProvider,
   type IntegrationErrorParam,
@@ -125,67 +124,6 @@ export function parseSuccessParam(param: string): IntegrationProvider | null {
     default:
       return null;
   }
-}
-
-// =============================================================================
-// Sync Status Management
-// =============================================================================
-
-/**
- * Update user's sync status for a provider
- *
- * Uses Prisma to update the correct status field based on provider.
- *
- * @param userId - The user ID
- * @param provider - The integration provider
- * @param status - The new sync status
- * @returns Promise that resolves when update is complete
- *
- * @example
- * await updateSyncStatus('user123', IntegrationProvider.BLING, SyncStatus.SYNCING)
- */
-export async function updateSyncStatus(
-  userId: string,
-  provider: IntegrationProvider,
-  status: SyncStatus
-): Promise<void> {
-  const field = getSyncStatusField(provider);
-
-  await prisma.user.update({
-    where: { id: userId },
-    data: {
-      [field]: status,
-    },
-  });
-}
-
-/**
- * Get user's current sync status for a provider
- *
- * @param userId - The user ID
- * @param provider - The integration provider
- * @returns Promise resolving to the current sync status
- * @throws Error if user not found
- *
- * @example
- * const status = await getSyncStatus('user123', IntegrationProvider.BLING)
- */
-export async function getSyncStatus(
-  userId: string,
-  provider: IntegrationProvider
-): Promise<SyncStatus> {
-  const field = getSyncStatusField(provider);
-
-  const user = await prisma.user.findUnique({
-    where: { id: userId },
-  });
-
-  if (!user) {
-    throw new Error(`User not found: ${userId}`);
-  }
-
-  // @ts-expect-error - Dynamic field access
-  return user[field] as SyncStatus;
 }
 
 // =============================================================================

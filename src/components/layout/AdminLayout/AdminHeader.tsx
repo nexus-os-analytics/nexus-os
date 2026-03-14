@@ -1,4 +1,5 @@
 'use client';
+import { useEffect } from 'react';
 import {
   Burger,
   Button,
@@ -26,11 +27,13 @@ import {
 } from '@tabler/icons-react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { signOut } from 'next-auth/react';
+import { signOut, useSession } from 'next-auth/react';
 import { UserDropdown } from '@/components/commons/UserDropdown';
 import { useAuth } from '@/features/auth/context/AuthContext';
 import { openCheckout, openPortal } from '@/features/billing/services/stripeClient';
 import { useActiveIntegration } from '@/hooks/useActiveIntegration';
+import { SourceSelector } from '@/features/dashboard/components/SourceSelector';
+import { useQueryString } from '@/hooks/useQueryString';
 
 const LOGO_SIZE_MOBILE = 48;
 const LOGO_SIZE_DESKTOP = 64;
@@ -38,8 +41,33 @@ const LOGO_SIZE_DESKTOP = 64;
 export function AdminHeader() {
   const { connectionState, provider } = useActiveIntegration();
   const { user, signOut: logout, hasPermission } = useAuth();
+  const { data: session } = useSession();
   const [drawerOpened, { toggle: toggleDrawer, close: closeDrawer }] = useDisclosure(false);
   const isMobile = useMediaQuery('(max-width: 48em)');
+  const { getQueryParam, setQueryParam } = useQueryString();
+
+  const availableProviders: string[] = [
+    session?.user?.hasBlingIntegration ? 'BLING' : null,
+    session?.user?.hasMeliIntegration ? 'MERCADO_LIVRE' : null,
+    session?.user?.hasShopeeIntegration ? 'SHOPEE' : null,
+  ].filter((p): p is string => p !== null);
+
+  const sourceParam = getQueryParam('source');
+  const firstProvider = availableProviders[0] ?? null;
+
+  useEffect(() => {
+    if (sourceParam === null && firstProvider !== null) {
+      setQueryParam('source', firstProvider);
+    }
+    // setQueryParam is a new reference each render but has stable behavior
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sourceParam, firstProvider]);
+
+  const source = sourceParam ?? firstProvider;
+
+  const handleSourceChange = (value: string | null) => {
+    if (value) setQueryParam('source', value);
+  };
 
   const handleLogout = () => {
     logout();
@@ -87,6 +115,13 @@ export function AdminHeader() {
                   )}
                 </Group>
               </Tooltip>
+            )}
+            {availableProviders.length > 1 && (
+              <SourceSelector
+                value={source}
+                onChange={handleSourceChange}
+                availableProviders={availableProviders}
+              />
             )}
             <UserDropdown />
           </Group>

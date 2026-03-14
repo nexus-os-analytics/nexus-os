@@ -7,7 +7,12 @@
  * @module lib/mercado-livre/meli-metrics
  */
 
-import type { IntegrationConnection, IntegrationMetrics, SyncStatus } from '@/types/integrations';
+import type {
+  IntegrationConnection,
+  IntegrationMetrics,
+  IntegrationTopAction,
+  SyncStatus,
+} from '@/types/integrations';
 import { IntegrationProvider } from '@/types/integrations';
 import type {
   DisconnectParams,
@@ -16,7 +21,8 @@ import type {
   IIntegrationService,
   IsConnectedParams,
 } from '@/lib/integrations/base-integration';
-import { getSyncStatus } from '@/lib/integrations/utils';
+import { createMeliRepository } from '@/lib/mercado-livre/meli-repository';
+import { getSyncStatus } from '@/lib/integrations/server';
 import prisma from '@/lib/prisma';
 import type { MeliIntegration } from '@prisma/client';
 
@@ -30,8 +36,8 @@ export class MeliMetricsService implements IIntegrationService {
   /**
    * Get overview metrics for Meli integration
    *
-   * Currently returns basic metrics. Full implementation will calculate
-   * metrics from MeliProduct, MeliAlert, and other models.
+   * Fetches aggregated metrics from the Meli repository and adapts
+   * them to the generic IntegrationMetrics format.
    */
   async getMetrics(params: GetMetricsParams): Promise<IntegrationMetrics> {
     const { userId, integrationId } = params;
@@ -48,23 +54,12 @@ export class MeliMetricsService implements IIntegrationService {
     // Get current sync status
     const syncStatus = await getSyncStatus(userId, IntegrationProvider.MERCADO_LIVRE);
 
-    // Count products
-    const productCount = await prisma.meliProduct.count({
-      where: { integrationId: integration.id },
-    });
+    // Fetch metrics from Meli repository
+    const repository = createMeliRepository({ integrationId: integration.id });
+    const meliMetrics = await repository.getOverviewMetrics({ integrationId: integration.id });
 
-    // TODO: Implement full metrics calculation from Meli data
-    // For now, return basic structure with product count
-    return {
-      capitalStuck: 0, // TODO: Calculate from products
-      ruptureCount: 0, // TODO: Calculate from alerts/stock
-      opportunityCount: 0, // TODO: Calculate from opportunities
-      topActions: [], // TODO: Get top priority actions
-      productCount,
-      productLimit: null, // TODO: Check user plan
-      lastSyncAt: null, // TODO: Add lastSyncedAt to MeliIntegration model
-      syncStatus,
-    };
+    // Adapt to generic format
+    return adaptMeliMetricsToGeneric(meliMetrics, syncStatus);
   }
 
   /**
@@ -96,7 +91,7 @@ export class MeliMetricsService implements IIntegrationService {
   /**
    * Disconnect Meli integration
    *
-   * Soft deletes the integration by clearing tokens and marking as disconnected.
+   * Deletes the integration and resets the user's sync status.
    */
   async disconnect(params: DisconnectParams): Promise<void> {
     const { userId } = params;
@@ -128,6 +123,66 @@ export class MeliMetricsService implements IIntegrationService {
 }
 
 /**
+ * Adapt Meli metrics to generic format
+ */
+function adaptMeliMetricsToGeneric(
+  meliMetrics: {
+    capitalStuck: number;
+    ruptureCount: number;
+    opportunityCount: number;
+    topActions: Array<{
+      id: string;
+      name: string;
+      sku: string;
+      recommendations: string | null;
+      impactAmount?: number;
+      impactLabel?: string;
+      alertType?: string;
+      alertRisk?: string;
+    }>;
+    productCount?: number;
+    productLimit?: number | null;
+  },
+  syncStatus: SyncStatus
+): IntegrationMetrics {
+  return {
+    capitalStuck: meliMetrics.capitalStuck,
+    ruptureCount: meliMetrics.ruptureCount,
+    opportunityCount: meliMetrics.opportunityCount,
+    topActions: meliMetrics.topActions.map(adaptMeliActionToGeneric),
+    productCount: meliMetrics.productCount,
+    productLimit: meliMetrics.productLimit,
+    lastSyncAt: null,
+    syncStatus,
+  };
+}
+
+/**
+ * Adapt Meli top action to generic format
+ */
+function adaptMeliActionToGeneric(action: {
+  id: string;
+  name: string;
+  sku: string;
+  recommendations: string | null;
+  impactAmount?: number;
+  impactLabel?: string;
+  alertType?: string;
+  alertRisk?: string;
+}): IntegrationTopAction {
+  return {
+    id: action.id,
+    name: action.name,
+    sku: action.sku,
+    recommendations: action.recommendations,
+    impactAmount: action.impactAmount,
+    impactLabel: action.impactLabel,
+    alertType: action.alertType,
+    alertRisk: action.alertRisk,
+  };
+}
+
+/**
  * Adapt Meli integration to generic connection format
  */
 function adaptMeliIntegrationToGeneric(
@@ -140,7 +195,7 @@ function adaptMeliIntegrationToGeneric(
     provider: IntegrationProvider.MERCADO_LIVRE,
     isConnected: !!integration.accessToken,
     syncStatus: user.meliSyncStatus as SyncStatus,
-    lastSyncAt: null, // TODO: Add lastSyncedAt to MeliIntegration model
+    lastSyncAt: null,
     createdAt: integration.connectedAt,
     updatedAt: integration.updatedAt,
   };

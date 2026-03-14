@@ -2,7 +2,7 @@
 name: iOS Safari Compatibility Agent
 description: This custom agent ensures full UI compatibility with iOS Safari and macOS Safari, auditing and adjusting the UI for consistent behavior, layout stability, and feature support in Safari and iOS devices.
 tools: ['search', 'fetch', 'edit', 'agent', 'execute', 'next-devtools/*', 'todo']
-model: Gemini 3 Pro (Preview) (copilot)
+model: Gemini 3.1 Pro (Preview) (copilot)
 user-invokable: true
 ---
 

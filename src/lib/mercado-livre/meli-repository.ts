@@ -1,6 +1,14 @@
+import type { MeliRuptureRisk } from '@prisma/client';
+import type {
+  GetMeliProductsAlertsParams,
+  GetMeliProductAlertsResponse,
+  GetOverviewMetricsParams,
+  GetOverviewMetricsResponse,
+} from '@/features/products/types';
 import prisma from '../prisma';
 import type {
   MeliCategoryType,
+  MeliProductMetrics,
   MeliProductSettingsType,
   MeliProductType,
   MeliSalesHistoryType,
@@ -402,12 +410,40 @@ export function createMeliRepository({ integrationId }: MeliRepositoryOptions) {
       for (const balance of stockBalances) {
         const { meliItemId, stock } = balance;
 
-        await prisma.meliStockBalance.create({
-          data: {
+        const product = await prisma.meliProduct.findFirst({
+          where: {
+            integrationId,
             meliItemId: String(meliItemId),
-            stock,
           },
+          select: { id: true },
         });
+
+        if (!product) {
+          console.warn(`Skipping stock balance for meliItemId ${meliItemId}: product not found`);
+          continue;
+        }
+
+        const existing = await prisma.meliStockBalance.findFirst({
+          where: { meliItemId: String(meliItemId) },
+          select: { id: true },
+        });
+
+        if (existing) {
+          await prisma.meliStockBalance.update({
+            where: { id: existing.id },
+            data: {
+              meliItemId: String(meliItemId),
+              stock,
+            },
+          });
+        } else {
+          await prisma.meliStockBalance.create({
+            data: {
+              meliItemId: String(meliItemId),
+              stock,
+            },
+          });
+        }
       }
     } catch (error) {
       console.error('Error upserting Mercado Livre stock balance:', error);
@@ -418,21 +454,26 @@ export function createMeliRepository({ integrationId }: MeliRepositoryOptions) {
   /**
    * Get stock balance for a product
    */
-  async function getStockBalance(meliItemId: string): Promise<MeliStockBalanceType[]> {
+  async function getStockBalanceByProductId(
+    meliItemId: string
+  ): Promise<MeliStockBalanceType | null> {
     try {
-      const balances = await prisma.meliStockBalance.findMany({
+      const balance = await prisma.meliStockBalance.findFirst({
         where: { meliItemId: String(meliItemId) },
         orderBy: { createdAt: 'desc' },
-        take: 100,
       });
 
-      return balances.map((balance) => ({
+      if (!balance) {
+        return null;
+      }
+
+      return {
         id: balance.id,
         meliItemId: balance.meliItemId,
         stock: balance.stock,
         createdAt: balance.createdAt,
         updatedAt: balance.updatedAt,
-      }));
+      };
     } catch (error) {
       console.error('Error fetching Mercado Livre stock balance:', error);
       throw error;
@@ -442,7 +483,7 @@ export function createMeliRepository({ integrationId }: MeliRepositoryOptions) {
   /**
    * Get sales history for a product
    */
-  async function getSalesHistory(meliItemId: string): Promise<MeliSalesHistoryType[]> {
+  async function getSaleHistoryByProductId(meliItemId: string): Promise<MeliSalesHistoryType[]> {
     try {
       const sales = await prisma.meliOrderHistory.findMany({
         where: { meliItemId: String(meliItemId) },
@@ -465,6 +506,242 @@ export function createMeliRepository({ integrationId }: MeliRepositoryOptions) {
     }
   }
 
+  /**
+   * Upsert product alert metrics into the database
+   */
+  async function upsertProductAlert(
+    meliItemId: string,
+    productMetrics: MeliProductMetrics
+  ): Promise<{ previousRisk: MeliRuptureRisk | null }> {
+    try {
+      const product = await prisma.meliProduct.findFirst({
+        where: {
+          integrationId,
+          meliItemId: meliItemId,
+        },
+        select: { id: true },
+      });
+
+      if (!product) {
+        console.warn(`Skipping alert for meliItemId ${meliItemId}: product not found`);
+        return { previousRisk: null };
+      }
+
+      const existingAlert = await prisma.meliAlert.findUnique({
+        where: {
+          meliItemId: String(meliItemId),
+        },
+        select: {
+          risk: true,
+        },
+      });
+
+      await prisma.meliAlert.upsert({
+        where: {
+          meliItemId: String(meliItemId),
+        },
+        create: {
+          ...productMetrics,
+          product: {
+            connect: { meliItemId: String(meliItemId) },
+          },
+        },
+        update: {
+          ...productMetrics,
+        },
+      });
+
+      return {
+        previousRisk: existingAlert?.risk ?? null,
+      };
+    } catch (error) {
+      console.error('Error upserting product alert:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Mark that a CRITICAL alert notification was sent
+   */
+  async function markCriticalNotified(meliItemId: string, jobId?: string): Promise<void> {
+    try {
+      await prisma.meliAlert.update({
+        where: { meliItemId: String(meliItemId) },
+        data: {
+          lastCriticalNotifiedAt: new Date(),
+          jobId: jobId ?? undefined,
+        },
+      });
+    } catch (error) {
+      console.error('Error marking critical alert as notified:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get product alerts with pagination and filtering
+   */
+  async function getProductAlerts(
+    params: GetMeliProductsAlertsParams
+  ): Promise<GetMeliProductAlertsResponse> {
+    const { limit = 20, integrationId, filters } = params;
+
+    const products = await prisma.meliProduct.findMany({
+      where: {
+        integrationId,
+        alert: {
+          type: filters?.type ? { in: filters.type } : undefined,
+          risk: filters?.risk ? { in: filters.risk } : undefined,
+        },
+      },
+      include: {
+        alert: true,
+      },
+      take: limit,
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+
+    const hasNextPage = products.length > limit;
+    const data = hasNextPage ? products.slice(0, -1) : products;
+
+    return {
+      data: data.map((product) => ({
+        id: product.id,
+        meliItemId: product.meliItemId,
+        meliCategoryId: product.meliCategoryId,
+        sku: product.sku,
+        title: product.title,
+        costPrice: product.costPrice,
+        salePrice: product.salePrice,
+        currentStock: product.currentStock,
+        thumbnail: product.thumbnail,
+        permalink: product.permalink,
+        listingType: product.listingType,
+        status: product.status,
+        createdAt: product.createdAt,
+        updatedAt: product.updatedAt,
+        alert: product.alert
+          ? {
+              id: product.alert.id,
+              meliItemId: product.alert.meliItemId,
+              type: product.alert.type,
+              risk: product.alert.risk,
+              discount: product.alert.discount,
+              discountAmount: product.alert.discountAmount,
+              vvdReal: product.alert.vvdReal,
+              vvd30: product.alert.vvd30,
+              vvd7: product.alert.vvd7,
+              daysRemaining: product.alert.daysRemaining,
+              reorderPoint: product.alert.reorderPoint,
+              growthTrend: product.alert.growthTrend,
+              capitalStuck: product.alert.capitalStuck,
+              daysSinceLastSale: product.alert.daysSinceLastSale,
+              suggestedPrice: product.alert.suggestedPrice,
+              estimatedDeadline: product.alert.estimatedDeadline,
+              recoverableAmount: product.alert.recoverableAmount,
+              daysOutOfStock: product.alert.daysOutOfStock,
+              estimatedLostSales: product.alert.estimatedLostSales,
+              estimatedLostAmount: product.alert.estimatedLostAmount,
+              idealStock: product.alert.idealStock,
+              excessUnits: product.alert.excessUnits,
+              excessPercentage: product.alert.excessPercentage,
+              excessCapital: product.alert.excessCapital,
+              message: product.alert.message,
+              recommendations: JSON.stringify(product.alert.recommendations),
+              lastCriticalNotifiedAt: product.alert.lastCriticalNotifiedAt,
+              createdAt: product.alert.createdAt,
+              updatedAt: product.alert.updatedAt,
+            }
+          : null,
+      })),
+      nextCursor: hasNextPage ? data[data.length - 1].id : null,
+      hasNextPage,
+    };
+  }
+
+  /**
+   * Get overview metrics for the dashboard
+   */
+  async function getOverviewMetrics({
+    integrationId,
+  }: GetOverviewMetricsParams): Promise<GetOverviewMetricsResponse> {
+    const products = await prisma.meliProduct.findMany({
+      where: {
+        integrationId,
+        alert: {
+          type: {
+            in: ['DEAD_STOCK', 'LIQUIDATION'],
+          },
+        },
+      },
+      include: {
+        alert: true,
+      },
+    });
+
+    let capitalStuck = 0;
+    let ruptureCount = 0;
+    let opportunityCount = 0;
+    const topActions: GetOverviewMetricsResponse['topActions'] = [];
+
+    for (const product of products) {
+      if (product.alert) {
+        if (product.alert.type === 'RUPTURE') {
+          ruptureCount += 1;
+        } else if (product.alert.type === 'OPPORTUNITY') {
+          opportunityCount += 1;
+        }
+
+        let impactAmount: number | undefined;
+        let impactLabel: string | undefined;
+        const a = product.alert;
+
+        if (a.type === 'DEAD_STOCK' && typeof a.capitalStuck === 'number') {
+          impactAmount = a.capitalStuck;
+          impactLabel = 'Capital parado';
+        } else if (
+          (a as unknown as { type: string }).type === 'LIQUIDATION' &&
+          typeof a.excessCapital === 'number'
+        ) {
+          impactAmount = a.excessCapital;
+          impactLabel = 'Capital em excesso';
+        }
+
+        topActions.push({
+          id: product.id,
+          name: product.title,
+          sku: product.sku ?? '',
+          recommendations: a.recommendations ? JSON.stringify(a.recommendations) : null,
+          impactAmount,
+          impactLabel,
+          alertType: a.type as unknown as GetOverviewMetricsResponse['topActions'][0]['alertType'],
+          alertRisk: a.risk as unknown as GetOverviewMetricsResponse['topActions'][0]['alertRisk'],
+        });
+      }
+    }
+
+    capitalStuck = products.reduce((sum: number, p) => {
+      return sum + p.currentStock * p.salePrice;
+    }, 0);
+
+    const riskOrder: Record<string, number> = { CRITICAL: 4, HIGH: 3, MEDIUM: 2, LOW: 1 };
+
+    const sortedTopActions = topActions.toSorted((a, b) => {
+      const aRisk = products.find((p) => p.id === a.id)?.alert?.risk ?? 'LOW';
+      const bRisk = products.find((p) => p.id === b.id)?.alert?.risk ?? 'LOW';
+      return (riskOrder[bRisk] ?? 0) - (riskOrder[aRisk] ?? 0);
+    });
+
+    return {
+      capitalStuck,
+      ruptureCount,
+      opportunityCount,
+      topActions: sortedTopActions.slice(0, 3),
+    };
+  }
+
   return {
     upsertProducts,
     getProducts,
@@ -476,7 +753,11 @@ export function createMeliRepository({ integrationId }: MeliRepositoryOptions) {
     getCategoryById,
     upsertSalesHistory,
     upsertStockBalance,
-    getStockBalance,
-    getSalesHistory,
+    getStockBalanceByProductId,
+    getSaleHistoryByProductId,
+    upsertProductAlert,
+    markCriticalNotified,
+    getProductAlerts,
+    getOverviewMetrics,
   };
 }

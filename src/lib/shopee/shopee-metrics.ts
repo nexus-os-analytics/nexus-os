@@ -16,7 +16,7 @@ import type {
   IIntegrationService,
   IsConnectedParams,
 } from '@/lib/integrations/base-integration';
-import { getSyncStatus } from '@/lib/integrations/utils';
+import { getSyncStatus } from '@/lib/integrations/server';
 import prisma from '@/lib/prisma';
 import { createShopeeRepository } from './shopee-repository';
 

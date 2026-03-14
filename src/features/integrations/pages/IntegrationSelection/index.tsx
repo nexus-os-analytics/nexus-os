@@ -40,6 +40,26 @@ export function IntegrationSelection({ canConnect = false }: { canConnect?: bool
     router.push('/meli');
   };
 
+  const handleSelectShopee = () => {
+    if (!canConnect) {
+      setError(
+        'Confirme seu e-mail para conectar a uma integração. Verifique sua caixa de entrada.'
+      );
+      return;
+    }
+    router.push('/shopee');
+  };
+
+  const handleSelectOlist = () => {
+    if (!canConnect) {
+      setError(
+        'Confirme seu e-mail para conectar a uma integração. Verifique sua caixa de entrada.'
+      );
+      return;
+    }
+    router.push('/olist');
+  };
+
   return (
     <Box
       style={{
@@ -170,6 +190,100 @@ export function IntegrationSelection({ canConnect = false }: { canConnect?: bool
                     onClick={handleSelectMeli}
                   >
                     Conectar Mercado Livre
+                  </Button>
+                </Stack>
+              </Card>
+
+              {/* Shopee Card */}
+              <Card
+                shadow="sm"
+                padding="lg"
+                radius="md"
+                withBorder
+                style={{
+                  cursor: 'pointer',
+                  transition: 'all 0.3s',
+                  '&:hover': {
+                    transform: 'translateY(-4px)',
+                    boxShadow: '0 8px 16px rgba(0,0,0,0.1)',
+                  },
+                }}
+                onClick={handleSelectShopee}
+              >
+                <Card.Section
+                  style={{
+                    padding: '2rem',
+                    background: '#f8f9fa',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <Image src="/img/shopee-logo.webp" alt="Shopee Logo" width={150} height={150} />
+                </Card.Section>
+
+                <Stack gap="md" mt="md">
+                  <Title order={3} ta="center">
+                    Shopee
+                  </Title>
+                  <Text size="sm" c="dimmed" ta="center">
+                    Conecte sua conta Shopee para sincronizar produtos, estoque e pedidos
+                  </Text>
+                  <Button
+                    fullWidth
+                    variant="light"
+                    color="orange"
+                    rightSection={<ChevronRight size={16} />}
+                    onClick={handleSelectShopee}
+                  >
+                    Conectar Shopee
+                  </Button>
+                </Stack>
+              </Card>
+
+              {/* Olist Card */}
+              <Card
+                shadow="sm"
+                padding="lg"
+                radius="md"
+                withBorder
+                style={{
+                  cursor: 'pointer',
+                  transition: 'all 0.3s',
+                  '&:hover': {
+                    transform: 'translateY(-4px)',
+                    boxShadow: '0 8px 16px rgba(0,0,0,0.1)',
+                  },
+                }}
+                onClick={handleSelectOlist}
+              >
+                <Card.Section
+                  style={{
+                    padding: '2rem',
+                    background: '#f8f9fa',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <Image src="/img/olist-logo.png" alt="Olist Logo" width={150} height={150} />
+                </Card.Section>
+
+                <Stack gap="md" mt="md">
+                  <Title order={3} ta="center">
+                    Olist
+                  </Title>
+                  <Text size="sm" c="dimmed" ta="center">
+                    Conecte sua conta Olist para sincronizar anúncios, estoque e vendas
+                  </Text>
+                  <Button
+                    fullWidth
+                    variant="light"
+                    color="blue"
+                    rightSection={<ChevronRight size={16} />}
+                    onClick={handleSelectOlist}
+                  >
+                    Conectar Olist
                   </Button>
                 </Stack>
               </Card>

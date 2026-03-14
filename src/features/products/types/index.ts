@@ -1,5 +1,14 @@
-import type { BlingAlertType, BlingRuptureRisk } from '@prisma/client';
+import type {
+  BlingAlertType,
+  BlingRuptureRisk,
+  IntegrationProvider,
+  MeliAlertType,
+  MeliRuptureRisk,
+  ShopeeAlertType,
+  ShopeeRuptureRisk,
+} from '@prisma/client';
 import type { BlingProductType } from '@/lib/bling';
+import type { MeliProductType } from '@/lib/mercado-livre';
 
 export interface GetProductsAlertsParams {
   integrationId: string;
@@ -12,7 +21,7 @@ export interface GetProductsAlertsParams {
 }
 
 export interface GetProductAlertsResponse {
-  data: BlingProductType[];
+  data: DashboardAlertProduct[];
   nextCursor: string | null;
   hasNextPage: boolean;
 }
@@ -39,4 +48,51 @@ export interface GetOverviewMetricsResponse {
   productCount?: number;
   /** Present for FREE plan: max products allowed (e.g. 30). PRO has null/unlimited. */
   productLimit?: number | null;
+}
+
+export interface GetMeliProductsAlertsParams {
+  integrationId: string;
+  limit?: number;
+  cursor?: string;
+  filters?: {
+    type?: MeliAlertType[];
+    risk?: MeliRuptureRisk[];
+  };
+}
+
+export interface GetMeliProductAlertsResponse {
+  data: MeliProductType[];
+  nextCursor: string | null;
+  hasNextPage: boolean;
+}
+
+/**
+ * Provider-agnostic alert fields shared across Bling, Mercado Livre, and Shopee.
+ */
+export interface DashboardProductAlert {
+  id: string;
+  type: BlingAlertType | MeliAlertType | ShopeeAlertType;
+  risk: BlingRuptureRisk | MeliRuptureRisk | ShopeeRuptureRisk;
+  vvdReal: number;
+  vvd30: number;
+  vvd7: number;
+  daysRemaining: number;
+  capitalStuck: number;
+  recommendations: string | null; // JSON-stringified string[]
+}
+
+/**
+ * Provider-agnostic product with optional alert, used in the dashboard alert views.
+ */
+export interface DashboardAlertProduct {
+  id: string;
+  externalId: string; // blingProductId | meliItemId | shopeeItemId
+  provider: IntegrationProvider;
+  name: string;
+  sku: string | null;
+  costPrice: number | null;
+  salePrice: number | null;
+  currentStock: number;
+  image: string | null;
+  alert: DashboardProductAlert | null;
 }

@@ -22,7 +22,7 @@ import type {
   IsConnectedParams,
 } from '@/lib/integrations/base-integration';
 import { createBlingRepository } from '@/lib/bling/bling-repository';
-import { getSyncStatus } from '@/lib/integrations/utils';
+import { getSyncStatus } from '@/lib/integrations/server';
 import prisma from '@/lib/prisma';
 import type { BlingIntegration, User } from '@prisma/client';
 

@@ -2,7 +2,6 @@
 import type { MantineTheme } from '@mantine/core';
 import {
   Accordion,
-  Alert,
   AspectRatio,
   alpha,
   Badge,
@@ -39,14 +38,15 @@ import {
   TrendingUp,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { IntegrationProvider } from '@prisma/client';
 import { ProLockedState } from '@/features/billing/components/ProLockedState';
-import type { BlingProductType } from '@/lib/bling';
+import type { DashboardAlertProduct } from '@/features/products/types';
 import { formatCurrency } from '@/lib/utils';
 
 // rupture risk badge removed from ProductCard
 
 interface ProductCardProps {
-  product: BlingProductType;
+  product: DashboardAlertProduct;
 }
 
 export function ProductCard({ product }: ProductCardProps) {
@@ -122,6 +122,7 @@ export function ProductCard({ product }: ProductCardProps) {
   const style = getCardStyle();
   const Icon = style?.icon;
   const showDualCtas = alert.type === 'DEAD_STOCK' || alert.type === 'LIQUIDATION';
+  const isBling = product.provider === IntegrationProvider.BLING;
 
   return (
     <Card
@@ -174,23 +175,14 @@ export function ProductCard({ product }: ProductCardProps) {
               {product.name}
             </Title>
             <Group gap="xs" c="dimmed">
-              <Text size="xs">SKU: {product.sku}</Text>
-              <Text size="xs">•</Text>
-              <Text size="xs" lineClamp={1}>
-                Categoria: {product.category?.name ?? '—'}
-              </Text>
+              <Text size="xs">SKU: {product.sku ?? '—'}</Text>
             </Group>
             <Group justify="space-between" align="center" mt="xs">
-              <Title order={4}>{formatCurrency(product.salePrice || 0)}</Title>
+              <Title order={4}>{formatCurrency(product.salePrice ?? 0)}</Title>
               <Group gap="xs">
                 <Badge color="gray" variant="light" size="md">
                   Estoque: {product.currentStock}
                 </Badge>
-                {typeof alert.idealStock === 'number' && (
-                  <Badge color="gray" variant="outline" size="md">
-                    Ideal: {alert.idealStock}
-                  </Badge>
-                )}
               </Group>
             </Group>
           </Stack>
@@ -237,17 +229,6 @@ export function ProductCard({ product }: ProductCardProps) {
               <Box style={{ flex: 1 }}>
                 {alert.type === 'RUPTURE' && (
                   <Paper p="md" radius="md" withBorder>
-                    {/* Risk Message */}
-                    <Alert
-                      variant="light"
-                      color="red"
-                      title="Ação Recomendadas"
-                      icon={<AlertTriangle size={16} />}
-                      mb="md"
-                    >
-                      {alert.message ?? 'Atenção: risco de ruptura de estoque identificado.'}
-                    </Alert>
-
                     <Title order={6} mb="xs">
                       Estoque e Consumo
                     </Title>
@@ -265,15 +246,7 @@ export function ProductCard({ product }: ProductCardProps) {
                           VVD real
                         </Text>
                         <Text size="sm" fw={600}>
-                          {alert.vvdReal?.toFixed(2)} unid./dia
-                        </Text>
-                      </Group>
-                      <Group justify="space-between">
-                        <Text size="sm" c="dimmed">
-                          Ponto de pedido
-                        </Text>
-                        <Text size="sm" fw={600}>
-                          {alert.reorderPoint?.toFixed(0)} unid.
+                          {alert.vvdReal.toFixed(2)} unid./dia
                         </Text>
                       </Group>
                       {typeof alert.daysRemaining === 'number' && (
@@ -287,30 +260,6 @@ export function ProductCard({ product }: ProductCardProps) {
                         </Group>
                       )}
                     </Stack>
-
-                    <Divider my="xs" />
-
-                    <Title order={6} mb="xs">
-                      Reposição
-                    </Title>
-                    <Text size="sm">
-                      {product.settings?.leadTimeDays ?? 0} dias de lead time +{' '}
-                      {product.settings?.safetyDays ?? 0} dias de segurança
-                    </Text>
-                    <Text size="sm" c="dimmed" mt={4}>
-                      Lead time: tempo entre o pedido e a entrega do fornecedor.
-                    </Text>
-                    {alert.daysOutOfStock && alert.daysOutOfStock > 0 && (
-                      <Paper p="xs" radius="sm" mt="xs" withBorder>
-                        <Group gap="xs">
-                          <Info size={12} />
-                          <Text size="sm" style={{ flex: 1 }}>
-                            ⚠️ Produto ficou {alert.daysOutOfStock} dias sem estoque no período
-                            analisado.
-                          </Text>
-                        </Group>
-                      </Paper>
-                    )}
                   </Paper>
                 )}
 
@@ -319,14 +268,9 @@ export function ProductCard({ product }: ProductCardProps) {
                     <Title order={6} mb="xs">
                       Capital parado
                     </Title>
-                    <Title order={5}>
-                      {formatCurrency(product.currentStock * product.salePrice)}
-                    </Title>
-                    <Text size="sm" c="dimmed" mb="sm">
-                      Sem vendas há {alert.daysSinceLastSale ?? 0} dias
-                    </Text>
+                    <Title order={5}>{formatCurrency(alert.capitalStuck)}</Title>
 
-                    <Stack gap={6}>
+                    <Stack gap={6} mt="sm">
                       <Group justify="space-between">
                         <Text size="sm" c="dimmed">
                           Estoque
@@ -340,7 +284,7 @@ export function ProductCard({ product }: ProductCardProps) {
                           Custo
                         </Text>
                         <Text size="sm" fw={600}>
-                          {formatCurrency(product.costPrice || 0)}
+                          {formatCurrency(product.costPrice ?? 0)}
                         </Text>
                       </Group>
                       <Group justify="space-between">
@@ -348,7 +292,7 @@ export function ProductCard({ product }: ProductCardProps) {
                           Preço de venda
                         </Text>
                         <Text size="sm" fw={600}>
-                          {formatCurrency(product.salePrice || 0)}
+                          {formatCurrency(product.salePrice ?? 0)}
                         </Text>
                       </Group>
                     </Stack>
@@ -360,7 +304,6 @@ export function ProductCard({ product }: ProductCardProps) {
                     <Title order={6} mb="xs">
                       Oportunidade
                     </Title>
-                    <Title order={5}>{(alert.growthTrend ?? 0).toFixed(1)}%</Title>
 
                     <Stack gap={6} mt="xs">
                       <Group justify="space-between">
@@ -368,7 +311,7 @@ export function ProductCard({ product }: ProductCardProps) {
                           VVD últimos 7 dias
                         </Text>
                         <Text size="sm" fw={600}>
-                          {alert.vvd7?.toFixed(1)} unid./dia
+                          {alert.vvd7.toFixed(1)} unid./dia
                         </Text>
                       </Group>
                       <Group justify="space-between">
@@ -376,7 +319,7 @@ export function ProductCard({ product }: ProductCardProps) {
                           VVD últimos 30 dias
                         </Text>
                         <Text size="sm" fw={600}>
-                          {alert.vvd30?.toFixed(1)} unid./dia
+                          {alert.vvd30.toFixed(1)} unid./dia
                         </Text>
                       </Group>
                       {typeof alert.daysRemaining === 'number' && (
@@ -400,17 +343,6 @@ export function ProductCard({ product }: ProductCardProps) {
 
                 {alert.type === 'FINE' && (
                   <Paper p="md" radius="md" withBorder>
-                    {alert.message ? (
-                      <Alert
-                        variant="light"
-                        color="yellow"
-                        title="Ação Recomendadas"
-                        icon={<AlertTriangle size={16} />}
-                        mb="md"
-                      >
-                        {alert.message ?? 'Atenção: recomenda-se observar este produto.'}
-                      </Alert>
-                    ) : null}
                     <Title order={6} mb="xs">
                       Resumo
                     </Title>
@@ -423,87 +355,6 @@ export function ProductCard({ product }: ProductCardProps) {
                           {product.currentStock} unid.
                         </Text>
                       </Group>
-
-                      {typeof alert.idealStock === 'number' && (
-                        <Group justify="space-between">
-                          <Text size="sm" c="dimmed">
-                            Estoque ideal
-                          </Text>
-                          <Text size="sm" fw={600}>
-                            {alert.idealStock}
-                          </Text>
-                        </Group>
-                      )}
-
-                      {(typeof alert.excessUnits === 'number' ||
-                        typeof alert.excessPercentage === 'number') &&
-                        (() => {
-                          let label = '';
-                          const hasUnits = typeof alert.excessUnits === 'number';
-                          const hasPct = typeof alert.excessPercentage === 'number';
-                          if (hasUnits && hasPct) {
-                            label = `Excesso: ${Number(alert.excessUnits).toFixed(0)} unid. (${Number(alert.excessPercentage).toFixed(1)}%)`;
-                          } else if (hasUnits) {
-                            label = `Excesso: ${Number(alert.excessUnits).toFixed(0)} unid.`;
-                          } else if (hasPct) {
-                            label = `Excesso: ${Number(alert.excessPercentage).toFixed(1)}%`;
-                          }
-                          return (
-                            <Group justify="space-between">
-                              <Text size="sm" c="dimmed">
-                                Excesso
-                              </Text>
-                              <Text size="sm" fw={600}>
-                                {label}
-                              </Text>
-                            </Group>
-                          );
-                        })()}
-
-                      {typeof alert.excessCapital === 'number' && (
-                        <Group justify="space-between">
-                          <Text size="sm" c="dimmed">
-                            Capital em excesso
-                          </Text>
-                          <Text size="sm" fw={600}>
-                            {formatCurrency(alert.excessCapital)}
-                          </Text>
-                        </Group>
-                      )}
-
-                      {typeof alert.estimatedDeadline === 'number' &&
-                        alert.estimatedDeadline > 0 && (
-                          <Group justify="space-between">
-                            <Text size="sm" c="dimmed">
-                              Prazo estimado
-                            </Text>
-                            <Text size="sm" fw={600}>
-                              {alert.estimatedDeadline} dias
-                            </Text>
-                          </Group>
-                        )}
-
-                      {typeof alert.recoverableAmount === 'number' && (
-                        <Group justify="space-between">
-                          <Text size="sm" c="dimmed">
-                            Valor recuperável
-                          </Text>
-                          <Text size="sm" fw={600}>
-                            {formatCurrency(alert.recoverableAmount)}
-                          </Text>
-                        </Group>
-                      )}
-
-                      {typeof alert.suggestedPrice === 'number' && alert.suggestedPrice > 0 && (
-                        <Group justify="space-between">
-                          <Text size="sm" c="dimmed">
-                            Preço sugerido
-                          </Text>
-                          <Text size="sm" fw={600}>
-                            {formatCurrency(alert.suggestedPrice)}
-                          </Text>
-                        </Group>
-                      )}
 
                       {(typeof alert.vvd7 === 'number' || typeof alert.vvd30 === 'number') && (
                         <>
@@ -542,105 +393,33 @@ export function ProductCard({ product }: ProductCardProps) {
                         </Text>
                       </Group>
 
-                      {typeof alert.idealStock === 'number' && (
-                        <Group justify="space-between">
-                          <Text size="sm" c="dimmed">
-                            Estoque ideal
-                          </Text>
-                          <Text size="sm" fw={600}>
-                            {alert.idealStock}
-                          </Text>
-                        </Group>
-                      )}
-
-                      {(typeof alert.excessUnits === 'number' ||
-                        typeof alert.excessPercentage === 'number') &&
-                        (() => {
-                          let label = '';
-                          const hasUnits = typeof alert.excessUnits === 'number';
-                          const hasPct = typeof alert.excessPercentage === 'number';
-                          if (hasUnits && hasPct) {
-                            label = `Excesso: ${Number(alert.excessUnits).toFixed(0)} unid. (${Number(alert.excessPercentage).toFixed(1)}%)`;
-                          } else if (hasUnits) {
-                            label = `Excesso: ${Number(alert.excessUnits).toFixed(0)} unid.`;
-                          } else if (hasPct) {
-                            label = `Excesso: ${Number(alert.excessPercentage).toFixed(1)}%`;
-                          }
-                          return (
-                            <Group justify="space-between">
-                              <Text size="sm" c="dimmed">
-                                Excesso
-                              </Text>
-                              <Text size="sm" fw={600}>
-                                {label}
-                              </Text>
-                            </Group>
-                          );
-                        })()}
-
-                      {typeof alert.excessCapital === 'number' && (
-                        <Group justify="space-between">
-                          <Text size="sm" c="dimmed">
-                            Capital em excesso
-                          </Text>
-                          <Text size="sm" fw={600}>
-                            {formatCurrency(alert.excessCapital)}
-                          </Text>
-                        </Group>
-                      )}
-
                       {typeof alert.capitalStuck === 'number' && alert.capitalStuck > 0 && (
                         <Group justify="space-between">
                           <Text size="sm" c="dimmed">
                             Capital parado
                           </Text>
                           <Text size="sm" fw={600}>
-                            {formatCurrency(product.currentStock * product.salePrice)}
+                            {formatCurrency(alert.capitalStuck)}
                           </Text>
                         </Group>
                       )}
 
-                      {typeof alert.suggestedPrice === 'number' && alert.suggestedPrice > 0 ? (
-                        <Group justify="space-between">
-                          <Text size="sm" c="dimmed">
-                            Preço sugerido
-                          </Text>
-                          <Text size="sm" fw={600}>
-                            {formatCurrency(alert.suggestedPrice)}
-                          </Text>
-                        </Group>
-                      ) : (
-                        <>
-                          <Group justify="space-between">
-                            <Text size="sm" c="dimmed">
-                              Preço atual
-                            </Text>
-                            <Text size="sm" fw={600}>
-                              {formatCurrency(product.salePrice || 0)}
-                            </Text>
-                          </Group>
-                          <Group justify="space-between">
-                            <Text size="sm" c="dimmed">
-                              Custo
-                            </Text>
-                            <Text size="sm" fw={600}>
-                              {formatCurrency(product.costPrice || 0)}
-                            </Text>
-                          </Group>
-                        </>
-                      )}
-
-                      {typeof alert.daysSinceLastSale === 'number' &&
-                        alert.daysSinceLastSale > 0 && (
-                          <Group justify="space-between">
-                            <Text size="sm" c="dimmed">
-                              Dias desde última venda
-                            </Text>
-                            <Text size="sm" fw={600}>
-                              {alert.daysSinceLastSale}
-                            </Text>
-                          </Group>
-                        )}
+                      <Group justify="space-between">
+                        <Text size="sm" c="dimmed">
+                          Preço atual
+                        </Text>
+                        <Text size="sm" fw={600}>
+                          {formatCurrency(product.salePrice ?? 0)}
+                        </Text>
+                      </Group>
+                      <Group justify="space-between">
+                        <Text size="sm" c="dimmed">
+                          Custo
+                        </Text>
+                        <Text size="sm" fw={600}>
+                          {formatCurrency(product.costPrice ?? 0)}
+                        </Text>
+                      </Group>
 
                       {(typeof alert.vvd7 === 'number' ||
                         typeof alert.vvd30 === 'number' ||
@@ -719,38 +498,41 @@ export function ProductCard({ product }: ProductCardProps) {
             <Button
               type="button"
               onClick={() => {
-                router.push(`/produto/${product.blingProductId}`);
+                router.push(`/produto/${product.externalId}`);
               }}
               variant="light"
               color={style.color}
             >
               Ver detalhes
             </Button>
-            <Button
-              type="button"
-              onClick={() => {
-                if (planTier === 'FREE') {
-                  showProRequiredModal();
-                } else {
-                  const campaignType = alert.type === 'DEAD_STOCK' ? 'LIQUIDATION' : 'LIQUIDATION';
-                  router.push(
-                    `/campanhas/criar?step=3&type=${campaignType}&productId=${product.blingProductId}`
-                  );
-                }
-              }}
-              variant="filled"
-              color={style.color}
-              leftSection={<Sparkles size={16} />}
-            >
-              Gerar campanha com IA
-            </Button>
+            {isBling && (
+              <Button
+                type="button"
+                onClick={() => {
+                  if (planTier === 'FREE') {
+                    showProRequiredModal();
+                  } else {
+                    const campaignType =
+                      alert.type === 'DEAD_STOCK' ? 'LIQUIDATION' : 'LIQUIDATION';
+                    router.push(
+                      `/campanhas/criar?step=3&type=${campaignType}&productId=${product.externalId}`
+                    );
+                  }
+                }}
+                variant="filled"
+                color={style.color}
+                leftSection={<Sparkles size={16} />}
+              >
+                Gerar campanha com IA
+              </Button>
+            )}
           </Stack>
         ) : (
           <Group justify="flex-end" mt="sm">
             <Button
               type="button"
               onClick={() => {
-                router.push(`/produto/${product.blingProductId}`);
+                router.push(`/produto/${product.externalId}`);
               }}
               variant="filled"
               color={style.color}
