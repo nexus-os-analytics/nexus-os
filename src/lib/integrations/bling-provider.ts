@@ -69,7 +69,7 @@ export class BlingInventoryProvider implements InventoryProvider {
         const alert = product.alert!;
         return {
           id: alert.id,
-          externalProductId: alert.blingProductId,
+          externalProductId: product.externalId,
           provider: IntegrationProvider.BLING,
           type: alert.type,
           risk: alert.risk,

@@ -49,8 +49,13 @@ type BlingProductRaw = Pick<
     | 'vvd30'
     | 'vvd7'
     | 'daysRemaining'
+    | 'reorderPoint'
     | 'capitalStuck'
+    | 'daysSinceLastSale'
+    | 'message'
     | 'recommendations'
+    | 'createdAt'
+    | 'updatedAt'
   > | null;
 };
 
@@ -74,8 +79,13 @@ function normalizeBlingProduct(product: BlingProductRaw): DashboardAlertProduct 
           vvd30: product.alert.vvd30,
           vvd7: product.alert.vvd7,
           daysRemaining: product.alert.daysRemaining,
+          reorderPoint: product.alert.reorderPoint,
           capitalStuck: product.alert.capitalStuck,
+          daysSinceLastSale: product.alert.daysSinceLastSale,
+          message: product.alert.message ?? null,
           recommendations: product.alert.recommendations ?? null,
+          createdAt: product.alert.createdAt,
+          updatedAt: product.alert.updatedAt,
         }
       : null,
   };
@@ -96,8 +106,13 @@ function buildMeliAlert(raw: MeliProductAlertType): DashboardProductAlert {
     vvd30: raw.vvd30,
     vvd7: raw.vvd7,
     daysRemaining: raw.daysRemaining,
+    reorderPoint: raw.reorderPoint,
     capitalStuck: raw.capitalStuck,
+    daysSinceLastSale: raw.daysSinceLastSale,
+    message: raw.message ?? null,
     recommendations,
+    createdAt: raw.createdAt,
+    updatedAt: raw.updatedAt,
   };
 }
 
@@ -136,8 +151,13 @@ function normalizeShopeeProduct(product: ShopeeProductType): DashboardAlertProdu
           vvd30: product.alert.vvd30,
           vvd7: product.alert.vvd7,
           daysRemaining: product.alert.daysRemaining,
+          reorderPoint: product.alert.reorderPoint,
           capitalStuck: product.alert.capitalStuck,
+          daysSinceLastSale: product.alert.daysSinceLastSale,
+          message: product.alert.message ?? null,
           recommendations: product.alert.recommendations ?? null,
+          createdAt: product.alert.createdAt,
+          updatedAt: product.alert.updatedAt,
         }
       : null,
   };
