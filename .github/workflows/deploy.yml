@@ -1,58 +1,22 @@
 name: Deploy to VPS
 
 on:
-  push:
-    branches: ["prod"]
+  workflow_run:
+    workflows: ['Build']
+    types: [completed]
+    branches: ['prod']
   workflow_dispatch:
 
 jobs:
   deploy:
+    # Só executa se o build anterior teve sucesso (workflow_run) ou se foi disparado manualmente
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
     runs-on: [self-hosted, Linux, X64]
+    # O environment "production" deve ter "Required reviewers" configurado nas
+    # Settings > Environments do repositório para exigir aprovação antes do deploy.
+    environment: production
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Set image tag
-        id: meta
-        run: echo "tag=$(echo $GITHUB_SHA | cut -c1-8)" >> $GITHUB_OUTPUT
-
-      - name: Create .env
-        run: |
-          # Write multi-line secret using quoted heredoc to avoid shell expansion
-          cat > .env << 'EOF'
-          ${{ secrets.PROD_ENV_FILE }}
-          EOF
-          # Normalize CRLF to LF (in case secret was pasted from Windows)
-          sed -i 's/\r$//' .env || true
-          echo "IMAGE_TAG=${{ steps.meta.outputs.tag }}" >> .env
-          echo "✅ .env criado:"
-          wc -l .env || true
-          head -n 5 .env || true
-
-      - name: Prepare files for upload
-        run: |
-          git clean -fdx -e .env
-          echo "📦 Upload size: $(du -sh . | cut -f1)"
-
-      - name: Upload project to VPS
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_KEY }}
-          port: ${{ secrets.SSH_PORT || 22 }}
-          source: "./"
-          target: "/opt/nexus-os"
-          rm: true
-          strip_components: 0
-          overwrite: true
-          use_insecure_cipher: true
-          timeout: 120s
-          command_timeout: 300s
-
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.0.0
         with:
@@ -66,19 +30,10 @@ jobs:
             set -e
             cd /opt/nexus-os
 
-            # Debug
-            ls -la .env*
             echo "IMAGE_TAG from .env: $(grep IMAGE_TAG .env || echo 'not found')"
 
             echo "🛑 Stopping containers..."
             docker compose down --remove-orphans || true
-
-            echo "🔨 Building images with cache..."
-            DOCKER_BUILDKIT=1 docker compose --env-file .env build --parallel
-
-            echo "🏷️  Tagging latest for cache..."
-            docker tag nexus-os:$(grep IMAGE_TAG .env | cut -d= -f2) nexus-os:latest || true
-            docker tag nexus-os-migrate:$(grep IMAGE_TAG .env | cut -d= -f2) nexus-os-migrate:latest || true
 
             echo "🚀 Starting services..."
             docker compose --env-file .env up -d --remove-orphans
