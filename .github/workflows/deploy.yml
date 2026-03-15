@@ -36,7 +36,7 @@ jobs:
             docker compose down --remove-orphans || true
 
             echo "🚀 Starting services..."
-            docker compose --env-file .env up -d --remove-orphans
+            docker compose --env-file .env up -d --no-build --remove-orphans
 
             echo "⏳ Waiting for app to be ready..."
             timeout 60 sh -c 'until docker compose ps app | grep -q "healthy\|running"; do sleep 2; done' || true
