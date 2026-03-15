@@ -1,7 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { Box, Button, Indicator, Tooltip } from '@mantine/core';
+import { Box, Group, Indicator, Menu, Text, UnstyledButton } from '@mantine/core';
+import { IconChevronDown, IconPlus } from '@tabler/icons-react';
+import { useRouter } from 'next/navigation';
 import { ShopeeLogo } from './shopee-logo';
 
 interface IntegrationSwitcherProps {
@@ -77,68 +79,126 @@ export function IntegrationSwitcher({
   availableProviders,
   connectionState,
 }: IntegrationSwitcherProps) {
+  const [opened, setOpened] = useState(false);
   const [imgErrors, setImgErrors] = useState<Record<string, boolean>>({});
-
-  if (availableProviders.length === 0) {
-    return null;
-  }
+  const router = useRouter();
 
   const handleImgError = (provider: string) => {
     setImgErrors((prev) => ({ ...prev, [provider]: true }));
   };
 
-  const isSingle = availableProviders.length === 1;
+  const selectedKey = value as ProviderKey | null;
+  const selectedConfig = selectedKey
+    ? (PROVIDER_CONFIG[selectedKey] ?? {
+        label: value!,
+        color: 'gray',
+        logoSrc: null,
+        logoAlt: value!,
+      })
+    : null;
+
+  const isConnected = connectionState === 'connected';
 
   return (
-    <Button.Group>
-      {availableProviders.map((provider) => {
-        const key = provider as ProviderKey;
-        const config = PROVIDER_CONFIG[key] ?? {
-          label: provider,
-          color: 'gray',
-          logoSrc: null,
-          logoAlt: provider,
-        };
-        const isActive = value === provider;
-        const isConnected = connectionState === 'connected';
+    <Menu
+      opened={opened}
+      onChange={setOpened}
+      position="bottom-start"
+      withinPortal
+      shadow="md"
+      width={220}
+    >
+      <Menu.Target>
+        <UnstyledButton
+          onClick={() => setOpened((o) => !o)}
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 8,
+            paddingInline: 12,
+            paddingBlock: 7,
+            borderRadius: 'var(--mantine-radius-sm)',
+            border: '1px solid var(--mantine-color-default-border)',
+            backgroundColor: 'var(--mantine-color-default)',
+            cursor: 'pointer',
+            fontSize: 'var(--mantine-font-size-sm)',
+            fontWeight: 500,
+            color: 'var(--mantine-color-text)',
+          }}
+        >
+          {selectedKey ? (
+            <ProviderLogo
+              provider={selectedKey}
+              imgErrorState={imgErrors}
+              onImgError={handleImgError}
+            />
+          ) : null}
+          <Text size="sm" fw={500} style={{ lineHeight: 1 }}>
+            {selectedConfig ? selectedConfig.label : 'Selecionar integração'}
+          </Text>
+          <IconChevronDown size={14} style={{ marginLeft: 2, opacity: 0.6 }} />
+        </UnstyledButton>
+      </Menu.Target>
 
-        const button = (
-          <Tooltip key={provider} label={config.label} withArrow>
-            <Button
-              size="sm"
-              variant={isActive ? 'light' : 'default'}
-              color={isActive ? config.color : undefined}
-              onClick={isSingle ? undefined : () => onChange(provider)}
+      <Menu.Dropdown>
+        <Menu.Item
+          leftSection={<IconPlus size={16} />}
+          onClick={() => {
+            setOpened(false);
+            router.push('/integracao');
+          }}
+        >
+          Nova integração
+        </Menu.Item>
+
+        {availableProviders.length > 0 && <Menu.Divider />}
+
+        {availableProviders.map((provider) => {
+          const key = provider as ProviderKey;
+          const config = PROVIDER_CONFIG[key] ?? {
+            label: provider,
+            color: 'gray',
+            logoSrc: null,
+            logoAlt: provider,
+          };
+          const isActive = value === provider;
+
+          return (
+            <Menu.Item
+              key={provider}
+              onClick={() => {
+                onChange(provider);
+                setOpened(false);
+              }}
               style={
-                isSingle
-                  ? { cursor: 'default', letterSpacing: 'normal' }
-                  : { letterSpacing: 'normal' }
+                isActive ? { backgroundColor: 'var(--mantine-color-default-hover)' } : undefined
               }
-              leftSection={
+              rightSection={
+                isActive && isConnected ? (
+                  <Indicator
+                    color="green"
+                    size={8}
+                    processing={false}
+                    position="middle-end"
+                    style={{ position: 'static', display: 'inline-block' }}
+                  >
+                    <Box w={8} h={8} />
+                  </Indicator>
+                ) : undefined
+              }
+            >
+              <Group gap={8} wrap="nowrap">
                 <ProviderLogo
                   provider={key}
                   imgErrorState={imgErrors}
                   onImgError={handleImgError}
                 />
-              }
-            >
-              <Box component="span" visibleFrom="sm">
-                {config.label}
-              </Box>
-            </Button>
-          </Tooltip>
-        );
-
-        if (isActive) {
-          return (
-            <Indicator key={provider} color="green" size={8} offset={4} disabled={!isConnected}>
-              {button}
-            </Indicator>
+                <Text size="sm">{config.label}</Text>
+              </Group>
+            </Menu.Item>
           );
-        }
-
-        return button;
-      })}
-    </Button.Group>
+        })}
+      </Menu.Dropdown>
+    </Menu>
   );
 }
