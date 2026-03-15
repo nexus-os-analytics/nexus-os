@@ -1,0 +1,77 @@
+name: Build
+
+on:
+  push:
+    branches: ['prod']
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: [self-hosted, Linux, X64]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set image tag
+        id: meta
+        run: echo "tag=$(echo $GITHUB_SHA | cut -c1-8)" >> $GITHUB_OUTPUT
+
+      - name: Create .env
+        run: |
+          cat > .env << 'EOF'
+          ${{ secrets.PROD_ENV_FILE }}
+          EOF
+          sed -i 's/\r$//' .env || true
+          echo "IMAGE_TAG=${{ steps.meta.outputs.tag }}" >> .env
+          echo "✅ .env criado:"
+          wc -l .env || true
+          head -n 5 .env || true
+
+      - name: Prepare files for upload
+        run: |
+          git clean -fdx -e .env
+          echo "📦 Upload size: $(du -sh . | cut -f1)"
+
+      - name: Upload project to VPS
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          port: ${{ secrets.SSH_PORT || 22 }}
+          source: './'
+          target: '/opt/nexus-os'
+          rm: true
+          strip_components: 0
+          overwrite: true
+          use_insecure_cipher: true
+          timeout: 120s
+          command_timeout: 300s
+
+      - name: Build Docker images on VPS
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          port: ${{ secrets.SSH_PORT || 22 }}
+          script_stop: true
+          timeout: 600s
+          script: |
+            set -e
+            cd /opt/nexus-os
+
+            ls -la .env*
+            echo "IMAGE_TAG from .env: $(grep IMAGE_TAG .env || echo 'not found')"
+
+            echo "🔨 Building images with cache..."
+            DOCKER_BUILDKIT=1 docker compose --env-file .env build --parallel
+
+            echo "🏷️  Tagging latest for cache..."
+            docker tag nexus-os:$(grep IMAGE_TAG .env | cut -d= -f2) nexus-os:latest || true
+            docker tag nexus-os-migrate:$(grep IMAGE_TAG .env | cut -d= -f2) nexus-os-migrate:latest || true
+
+            echo "✅ Build concluído."
