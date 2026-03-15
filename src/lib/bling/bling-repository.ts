@@ -5,6 +5,7 @@ import type {
   GetProductAlertsResponse,
   GetProductsAlertsParams,
 } from '@/features/products/types';
+import { IntegrationProvider } from '@/types/integrations';
 import prisma from '../prisma';
 import type {
   BlingCategoryType,
@@ -667,6 +668,8 @@ export function createBlingRepository({ integrationId }: BlingRepositoryOptions)
     return {
       data: data.map((product) => ({
         id: product.id,
+        externalId: product.blingProductId,
+        provider: IntegrationProvider.BLING,
         blingProductId: product.blingProductId,
         blingCategoryId: product.blingCategoryId,
         sku: product.sku,

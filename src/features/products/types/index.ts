@@ -77,8 +77,13 @@ export interface DashboardProductAlert {
   vvd30: number;
   vvd7: number;
   daysRemaining: number;
+  reorderPoint: number;
   capitalStuck: number;
+  daysSinceLastSale: number;
+  message: string | null;
   recommendations: string | null; // JSON-stringified string[]
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 /**
