@@ -17,6 +17,7 @@ import {
 } from '@mantine/core';
 import { AlertCircle, CheckCircle2 } from 'lucide-react';
 import Image from 'next/image';
+import { useSession } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
@@ -78,10 +79,12 @@ export function ConnectPage({ config, canConnect, loading, onConnect }: ConnectP
   const router = useRouter();
   const searchParams = useSearchParams();
   const handledRef = useRef(false);
+  const { update } = useSession();
 
-  const handleComplete = useCallback(() => {
+  const handleComplete = useCallback(async () => {
+    await update();
     router.push('/visao-geral');
-  }, [router]);
+  }, [router, update]);
 
   const handleConnect = async () => {
     if (!canConnect && searchParams.get('activated') !== '1') {

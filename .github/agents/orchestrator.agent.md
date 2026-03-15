@@ -2,7 +2,7 @@
 name: Orchestrator
 description: Sonnet, Codex, Gemini
 model: Claude Sonnet 4.6 (copilot)
-tools: ['read/readFile', 'agent', 'memory']
+tools: ['read/readFile', 'search', 'listFiles', 'grep', 'getSymbols', 'agent', 'memory']
 ---
 
 <!-- Note: Memory is experimental at the moment. You'll need to be in VS Code Insiders and toggle on memory in settings -->
